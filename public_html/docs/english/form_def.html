@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1" />
+  <link rel="stylesheet" type="text/css" href="../../../docs/docstyle.css" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Custom Form Definitions - glFusion CMS</title>
+</head>
+<body style="direction: ltr;">
+  <div id="gl_container_fluid">
+    <div id="gl_header"> <span style="color: rgb(255, 255, 255); float: left; padding-left: 10px; padding-top: 5px; vertical-align: middle;">glFusion
+Documentation Project </span> <a style="float: right; padding-right: 10px; padding-top: 5px; vertical-align: middle;" href="http://www.glfusion.org/wiki/doku.php">glFusion Wiki</a>
+    </div>
+
+    <div id="gl_wrapper">
+      <div class="body-container">
+        <h1>Custom Form Definitions</h1>
+        <table class="inline">
+        <tbody>
+        <th class="col0 leftalign" colspan="2">Form Attributes</th>
+        <tr class="row0">
+          <td valign="top" class="col0 leftalign"><a name="desc_name"></a>Form Name</td>
+          <td class="col1 leftalign">This is a short descriptive name for the form, such as "Event Signup".  It does not have to be unique, but should be to avoid confusion.</td>
+        </tr>
+        <tr class="row1">
+          <td valign="top" class="col0 leftalign"><a name="desc_introtext"></a>Intro Text</td>
+          <td class="col1 leftalign">Enter some text or instructions to be displayed before the forms' fields.</td>
+        </tr>
+        <tr class="row2">
+          <td valign="top" class="col0 leftalign"><a name="desc_submit_msg"></a>Message after Submission</td>
+          <td class="col1 leftalign">*Not Implemented* Enter some text to be displayed in a popup message after the form is submitted.  This function is currently under development; for now a static message is defined in the language file.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_noaccess_msg"></a>Message shown if user can't access the form</td>
+          <td>Enter a message to be displayed to users if they have no access to the form.  This is optional; if nothing is entered here then nothing at all will be displayed.  HTML is allowed.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_redirect"></a>Redirect URL</td>
+          <td>Eneter a destination URL to redirect the submitter after submission. Substitute &quot;{site_url}&quot; for your site&apos;s base URL.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_enabled"></a>Enabled</td>
+          <td>Check this box if this form is to be enabled.  This provides a quick way to prevent forms from being used without deleting them.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_onsubmit"></a>Action upon Submission</td>
+          <td>When submitted, forms may have their data added to the database, emailed to the form's owner, or both.  Select which actions you want to occur.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_moderate"></a>Moderate?</td>
+          <td>*Not Implemented* Check this box if user submissions must be approved before they become visible in the results table or for download.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_max_submit"></a>Max. Submissions</td>
+          <td>Enter a positive integer here if there should be a limit on the total number of submissions.  If this field is empty or zero, then unlimited submissions are accepted.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_owner_id"></a>Owner</td>
+          <td>Select the user to become the "owner" of this form.  The owner can see and download all results.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_group_id"></a>Admin Group</td>
+          <td>Select a group to be the Admin group for this form.  The admin group has all rights that the owner has.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_fill_gid"></a>Group that can fill out form</td>
+          <td>Select the user group that is allowed to fill out this form.  If the current user is not a member of this group, they will not have access to the form.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a name="desc_results_gid"></a>Group that can see results</td>
+          <td>Select the user group that will be able to see the results for this form.  When results are shown in an autotag, users must be a member of this group or nothing will be displayed.  For example, you may not want regular users to see other members who will be attending an event, or other bids on items.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_captcha"></a>CAPTCHA</td>
+          <td>Check this box to require a CAPTCHA to be entered along with the form.  The global site configuration governs whether the CAPTCHA is shown to all users or only to Anonymous.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_reset_fld_perm"></a>Reset Field Permissions</td>
+          <td>Check this box to reset all field permissions to match the form's permission settings.</td>
+        </tr>
+        </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

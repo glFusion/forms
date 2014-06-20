@@ -1,0 +1,29 @@
+{# begin {templatelocation} #}
+  <input name="mode" value="delresults" type="hidden" />
+  <input name="frm_id" value="{frm_id}" type="hidden" />
+  <table width="100%">
+    {!if res_user}
+    <th>{$LANG_FORMS['submitter']}</th>
+    {!endif}
+    {!if res_date}
+    <th>{$LANG_FORMS['submitted']}</th>
+    {!endif}
+    <!-- BEGIN Headers -->
+    <th>{fld_name}</th>
+    <!-- END Headers -->
+    <!-- BEGIN DataRows -->
+    <tr>
+    {!if res_user}
+      <td>{res_user}</td>
+    {!endif}
+    {!if res_date}
+      <td>{res_date}</td>
+    {!endif}
+      <!-- BEGIN Fields -->
+      <td>{fld_value}</td>
+      <!-- END Fields -->
+    </tr>
+    <!-- END DataRows -->
+  </table>
+{# end {templatelocation} #}
+

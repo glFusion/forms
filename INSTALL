@@ -1,0 +1,68 @@
+Install/Uninstall instruction for the glFusion Custom Forms plugin.
+
+AUTOMATIC INSTALLATION
+
+You may upload and install the archive file to your site via the plugin 
+administration interface in glFusion.  This is the recommended method.
+
+
+MANUAL INSTALLATION
+
+Step 1:  Back up your GLFusion Database.  The forms plugin adds tables 
+to your GLFusion database. You can do this with the built in admin backup 
+facility.
+
+Step 2:  Uncompress the forms plugin archive while in the 
+<glfusion_private_dir>/plugins directory.  The archive will create a 
+directory called forms in the plugins directory.
+
+Step 3:  Create the public_html and admin directories.  Under your html 
+directory (usually public_html) create a directory called forms.  
+Under your admin/plugins/ directory create a directory called forms.
+
+Step 4:  Change to your <glfusion_private_dir>/plugins/forms/ directory.  
+Copy the files in the admin directory to the admin/plugins/forms/ directory 
+that you created in step 3.  Copy the files and directories in the public_html 
+directory to the public_html/forms/ directory that you created in step 3.
+
+Step 5:  Log in to your GLFusion as a root user, chose Plugins from Admin 
+Block. You will see the new plugin awaiting installation. Click Install. 
+The install page will tell you if the install was successful or not.  
+If not examine glFusion system error log for possible problems.
+
+Step 6:  (glFusion 1.1.6 and earlier only) 
+Enable custom registration and customize your templates and 
+lib-custom.php.  Although glFusion 1.1.5 has added additional methods 
+for plugins to interact with the user, a few areas still require manual 
+configuration.  Refer to the sample templates and lib-custom.php files in 
+the <plugin_dir>/custom directory.
+
+If you have already modified lib-custom.php with a CUSTOM_userForm() function,
+then just add the sample section between "BEGIN PROFILE PLUGIN" and 
+"END PROFILE PLUGIN", and modify your custom memberdetail.thtml file 
+accordingly.
+
+
+The forms plugin should now be installed and functioning.  
+Clicking on the forms icon in Command & Control, or from the Admin menu, 
+will take you to the admin page where you can add your own custom forms.
+
+
+UPGRADING (Manual):
+
+Perform the same steps as for a new installation.
+
+
+UNINSTALL:
+
+Step 1:  Go to Admin Block/Plugins. Find the plugin in the list of plugins, 
+click the edit icon. Then press Delete and confirm (or not) the deletion.
+This will remove all the plugin data from your database.
+
+Step 2:  Delete the three plugin directories created in the install process:
+    <private_dir>/plugins/forms/
+    <public_html>/forms/
+    <public_html>/admin/plugins/forms/
+
+Thats it.
+

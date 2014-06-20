@@ -1,0 +1,8 @@
+{# begin {templatelocation} #}
+<p>{field_adminlist}</p>
+<form action="{action_url}" method="POST">
+  <input type="hidden" name="frm_id" value="{frm_id}" />
+  <input name="editfield" type="submit" value="{$LANG_FORMS['add_field']}" />
+</form>
+{# end {templatelocation} #}
+

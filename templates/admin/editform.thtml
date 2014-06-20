@@ -1,0 +1,226 @@
+{# begin {templatelocation} #}
+<script type=text/javascript>
+window.addEvent("domready", function() {
+    var exValidatorA = new fValidator("forms_frm1");
+});
+function confirmDelete()
+{
+    if (confirm("'Are you sure you want to delete this form?  All associated fields and data will be removed.")) {
+        document.location.href='{site_url}/admin/plugins/forms/index.php';
+    }
+}
+</script>
+
+<form id="forms_frm1" action="{site_url}/admin/plugins/forms/index.php"
+    method="post">
+  <input type="hidden" name="old_id" value="{old_id}" />
+  <fieldset>
+    <table>
+      <tr>
+        <td width="150">{$LANG_FORMS['frm_id']}: </td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_id', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="text" size="32" name="id" value="{id}"
+            class="fValidate['required']" />
+        </td>
+      </tr>
+
+      <tr>
+        <td width="150">{$LANG_FORMS['name']}: </td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_name', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="text" size="32" name="name" value="{name}"
+            class="fValidate['required']" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['introtext']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_introtext', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <textarea rows="2" name="introtext" cols="40"
+            class="pluginForms" maxlength="1000">{introtext}</textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['submit_msg']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_submit_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <textarea rows="2" name="submit_msg" cols="40" 
+            class="pluginForms" maxlength="1000">{submit_msg}</textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['noaccess_msg']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_noaccess_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <textarea rows="2" name="noaccess_msg" cols="40" 
+            class="pluginForms" maxlength="1000">{noaccess_msg}</textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['redirect']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_redirect', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="text" size="80" name="redirect" value="{redirect}" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['enabled']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_enabled', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="checkbox" value="1" name="enabled" {ena_chk} />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['onsubmit']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_onsubmit', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="checkbox" value="1" name="onsubmit[store]" {store_chk} />{$LANG_FORMS['save_to_db']}
+          <input type="checkbox" value="16" name="onsubmit[preview]" {preview_chk} />{$LANG_FORMS['preview_on_save']}
+          <br />
+          <input type="checkbox" value="2" name="onsubmit[emailowner]" {emailowner_chk} />{$LANG_FORMS['email_owner']}&nbsp;&nbsp;
+          <input type="checkbox" value="4" name="onsubmit[emailgroup]" {emailgroup_chk} />{$LANG_FORMS['email_group']}&nbsp;&nbsp;
+          <input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
+          {$LANG_FORMS['other_emails']}: 
+          <input type="text" size="40" maxlength="255" name="email" value="{email}" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['moderate']}?</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_moderate', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="checkbox" value="1" name="moderate" {mod_chk} />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['inblock']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_inblock', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="checkbox" name="inblock" value="1" {inblock_chk} />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['max_submit']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_max_submit', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="text" size="5" maxlen="5" name="max_submit" value="{max_submit}" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['max_submit_msg']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_max_submit_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <textarea rows="2" name="max_submit_msg" cols="40"
+            class="pluginForms" maxlength="1000">{max_submit_msg}</textarea>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['onetime']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_onetime', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="radio" name="onetime" value="0" {one_chk_0} />{$LANG_FORMS['pul_mult']}
+          <input type="radio" name="onetime" value="1" {one_chk_1} />{$LANG_FORMS['pul_edit']}
+          <input type="radio" name="onetime" value="2" {one_chk_2} />{$LANG_FORMS['pul_once']}
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['noedit_msg']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_noedit_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <textarea rows="2" name="noedit_msg" cols="40"
+            class="pluginForms" maxlength="1000">{noedit_msg}</textarea>
+        </td>
+      </tr>
+
+    </table>
+  </fieldset>
+
+  <fieldset>
+    <legend>{$LANG_FORMS['permissions']}</legend>
+    <table>
+      <tr>
+        <td width="150">{$LANG_FORMS['owner']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_owner_id', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <select name="owner_id">
+            {owner_dropdown}
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td width="150">{$LANG_FORMS['admin_group']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_group_id', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <select name="group_id">
+            {admin_group_dropdown}
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['user_group']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_fill_gid', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <select name="fill_gid">
+            {user_group_dropdown}
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['results_group']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_results_gid', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <select name="results_gid">
+            {results_group_dropdown}
+          </select>
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['req_captcha']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_req_captcha', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="checkbox" name="captcha" value="1" {captcha_chk} />
+        </td>
+      </tr>
+
+      <tr>
+        <td>{$LANG_FORMS['reset_fld_perm']}:</td>
+        <td>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_reset_fld_perm', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <input type="checkbox" name="reset_fld_perm" value="1" />
+        </td>
+      </tr>
+
+    </table>
+  </fieldset>
+
+  <input name="updateform" type="submit" 
+      value="{$LANG_ADMIN['submit']}" />
+  <input name="btnReset" type="reset" 
+      value="{$LANG_FORMS['reset']}" />
+  <input type="submit" name="cancel" value="{$LANG_ADMIN['cancel']}" 
+      onclick="javascript:document.location.href='{referrer}';" />
+{!if candelete}
+  <div style="float:right;">
+  <input name="deleteFrmDef" type="submit"
+      value="{$LANG_ADMIN['delete']}" 
+      onclick="return confirm({lang_confirm_delete});" />
+  </div>
+{!endif}
+</form>
+{# end {templatelocation} #}

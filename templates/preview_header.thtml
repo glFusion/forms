@@ -1,0 +1,5 @@
+<h2>{$LANG_FORMS['preview']}: {frm_name}</h2>
+<p>
+  <strong>{$LANG_FORMS['frm_url']}:</strong>&nbsp;&nbsp;<a href="{frm_link}">{frm_link}</a>
+</p>
+<hr width=100% />

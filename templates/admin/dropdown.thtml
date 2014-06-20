@@ -1,0 +1,8 @@
+{# begin {templatelocation} #}
+<select name="{varname}">
+  <!-- BEGIN QueueRow -->
+  <option value="{value}" {selected}>{name}</option>
+  <!-- END QueueRow -->
+</select>
+{# end {templatelocation} #}
+

@@ -1,0 +1,24 @@
+A new form submission was received at {site_name}.
+<p />
+Submitted by {username} ({uid}) on {sub_date}
+<p />
+Form: {frm_name}
+<p />
+<table border="0" cellpadding="3">
+<!-- BEGIN QueueRow -->
+<tr>
+  <td 
+{!if colspan}
+colspan="2">
+{!else}
+class="alignright" valign="top">
+  {!if fld_prompt}
+    <label for="{fld_prompt}">{fld_prompt}:</label>
+  {!endif}
+  </td>
+  <td>
+{!endif}
+    {fld_value}</td>
+</tr>
+<!-- END QueueRow -->
+</table>

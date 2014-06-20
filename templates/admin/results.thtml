@@ -1,0 +1,40 @@
+{# begin {templatelocation} #}
+<script type="text/javascript">
+  function toggle(source) {
+    checkboxes = document.getElementsByName('delresmulti[]');
+    for(var i in checkboxes)
+      checkboxes[i].checked = source.checked;
+  }
+</script>
+<h2>{$LANG_FORMS['form_results']}: {frm_name}</h2>
+<a href="{site_admin_url}/plugins/forms/index.php?action=export&frm_id={frm_id}">{$LANG_FORMS['export']}</a>
+<form action="{site_admin_url}/plugins/forms/index.php" method="post">
+  <input name="action" value="delresults" type="hidden" />
+  <input name="frm_id" value="{frm_id}" type="hidden" />
+  <table width="100%">
+    <th width="100">{$LANG_FORMS['action']}</th>
+    <th>{$LANG_FORMS['submitter']}</th>
+    <th>{$LANG_FORMS['submitted']}</th>
+    <!-- BEGIN Headers -->
+    <th>{fld_name}</th>
+    <!-- END Headers -->
+    <!-- BEGIN DataRows -->
+    <tr>
+      <td class="" style="white-space:nowrap">
+        <input type="checkbox" name="delresmulti[]" value="{res_id}" />
+        <a href="{site_admin_url}/plugins/forms/index.php?action=print&frm_id={frm_id}&res_id={res_id}" target="_blank"><img src="{layout_url}/images/print.png" border="0"></a>
+        <a href="{site_admin_url}/plugins/forms/index.php?action=editresult&res_id={res_id}"><img src="{layout_url}/images/edit.png" border="0"></a>
+      </td>
+      <td>{res_user}</td>
+      <td>{res_date}</td>
+      <!-- BEGIN Fields -->
+      <td>{fld_value}</td>
+      <!-- END Fields -->
+    </tr>
+    <!-- END DataRows -->
+  </table>
+  <input type="checkbox" onClick="toggle(this)" />{$LANG01[126]}<br />
+  <input type="submit" name="delresults" value="{$LANG_FORMS['del_selected']}" />
+</form>
+{# end {templatelocation} #}
+

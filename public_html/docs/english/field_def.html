@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1" />
+  <link href="../../../docs/docstyle.css" type="text/css" rel="stylesheet" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Custom Forms - Field Definitions - glFusion CMS</title>
+</head>
+<body style="direction: ltr;">
+  <div id="gl_container_fluid">
+    <div id="gl_header"> <span style="color: rgb(255, 255, 255); float: left; padding-left: 10px; padding-top: 5px; vertical-align: middle;">glFusion
+Documentation Project </span> <a style="float: right; padding-right: 10px; padding-top: 5px; vertical-align: middle;" href="http://www.glfusion.org/wiki/doku.php">glFusion Wiki</a>
+    </div>
+<style type="text/css">
+td {
+    vertical-align:top;
+}
+</style>
+
+    <div id="gl_wrapper">
+      <div class="body-container">
+        <h1>Custom Form Field Definitions</h1>
+        <table class="inline">
+        <tbody>
+        <th class="col0 leftalign" colspan="2">Field Definitions</th>
+        <tr class="row0">
+          <td class="col0 leftalign"><a name="desc_name"></a>Field Name</td>
+          <td class="col1 leftalign">This is the name of the custom field used in the database.  It must be unique to this form.</td>
+        </tr>
+        <tr class="row1">
+          <td><a name="desc_prompt"></a>Text Prompt</td>
+          <td>This is the text that will be displayed next to the fields in forms and display screens.  For example, a custom field named "birthdate" might have a prompt of "Birth Date".</td>
+        </tr>
+        <tr class="row2">
+          <td><a name="desc_type"></a>Field Type</td>
+          <td>Select the type of field to be used.  This selection will determin which of the remaining options are displayed and how they are used.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_inputlength"></a>Length</td>
+          <td>(Type=text) These values determind the display length and actual maximum length of entries that can be made.</td>
+        </tr>
+         <tr>
+          <td><a name="desc_maxlength"></a>Max. Length</td>
+          <td>(Type=text) Enter the maximum number of characters that may be entered into this field.</td>
+        </tr>
+          <tr>
+          <td><a name="desc_columns"></a>Columns</td>
+          <td>(Type=textarea) Enter the number of columns for the textarea field.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_rows"></a>Rows</td>
+          <td>(Type=textarea) Enter the number of rows for the textarea field.</td>
+        </tr>
+         <tr>
+          <td><a name="desc_calc_type"></a>Calculation Type</td>
+          <td>(Type=calculation) Select the type of calculation to be performed- Addition, Subtraction, etc.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_default"></a>Default Value</td>
+          <td><ul><li>(Type=text, radio, checkbox)<br />Enter the default value for this field.  For text fields, this is a simple string.  For radio buttons, enter the value corresponding to the option to be selected as default.  For checboxes, enter either 1 or 0.<br />&nbsp;</li>
+<li>(Text fields only)<br />You can enter a default value as "$_USER:varname", where "varname" is a variable from the $_USER array, such as "email" or "fullname."<br />&nbsp;</li>
+<li>(Type=static) Enter the HTML or static text that you'd like to appear.  Leave this field empty to have a blank line inserted into the form.<br />&nbsp;</li>
+<li>(Type=date) Enter the default date as "YYYY-MM-DD".  If the "Show Time" box is checked, you can add the time as "HH:MM" (24-hour format).<br />
+The special string "$NOW" may be entered to indicate that the field should default to the current date and time.<br />&nbsp;</li>
+<li>(Type=time) Enter the default time as "HH:MM" (24-hour format).<br />
+The special string "$NOW" may be entered to indicate that the field should default to the current time.</li>
+</ul>
+          </td>
+        </tr>
+         <tr>
+          <td><a name="desc_valuestr"></a>Value</td>
+          <td>Enter the values to be used for selections, etc.  The usage depends upon the type of field being defined.<br />
+<ul><li>(Type=radio,dropdown,multicheck)<br />Create the values to be used in the radio buttons.  Click the "Add" icon to add a new value to the array.  Click the radio button next to the value that should be selected by default.<br />&nbsp;</li>
+<li>(Type=calculation)<br />Enter the values or field names to be used in the calculation.  Field names must exactly match the "Name" parameter for the fields used; if not, the field will be ignored.  Numeric values will be treated literally.<br />&nbsp;<br />
+Example:  if the field type is "Addition" and the value is "2,6,amount", then the result would be 2 + 6 + (numeric value of the "amount" field).  If a field value is non-numeric then it is ignored.  For division, a value of zero for other than the first value is also ignored.<br />&nbsp;</li>
+<li>(Type=static)<br />
+Enter the static text that should appear on the form.  You can include a value from the $_USER array as "$_USER:varname", where "varname" is a variable from the array such as "email" or "fullname."<br />&nbsp;</li>
+</ul>
+        </td>
+        </tr>
+          <tr>
+          <td><a name="desc_format"></a>Format</td>
+          <td>(Type=calculation) Enter an optional numeric format to be used when displaying the results.  If this is blank, "%8.2f" will be used.  Refer to the PHP documentation for the sprintf() function for formatting options.</td>
+        </tr>
+         <tr>
+          <td><a name="desc_autogen"></a>Auto-Generate?</td>
+          <td>Check this box if this field should be automatically generated.  The plugin will generate a value for this field using the first method that is available:
+<ol><li>You can define custom function in lib-custom.php named "CUSTOM_forms_autogen_{fieldname}" to create a function specifically for this field.</li>
+<li>You may also create "CUSTOM_forms_autogen()" to create a generic auto-generation function for all forms.</li>
+<li>If you do neither, then the plugin will create a unique value using COM_makeSid().</li></ol>
+        </td>
+        </tr>
+        <tr>
+          <td><a name="desc_mask"></a>Field Mask (TESTING)</td>
+          <td>(Type=text) Enter the mask string to be used with iMask for this field.
+<ul><li>"9" represents a digit.</li>
+<li>"A" represents a letter.</li>
+<li>"X" represents an alphanumeric character.</li></ul>
+          </td>
+        </tr>
+        <tr>
+          <td><a name="desc_showtime"></a>Show Time?</td>
+          <td>(Type=date) Check this box if the time selector is to be available on the datepicker.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_24hr"></a>12 or 24-hour format?</td>
+          <td>(Type=date) Select whether times will be entered in 12-hour or 24-hour format.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_add_century"></a>Add century if missing?</td>
+          <td>(Type=date) Check this box to have the current century added to values of less than 100.  Leave unchecked if you expect very small date values to be entered, in which case the user input will be taken literally.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_format"></a>Format</td>
+          <td>(Type=date) Enter the format string to be used for the date/time.  Refer to the PHP date formats for more information.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_value"></a>Value</td>
+          <td>(Type=radio, dropdown) This is a string which indicates the possible values for dropdown selections and radio buttons.  The format is "value:text;value:text;..."  For example, to have two radio buttons labeled "Red" and "Blue", which return values of "R" and "B" respectively, you would enter "R:Red;B:Blue" as the value.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_enabled"></a>Enabled</td>
+          <td>Check this box to enable the field, uncheck to disable.  This allows the administrator to prevent some fields from being used without deleting them.  (Deleting a custom field also deletes all user data associated with it).</td>
+        </tr>
+        </tr>
+        <tr>
+          <td><a name="desc_spancols"></a>Span All Columns?</td>
+          <td>Check this box to have the field's entry area span all columns of the form.  This causes the prompt to be supressed and the field will be left-aligned.  If you only want to omit the text prompt, but have the field aligned with the others, then leave the prompt empty.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_help_msg">Help Text</td>
+          <td>Enter an optional short help message to be displayed as a tooltip after the entry field.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_fill_gid">Group that can fill out field</td>
+          <td>Select the user group that will be allowed to see and fill out this field.  This allows some fields to be presented to only certain users.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_results_gid">Group that can see results</td>
+          <td>Select the user group that can see this field in the results table.  This controls the results display via the "forms:results" autotag, not in the administrator's control panel.</td>
+        <tr>
+          <td><a name="desc_fld_access">Field Access</td>
+          <td>Select the access level for this field.  The options are:
+<ul>
+<li><b>Normal</b> - Users with the appropriate access level can enter data into this field.</li>
+<li><b>Required</b> - This field requires something to be entered. Selecting this option for a Checkbox-type field means that the box must be selected before the form can be submitted.  This may be useful for acknowledging a "terms and conditions" page, for example.</li>
+<li><b>Read-Only</b> - The field is displayed but cannot be edited.</li>
+<li><b>Hidden</b> - The field is hidden from all users.</li>
+</ul>
+The Read-Only and Hidden options should be used only when the field is auto-generating or has a useful default value.</td>
+        </tr>
+        <tr>
+          <td><a name="desc_orderby">Position After</td>
+          <td>Select the existing field after which this field should be displayed on the form.  The default for new fields is to become the last field on the form.</td>
+        </tr>
+        </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
