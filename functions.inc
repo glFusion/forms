@@ -718,6 +718,24 @@ function plugin_configmanager_select_results_gid_forms()
 
 
 /**
+*   Support merging local accounts into remote accounts
+*
+*   @param  integer $origUID    Original (remote) user ID
+*   @param  integer $destUID    Merged (local) user ID
+*/
+function plugin_user_move_forms($origUID, $destUID)
+{
+    global $_TABLES;
+
+    $origUID = (int)$origUID;
+    $destUID = (int)$destUID;
+
+    DB_query("UPDATE {$_TABLES['forms_results']}
+            SET uid = $destUID WHERE uid = $origUID", 1);
+}
+
+
+/**
 *   Create an array of groups. 
 *
 *   @param  boolean $nogroup    True if "No Group" is an option.
