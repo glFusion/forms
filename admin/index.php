@@ -161,7 +161,13 @@ case 'copyform':
     USES_forms_class_form();
     $F = new frmForm($frm_id);
     $msg = $F->Duplicate();
-    $view = 'listforms';
+    if (empty($msg)) {
+        echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&amp;frm_id=' .
+            $F->id);
+        exit;
+    } else {
+        $view = 'listforms';
+    }
     break;
 
 case 'updateform':
