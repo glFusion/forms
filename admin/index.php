@@ -239,6 +239,7 @@ case 'export':
     $R = new frmResult();
     $fields = array('"UserID"', '"Submitted"');
     foreach ($Frm->fields as $F) {
+        if (!$F->enabled) continue;     // ignore disabled fields
         $fields[] = '"' . $F->name . '"';
     }
     $retval = join(',', $fields) . "\n";
@@ -249,6 +250,7 @@ case 'export':
             strftime('%Y-%m-%d %H:%M', $R->dt),
         );
         foreach ($Frm->fields as $F) {
+            if (!$F->enabled) continue;     // ignore disabled fields
             $F->GetValue($R->id);
             $fields[] = '"' . str_replace('"', '""', $F->value_text) . '"';
         }

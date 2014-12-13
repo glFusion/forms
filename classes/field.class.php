@@ -19,8 +19,6 @@ class frmField
     var $isNew;
     var $options = array();
     var $properties = array();
-    /*var $id, $name, $type, $enabled, $required, $prompt;
-    var $default, $value, $value_text;*/
 
     /**
     *   Constructor.  Sets the local properties using the array $item.
@@ -28,7 +26,7 @@ class frmField
     *   @param  integer $id     ID of the existing field, empty if new.
     *   @param  string  $frm_id ID of the form to which this field belongs.
     */
-    function __construct($id = 0, $frm_id = '')
+    public function __construct($id = 0, $frm_id = '')
     {
         global $_USER, $_CONF_FRM;
 
@@ -79,7 +77,7 @@ class frmField
     *   @param  string  $name   Optional field name
     *   @return boolean     Status from SetVars()
     */
-    function Read($id = 0)
+    public function Read($id = 0)
     {
         global $_TABLES;
 
@@ -98,7 +96,7 @@ class frmField
     *   @param  integer $res_id Result set
     *   @return mixed       Field value
     */
-    function GetValue($res_id)
+    public function GetValue($res_id)
     {
         global $_TABLES, $_CONF_FRM;
 
@@ -196,7 +194,7 @@ class frmField
     *   @param  string  $name       Name of property
     *   @param  mixed   $value      Value to set
     */
-    function __set($name, $value)
+    public function __set($name, $value)
     {
         global $LANG_FORMS;
         switch ($name) {
@@ -323,7 +321,7 @@ class frmField
     *   @param  string  $name       Name of property
     *   @return mixed       Value of property, or empty string if undefined
     */
-    function __get($name)
+    public function __get($name)
     {
         if (array_key_exists($name, $this->properties)) {
            return $this->properties[$name];
@@ -340,7 +338,7 @@ class frmField
     *   @param  array   $item   Array of fields for this item
     *   @param  boolean $fromdb Indicate whether this is read from the DB
     */
-    function SetVars($A, $fromdb=false)
+    public function SetVars($A, $fromdb=false)
     {
         if (!is_array($A))
             return false;
@@ -415,7 +413,7 @@ class frmField
     *   @param  string  $value  Name of value key to check
     *   @return string          String associated with $value
     */
-    function stringFromValues($val)
+    public function stringFromValues($val)
     {
         // If the request value is set in the array, return it.
         // Otherwise, return an empty string.
@@ -1028,7 +1026,7 @@ class frmField
     *
     *   @param  integer $fld_id     ID number of the field
     */
-    function Delete($fld_id=0)
+    public function Delete($fld_id=0)
     {
         global $_TABLES;
 
@@ -1055,7 +1053,7 @@ class frmField
     *   @param  integer $res_id Result ID associated with this field
     *   @return boolean     True on success, False on failure
     */
-    function SaveData($newval, $res_id)
+    public function SaveData($newval, $res_id)
     {
         global $_TABLES;
 
@@ -1125,7 +1123,7 @@ class frmField
     *
     *   @return string  Date formatted for display
     */
-    function DateDisplay()
+    public function DateDisplay()
     {
         if ($this->type != 'date')
             return $this->value_text;
@@ -1169,7 +1167,7 @@ class frmField
     *
     *   return  array   Array of date formats
     */
-    function DateFormats()
+    public function DateFormats()
     {
         global $LANG_FORMS;
         $_formats = array(
@@ -1186,7 +1184,7 @@ class frmField
     *   @param  integer $cur    Option to be selected by default
     *   @return string          HTML for selection, without select tags
     */
-    function DateFormatSelect($cur=0)
+    public function DateFormatSelect($cur=0)
     {
         $retval = '';
         $_formats = self::DateFormats();
@@ -1206,7 +1204,7 @@ class frmField
     *   @param  array   $fields     Array of field objects
     *   @return float               Calculated value of this field
     */
-    function CalcResult($fields)
+    public function CalcResult($fields)
     {
         $result = '';
 
@@ -1296,11 +1294,12 @@ class frmField
     *   @param  array   $vals  All form values
     *   @return string      Empty string for success, or error message
     */
-    function Validate(&$vals)
+    public function Validate(&$vals)
     {
         global $LANG_FORMS;
 
         $msg = '';
+        if (!$this->enabled) return $msg;   // not enabled
         if (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED)
             return $msg;        // not required
         //if ($this->required != 1) return $msg;    // only checking required
@@ -1340,7 +1339,7 @@ class frmField
     *
     *   @see    frmForm::Duplicate()
     */
-    function Duplicate()
+    public function Duplicate()
     {
         global $_TABLES;
 
@@ -1374,7 +1373,7 @@ class frmField
     *   @param  integer $id     Record ID to move
     *   @param  string  $where  Direction to move ('up' or 'down')
     */
-    function Move($frm_id, $fld_id, $where)
+    public function Move($frm_id, $fld_id, $where)
     {
         global $_CONF, $_TABLES, $LANG21;
 
@@ -1418,7 +1417,7 @@ class frmField
     *
     *   @param  integer $frm_id     ID of form being reordered
     */
-    function Reorder($frm_id)
+    public function Reorder($frm_id)
     {
         global $_TABLES;
 
@@ -1461,7 +1460,7 @@ class frmField
     *   @param  string  $def    Defined default value
     *   @return string          Actual text to use as the field value.
     */
-    function GetDefault($def = '')
+    public function GetDefault($def = '')
     {
         global $_USER;
 
@@ -1504,7 +1503,7 @@ class frmField
     *   @param  string  $timestr    Optional HH:MM string.  Seconds ignored.
     *   @return string  HTML for time selection field
     */
-    function TimeField($timestr = '')
+    public function TimeField($timestr = '')
     {
         $ampm_fld = '';
         $hour = '';
@@ -1562,7 +1561,7 @@ class frmField
     *   @param  integer $hour   Hour to convert
     *   @return array       array(new_hour, ampm_indicator)
     */
-    function hour24to12($hour)
+    public function hour24to12($hour)
     {
         if ($hour >= 12) {
             $ampm = 'pm';
@@ -1588,7 +1587,7 @@ class frmField
     *   @param  string  $type   'fill' or 'save' to indicate which function
     *   @return mixed       Generated field value
     */
-    function AutoGen($A, $type, $uid = 0)
+    public function AutoGen($A, $type, $uid = 0)
     {
         global $_USER;
 

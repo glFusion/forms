@@ -865,6 +865,7 @@ class frmForm
 
         $T->set_block('form', 'QueueRow', 'qrow');
         foreach ($this->fields as $F) {
+            if (!$F->enabled) continue;     // ignore disabled fields
             switch ($F->type) {
             case 'static':
                 $data = $F->GetDefault($F->options['default']);

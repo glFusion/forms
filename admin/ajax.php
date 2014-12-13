@@ -27,8 +27,8 @@ $base_url = FRM_ADMIN_URL;
 switch ($_GET['action']) {
 case 'toggleEnabled':
     $newval = $_REQUEST['newval'] == 1 ? 1 : 0;
-    $var = trim($_GET['var']);
-    $id = (int)$_REQUEST['id'];
+    $var = trim($_GET['var']);  // sanitized via switch below
+    $id = DB_escapeString($_REQUEST['id']);
     if (isset($_GET['type'])) {
         switch ($_GET['type']) {
         case 'form':
