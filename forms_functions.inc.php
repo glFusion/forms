@@ -6,7 +6,7 @@
 *   @author     Lee Garner <lee@leegarner.com>
 *   @copyright  Copyright (c) 2010-2011 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.1.7
+*   @version    0.2.3
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
 *               GNU Public License v2 or later
 *   @filesource
@@ -89,16 +89,15 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     foreach ($Frm->fields as $fldname=>$Fld) {
         $show_field = true;     // assume it will be shown
 
-        if (!empty($fields) && !in_array($Fld->name, $fields)) {
+        if (!$Fld->enabled || $Fld->type == 'static') {
+            $show_field = false;
+        } elseif (!empty($fields) && !in_array($Fld->name, $fields)) {
             // If we have a field list, and this isn't in it, block it.
             $show_field = false;
         } elseif ($Fld->results_gid != $Frm->results_gid &&
                 !in_array($Fld->results_gid, $_GROUPS)) {
             // If the user doesn't have permission to see this result, block it.
             // The form's permission has already been checked.
-            $show_field = false;
-        } elseif ($Fld->type == 'static') {
-            // Don't show static fields (no point)
             $show_field = false;
         }
 
