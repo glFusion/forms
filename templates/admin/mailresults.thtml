@@ -1,9 +1,6 @@
-A new form submission was received at {site_name}.
-<p />
-Submitted by {username} ({uid}) on {sub_date}
-<p />
-Form: {frm_name}
-<p />
+<p>{subject}</p>
+<p>$LANG_FORMS['submitter']}: {username} ({uid}) on {sub_date}</p>
+<p>{$LANG_FORMS['formname']}: {frm_name}</p>
 <table border="0" cellpadding="3">
 <!-- BEGIN QueueRow -->
 <tr>

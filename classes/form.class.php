@@ -529,6 +529,7 @@ class frmForm
 
             USES_class_date();
             $dt = new Date('now', $_CONF['timezone']);
+            $subject = sprintf($LANG_FORMS['formsubmission'], $this->name);
 
             $T = new Template(FRM_PI_PATH . '/templates/admin');
             $T->set_file('mailresults', 'mailresults.thtml');
@@ -541,10 +542,12 @@ class frmForm
                     //'recipient' => $recip_name,
                     'uid'       => $this->uid,
                     'frm_name'  => $this->name,
+                    'subject'   => $subject,
             ) );
 
             $T->set_block('mailresults', 'QueueRow', 'qrow');
             foreach ($this->fields as $field) {
+                if (!$field->enabled) continue; // no disabled fields
                 if ($field->type == 'calc') {
                     $field->CalcResult($this->fields);
                     $text = $field->value_text;
@@ -566,7 +569,6 @@ class frmForm
 
             $T->parse('output', 'mailresults');
             $message = $T->finish($T->get_var('output'));
-            $subject = sprintf($LANG_FORMS['formsubmission'], $this->name);
 
             foreach ($emails as $recip_email=>$recip_name) {
                 COM_mail(

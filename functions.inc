@@ -283,10 +283,6 @@ function plugin_getheaderjs_forms()
     $scripts[] = FRM_PI_PATH . '/js/toggleEnabled.js';
     //$scripts[] = FRM_PI_PATH . '/js/iMask.js';
     
-    /*$scripts[] = $path . 'calendar.js';
-    $scripts[] = $path . 'calendar-en.js';
-    $scripts[] = $path . 'calendar-setup.js';*/
-
 	return $scripts;
 }
 
