@@ -74,7 +74,10 @@ case 'savedata':
             $redirect = $_CONF['site_url'];
         }
         $u = parse_url($redirect);
-        $msg = isset($_POST['success_msg']) ? $_POST['success_msg'] : '1';
+        //$msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';
+        if ($F->submit_msg != '') {
+            LGLIB_storeMessage($F->submit_msg);
+        }
     } else {
         $msg = '2';
         if (!isset($_POST['referrer']) || empty($_POST['referrer'])) {
