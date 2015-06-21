@@ -74,10 +74,25 @@ case 'savedata':
             $redirect = $_CONF['site_url'];
         }
         $u = parse_url($redirect);
-        //$msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';
         if ($F->submit_msg != '') {
             LGLIB_storeMessage($F->submit_msg);
+        } else {
+            $msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';
         }
+        $q = array();
+        if (!empty($u['query'])) {
+            parse_str($u['query'], $q);
+        }
+        $q['msg'] = $msg;
+        $q['plugin'] = $_CONF_FRM['pi_name'];
+        $q['frm_id'] = $F->id;
+        $redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
+        $q_arr = array();
+        foreach($q as $key=>$value) {
+            $q_arr[] = "$key=" . urlencode($value);
+        }
+        $redirect .= join('&', $q_arr);
+            echo COM_refresh($redirect);
     } else {
         $msg = '2';
         if (!isset($_POST['referrer']) || empty($_POST['referrer'])) {
@@ -85,22 +100,7 @@ case 'savedata':
         }
         $_POST['forms_error_msg'] = $errmsg;
         FRM_showForm($_POST['frm_id']);
-        exit;
     }
-    $q = array();
-    if (!empty($u['query'])) {
-        parse_str($u['query'], $q);
-    }
-    $q['msg'] = $msg;
-    $q['plugin'] = $_CONF_FRM['pi_name'];
-    $q['frm_id'] = $F->id;
-    $redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
-    $q_arr = array();
-    foreach($q as $key=>$value) {
-        $q_arr[] = "$key=" . urlencode($value);
-    }
-    $redirect .= join('&', $q_arr);
-    echo COM_refresh($redirect);
     exit;
     break;
 
