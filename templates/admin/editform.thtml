@@ -39,7 +39,7 @@ function confirmDelete()
         <td>
           <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_introtext', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
           <textarea rows="2" name="introtext" cols="40"
-            class="pluginForms" maxlength="1000">{introtext}</textarea>
+            class="pluginForms">{introtext}</textarea>
         </td>
       </tr>
 
@@ -48,7 +48,7 @@ function confirmDelete()
         <td>
           <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_submit_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
           <textarea rows="2" name="submit_msg" cols="40" 
-            class="pluginForms" maxlength="1000">{submit_msg}</textarea>
+            class="pluginForms">{submit_msg}</textarea>
         </td>
       </tr>
 
@@ -57,7 +57,7 @@ function confirmDelete()
         <td>
           <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_noaccess_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
           <textarea rows="2" name="noaccess_msg" cols="40" 
-            class="pluginForms" maxlength="1000">{noaccess_msg}</textarea>
+            class="pluginForms">{noaccess_msg}</textarea>
         </td>
       </tr>
 
@@ -121,7 +121,7 @@ function confirmDelete()
         <td>
           <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_max_submit_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
           <textarea rows="2" name="max_submit_msg" cols="40"
-            class="pluginForms" maxlength="1000">{max_submit_msg}</textarea>
+            class="pluginForms">{max_submit_msg}</textarea>
         </td>
       </tr>
 
@@ -140,7 +140,7 @@ function confirmDelete()
         <td>
           <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_noedit_msg', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
           <textarea rows="2" name="noedit_msg" cols="40"
-            class="pluginForms" maxlength="1000">{noedit_msg}</textarea>
+            class="pluginForms">{noedit_msg}</textarea>
         </td>
       </tr>
 
