@@ -184,7 +184,7 @@ function FRM_showForm($frm_id)
         echo COM_showMessage(
                 COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']);
     }
-    if ($F->id != '' && $F->access) {
+    if ($F->id != '' && $F->access && $F->enabled) {
         echo $F->Render();
     } else {
         $msg = $F->noaccess_msg;
