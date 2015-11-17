@@ -314,6 +314,7 @@ class frmForm
             'submit_msg' => $this->submit_msg,
             'noaccess_msg' => $this->noaccess_msg,
             'noedit_msg' => $this->noedit_msg,
+            'max_submit' => $this->max_submit,
             'max_submit_msg' => $this->max_submit_msg,
             'redirect' => $this->redirect,
             'ena_chk' => $this->enabled == 1 ? 'checked="checked"' : '',
