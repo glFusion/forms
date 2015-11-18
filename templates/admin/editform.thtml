@@ -1,6 +1,6 @@
 {# begin {templatelocation} #}
 <script type=text/javascript>
-!if mootools}
+{!if mootools}
 window.addEvent('load', function() {
     var exValidatorA = new fValidator("forms_frm1");
 });

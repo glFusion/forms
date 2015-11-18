@@ -470,7 +470,7 @@ function insertRow(list) {
 </form>
 
 <script type="text/javascript">
-!if mootools}
+{!if mootools}
 window.addEvent('load',
 {!else}
 $(document).ready(
