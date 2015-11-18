@@ -466,7 +466,7 @@ class frmField
             return $fld;
             break;
         case FRM_FIELD_REQUIRED:
-            $class .= $_SYSTEM['disable_jquery'] ? "class=\"fValidate['required']\"" : 'class="required"';
+            $class .= $_SYSTEM['disable_jquery'] ? "class=\"fValidate['required']\"" : 'required';
             break;
         default:
             break;

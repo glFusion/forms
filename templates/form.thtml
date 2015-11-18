@@ -11,9 +11,7 @@ window.addEvent("domready", function() {
 <form id="forms_form{frm_id}" action="{frm_action}" method="post">
 {introtext}
 {!if error_msg}
-<span class="alert">
-{error_msg}
-</span>
+<span class="alert">{error_msg}</span>
 {!endif}
 <input type="hidden" name="frm_id" value="{frm_id}" />
 <input type="hidden" name="res_id" value="{res_id}" />
@@ -41,14 +39,17 @@ window.addEvent("domready", function() {
     {!if field}
       {field}
       {!if help_msg}
-        <img src="{layout_url}/images/button_help.png" alt="{help_msg}" 
-          title="{help_msg}" class="gl_mootip" />
+        <img src="{layout_url}/images/button_help.png" alt="{help_msg}"
+          data-uk-tooltip="{pos:'top-left'}"
+          title="{help_msg}"
+	  class="data-uk-tooltip gl_mootip" />
       {!endif}
       {!if is_required}
-        <img src="{pi_url}/images/required.png" 
+        <img src="{pi_url}/images/required.png"
           alt="{safe_prompt} {$LANG_FORMS['is_required']}"
           title="{safe_prompt} {$LANG_FORMS['is_required']}"
-          class="gl_mootip" />
+          data-uk-tooltip="{pos:'top-left'}"
+          class="data-uk-tooltip gl_mootip" />
       {!endif}
     {!else}
       &nbsp;
