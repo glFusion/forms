@@ -1,0 +1,51 @@
+.forms label {
+  width: 12em;
+  float: left;
+  text-align: right;
+  margin-right: 0.5em;
+  display: block;
+  /*font-weight:bold;*/
+}
+
+.forms p {
+  margin-bottom:1em;
+}
+
+.forms .frmrow {
+  clear:both;
+  margin-top:5px;
+}
+
+.forms .frmfield {
+  position:relative;
+  margin-left:10em;
+}
+
+.forms .left {
+  margin-left:0;
+}
+
+.forms textarea {
+  width:80%;
+}
+
+h2.forms_header {
+    text-align: center;
+    color: #656567;
+    background: transparent;
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 1em 0 0 0;
+    border: 1px solid #BBBBBB;
+    padding: .25em;
+    position: relative;
+}
+
+.form_print {
+    style="margin-left:20px;"
+}
+
+textarea.pluginForms {
+    width: 90%;
+}
+
