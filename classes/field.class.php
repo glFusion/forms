@@ -433,14 +433,9 @@ class frmField
     */
     public function Render($res_id = 0)
     {
-        global $_CONF, $LANG_FORMS;
+        global $_CONF, $LANG_FORMS, $_SYSTEM;
 
-        // Check for required status.
-        /*if ($this->required == 1) {
-            $class = "class=\"fValidate['required']\" ";
-        } else {
-            $class = '';
-        }*/
+        $class = '';
 
         // If POSTed form data, set the user variable to that.  Otherwise,
         // set it to the default or leave it alone. Since an empty checkbox
@@ -471,7 +466,7 @@ class frmField
             return $fld;
             break;
         case FRM_FIELD_REQUIRED:
-            $class .= "class=\"fValidate['required']\"";
+            $class .= $_SYSTEM['disable_jquery'] ? "class=\"fValidate['required']\"" : 'class="required"';
             break;
         default:
             break;

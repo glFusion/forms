@@ -149,6 +149,7 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 *   Create the fValidator class string for input fields.  If no options
 *   are supplied, then the fValidator is empty.
 *
+*   @deprecated
 *   @param  array   $opts   Options to include ('required', 'email', etc).
 *   @param  array   $data   All field data, to get the mask
 *   @return string          String for 'class="fValidate[] iMask...'

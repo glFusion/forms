@@ -301,7 +301,7 @@ class frmForm
     */
     function EditForm($type = 'edit')
     {
-        global $_CONF, $_USER, $_TABLES, $LANG_FORMS;
+        global $_CONF, $_USER, $_TABLES, $LANG_FORMS, $_SYSTEM;
 
         $T = new Template($_CONF['path'] . '/plugins/forms/templates/admin');
         $T->set_file('editform', 'editform.thtml');
@@ -344,6 +344,7 @@ class frmForm
             'captcha_chk' => $this->captcha == 1 ? 'checked="checked"' : '',
             'inblock_chk' => $this->inblock == 1 ? 'checked="checked"' : '',
             'one_chk_' . $this->onetime => 'checked="checked"',
+            'mootools' => $_SYSTEM['disable_mootools'] ? '' : 'true',
         ) );
         if (!$this->isNew) {
             $T->set_var('candelete', 'true');
