@@ -1,5 +1,5 @@
 <p>{subject}</p>
-<p>$LANG_FORMS['submitter']}: {username} ({uid}) on {sub_date}</p>
+<p>{$LANG_FORMS['submitter']}: {username} ({uid}) on {sub_date}</p>
 <p>{$LANG_FORMS['formname']}: {frm_name}</p>
 <table border="0" cellpadding="3">
 <!-- BEGIN QueueRow -->
