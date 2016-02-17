@@ -355,24 +355,4 @@ function FRM_siteFooter()
 }
 
 
-/**
-*   Strips slashes if magic_quotes_gpc is on.
-*
-*   @param  mixed   $var    Value or array of values to strip.
-*   @return mixed           Stripped value or array of values.
-*/
-function FRM_stripslashes($var)
-{
-	if (get_magic_quotes_gpc()) {
-		if (is_array($var)) {
-			return array_map('FRM_stripslashes', $var);
-		} else {
-			return stripslashes($var);
-		}
-	} else {
-		return $var;
-	}
-}
-
-
 ?>

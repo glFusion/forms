@@ -33,12 +33,6 @@ $isAdmin = SEC_hasRights('forms.admin') ? true : false;
 USES_lib_admin();
 USES_forms_functions();
 
-// Sanitize input.  We don't take any $_GET values except for actions & views
-if (GVERSION < '1.3.0') {
-    if (!empty($_POST)) $_POST = FRM_stripslashes($_POST);
-    if (!empty($_GET)) $_GET = FRM_stripslashes($_GET);
-}
-
 $action = 'listforms';      // Default view
 $expected = array('edit','updateform','editfield', 'updatefield',
     'save', 'print', 'editresult', 'updateresult', 'reorder',

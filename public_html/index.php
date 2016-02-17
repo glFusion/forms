@@ -20,11 +20,6 @@ if (!in_array('forms', $_PLUGINS)) {
 USES_forms_functions();
 USES_forms_class_form();
 
-if (GVERSION < '1.3.0') {
-    if (!empty($_POST)) $_POST = FRM_stripslashes($_POST);
-    if (!empty($_GET)) $_POST = FRM_stripslashes($_GET);
-}
-
 $action = '';
 $actionval = '';
 $expected = array(
