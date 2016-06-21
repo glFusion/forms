@@ -139,7 +139,7 @@ function insertRow(list) {
   <td>{$LANG_FORMS['fieldtype']}:</td>
   <td>
     <a href="#" class="toolbar" 
-        onclick="popupWindow('{doc_url}#desc_type', 'Help', 640, 480, 1)">
+        onclick="popupWindow('{doc_url}#desc_f_type', 'Help', 640, 480, 1)">
         <img src="{layout_url}/images/button_help.png" alt="" />
     </a>
     <select id="type" name="type" 

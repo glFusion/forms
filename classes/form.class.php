@@ -301,11 +301,9 @@ class frmForm
     */
     function EditForm($type = 'edit')
     {
-        global $_CONF, $_USER, $_TABLES, $LANG_FORMS, $_SYSTEM;
+        global $_CONF, $_USER, $_TABLES, $LANG_FORMS;
 
-        $T = new Template($_CONF['path'] . '/plugins/forms/templates/admin');
-        $T->set_file('editform', 'editform.thtml');
-
+        $T = FRM_getTemplate('editform', 'editform', 'admin');
         $T->set_var(array(
             'id'    => $this->id,
             'old_id' => $this->old_id,
@@ -344,7 +342,6 @@ class frmForm
             'captcha_chk' => $this->captcha == 1 ? 'checked="checked"' : '',
             'inblock_chk' => $this->inblock == 1 ? 'checked="checked"' : '',
             'one_chk_' . $this->onetime => 'checked="checked"',
-            'mootools' => $_SYSTEM['disable_mootools'] ? '' : 'true',
         ) );
         if (!$this->isNew) {
             $T->set_var('candelete', 'true');
@@ -755,8 +752,7 @@ class frmForm
             }
         }
 
-        $T = new Template(FRM_PI_PATH . '/templates');
-        $T->set_file('form', 'form.thtml');
+        $T = FRM_getTemplate('form', 'form');
         // Set template variables without allowing caching
         $T->set_var(array(
             'frm_action'    => $actionurl,

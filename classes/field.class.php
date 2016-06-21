@@ -637,13 +637,15 @@ class frmField
     */
     public function EditDef()
     {
-        global $_TABLES, $_CONF, $LANG_FORMS, $LANG_ADMIN, $_CONF_FRM;
+        global $_TABLES, $_CONF, $LANG_FORMS, $LANG_ADMIN, $_CONF_FRM, $_SYSTEM;
 
         $retval = '';
         $format_str = '';
 
-        $T = new Template($_CONF['path'] . '/plugins/forms/templates/admin');
-        $T->set_file('editform', 'editfield.thtml');
+        $T = FRM_getTemplate('editfield', 'editform', '/admin');
+        //$T = new Template($_CONF['path'] . '/plugins/forms/templates/admin');
+        //$tpltype = $_SYSTEM['framework'] == 'uikit' ? '.uikit' : '';
+        //$T->set_file('editform', "editfield$tpltype.thtml");
 
         // Create the "Field Type" dropdown
         $type_options = '';

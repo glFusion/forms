@@ -1,0 +1,70 @@
+{# begin {templatelocation} #}
+<div class="uk-form-horizontal">
+{additional}
+<form id="forms_form{frm_id}" action="{frm_action}" method="post">
+{introtext}
+{!if error_msg}
+<div class="uk-alert uk-alert-danger">{error_msg}</div>
+{!endif}
+<input type="hidden" name="frm_id" value="{frm_id}" />
+<input type="hidden" name="res_id" value="{res_id}" />
+<input type="hidden" name="instance_id" value="{instance_id}" />
+{!if success_msg}
+<input type="hidden" name="success_msg" value="{success_msg}" />
+{!endif}
+
+  <!-- BEGIN QueueRow -->
+  <div class="uk-form-row">
+    {!if spancols}
+    {!else}
+      {!if prompt}
+    <label class="uk-form-label" for="{fieldname}">{prompt}:</label>
+      {!else}
+        &nbsp;
+      {!endif}
+    {!endif}
+
+    {!if spancols}
+    {!else}
+    <div class="uk-form-controls">
+    {!endif}
+    {!if field}
+      {field}
+      {!if help_msg}
+        <img src="{layout_url}/images/button_help.png" alt="{help_msg}"
+          data-uk-tooltip="{pos:'top-left'}"
+          title="{help_msg}"
+	      class="data-uk-tooltip gl_mootip" />
+      {!endif}
+      {!if is_required}
+        <img src="{pi_url}/images/required.png"
+          alt="{safe_prompt} {$LANG_FORMS['is_required']}"
+          title="{safe_prompt} {$LANG_FORMS['is_required']}"
+          data-uk-tooltip="{pos:'top-left'}"
+          class="data-uk-tooltip gl_mootip" />
+      {!endif}
+    {!else}
+      &nbsp;
+    {!endif}
+    </div>
+  </div>
+  <!-- END QueueRow -->
+
+  {!if captcha}
+    <div class="frmfield left">&nbsp;</div>
+    <div class="frmfield">{captcha}</div>
+  {!endif}
+  {hidden_vars}
+  <label for="buttons">&nbsp;</label>
+  <div class="frmfield">
+    <input type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled} />
+    <input type="reset" name="btnReset" value="{$LANG_FORMS['reset']}" />
+    {!if referrer}
+      <input type="hidden" name="referrer" value="{referrer}" />
+      <input type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}" 
+        onclick="javascript:document.location.href='{referrer}';" />
+    {!endif}
+  </div>
+</form>
+</div>
+{# end {templatelocation} #}

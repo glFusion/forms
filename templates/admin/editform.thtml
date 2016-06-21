@@ -1,10 +1,5 @@
 {# begin {templatelocation} #}
 <script type=text/javascript>
-{!if mootools}
-window.addEvent('load', function() {
-    var exValidatorA = new fValidator("forms_frm1");
-});
-{!endif}
 function confirmDelete()
 {
     if (confirm("'Are you sure you want to delete this form?  All associated fields and data will be removed.")) {
@@ -21,7 +16,7 @@ function confirmDelete()
       <tr>
         <td width="150">{$LANG_FORMS['frm_id']}: </td>
         <td>
-          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_id', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
+          <a href="#" class="toolbar" onclick="popupWindow('{doc_url}#desc_frm_id', 'Help', 640, 480, 1)"><img src="{layout_url}/images/button_help.png" alt="" /></a>
           <input type="text" size="32" name="id" value="{id}"
           {!if mootools}
             class="fValidate['required']" />
