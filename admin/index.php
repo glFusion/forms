@@ -432,7 +432,7 @@ function FRM_listForms()
 */
 function FRM_listFields($frm_id = '')
 {
-    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS;
+    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_SYSTEM;
 
     $retval = '';
 
@@ -459,9 +459,6 @@ function FRM_listFields($frm_id = '')
     if ($frm_id != '') {
         $query_arr['sql'] .= " WHERE frm_id='" . DB_escapeString($frm_id) . "'";
     }
-    /*$retval .= ADMIN_list('forms', 'FRM_getField_field', $header_arr,
-                    $text_arr, $query_arr, $defsort_arr, '', '', 
-                    $options_arr, $form_arr);*/
 
     $T = new Template(FRM_PI_PATH . '/templates/admin');
     $T->set_file('formfields', 'formfields.thtml');
@@ -492,46 +489,65 @@ function FRM_listFields($frm_id = '')
 */
 function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 {
-    global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES;
+    global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES, $_SYSTEM;
 
     $retval = '';
 
     switch($fieldname) {
     case 'edit':
-        $retval = 
-            COM_createLink(
-                $icon_arr['edit'],
-                FRM_ADMIN_URL . "/index.php?editform=x&amp;frm_id={$A['id']}"
-            );
+        $url = FRM_ADMIN_URL . "/index.php?editform=x&amp;frm_id={$A['id']}";
+        if ($_SYSTEM['framework'] == 'uikit') {
+            $retval = COM_createLink('', $url, array(
+                'class' => 'uk-icon uk-icon-edit'
+            ) );
+        } else {
+            $retval = COM_createLink($icon_arr['edit'], $url);
+        }
         break;
 
     case 'copy':
-        $retval = 
-            COM_createLink(
-                $icon_arr['copy'],
-                FRM_ADMIN_URL . "/index.php?copyform=x&amp;frm_id={$A['id']}"
-            );
+        $url = FRM_ADMIN_URL . "/index.php?copyform=x&amp;frm_id={$A['id']}";
+        if ($_SYSTEM['framework'] == 'uikit') {
+            $retval = COM_createLink('', $url, array(
+                'class' => 'uk-icon uk-icon-clone'
+            ) );
+        } else {
+            $retval = COM_createLink($icon_arr['copy'], $url);
+        }
         break;
 
     case 'view_html':
-        $retval = 
-            COM_createLink(
+        $url = FRM_ADMIN_URL . "/index.php?showhtml=x&amp;frm_id={$A['id']}";
+        if ($_SYSTEM['framework'] == 'uikit') {
+            $retval = COM_createLink('', $url, array(
+                'class' => 'uk-icon uk-icon-file-code-o',
+                'target' => '_new'
+            ) );
+        } else {
+            $retval = COM_createLink(
                 '<img src="' . FRM_PI_URL . '/images/show_html.png"
-                height="16" width="16" border="0">',
-                FRM_ADMIN_URL . "/index.php?showhtml=x&amp;frm_id={$A['id']}",
+                height="16" width="16" border="0">', $url,
                 array('target'=>'_new')
             );
+        }
         break;
 
     case 'delete':
+        $url = FRM_ADMIN_URL . "/index.php?deleteFrmDef=x&frm_id={$A['id']}";
+        if ($_SYSTEM['framework'] == 'uikit') {
+            $retval = COM_createLink('', $url, array(
+                'class' => 'uk-icon uk-icon-trash-o form_danger',
+                'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}?');",
+            ) );
+        } else { 
             $retval = COM_createLink(
                 "<img src=\"{$_CONF['layout_url']}/images/admin/delete.png\" 
                     height=\"16\" width=\"16\" border=\"0\"
                     onclick=\"return confirm('{$LANG_FORMS['confirm_delete']}?');\"
-                    >",
-                FRM_ADMIN_URL . "/index.php?deleteFrmDef=x&frm_id={$A['id']}"
+                    >", $url
             );
-       break;
+        }
+        break;
 
     case 'enabled':
         if ($A[$fieldname] == 1) {

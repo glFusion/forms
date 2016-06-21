@@ -49,3 +49,6 @@ textarea.pluginForms {
     width: 90%;
 }
 
+.form_danger {
+    color: red;
+}
