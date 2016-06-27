@@ -790,7 +790,7 @@ class frmForm
                 $T->set_var(array(
                     'prompt'    => PLG_replaceTags($F->prompt),
                     'safe_prompt' => self::_stripHtml($F->prompt),
-                    'fieldname' => $F->fieldname,
+                    'fieldname' => $F->name,
                     'field'     => $F->Render($res_id),
                     'help_msg'  => self::_stripHtml($F->help_msg),
                     'spancols'  => $F->options['spancols'] == 1 ? 'true' : '',

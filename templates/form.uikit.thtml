@@ -31,17 +31,13 @@
     {!if field}
       {field}
       {!if help_msg}
-        <img src="{layout_url}/images/button_help.png" alt="{help_msg}"
-          data-uk-tooltip="{pos:'top-left'}"
-          title="{help_msg}"
-	      class="data-uk-tooltip gl_mootip" />
+      <i class="uk-icon-question-circle" data-uk-tooltip="{pos:'top-left'}"
+        title="{help_msg}"></i>
       {!endif}
       {!if is_required}
-        <img src="{pi_url}/images/required.png"
-          alt="{safe_prompt} {$LANG_FORMS['is_required']}"
-          title="{safe_prompt} {$LANG_FORMS['is_required']}"
-          data-uk-tooltip="{pos:'top-left'}"
-          class="data-uk-tooltip gl_mootip" />
+      <i class="uk-icon-exclamation-triangle form_danger"
+        title="{safe_prompt} {$LANG_FORMS['is_required']}"
+        data-uk-tooltip="{pos:'top-left'}"></i>
       {!endif}
     {!else}
       &nbsp;
