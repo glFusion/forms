@@ -27,11 +27,11 @@ $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
   `results_gid` mediumint(8) unsigned NOT NULL DEFAULT '1',
   `redirect` varchar(255) DEFAULT '',
   `onetime` tinyint(1) NOT NULL DEFAULT '0',
-  `introtext` text DEFAULT '',
-  `submit_msg` text DEFAULT '',
-  `noaccess_msg` text DEFAULT '',
-  `noedit_msg` text DEFAULT '',
-  `max_submit_msg` text default '',
+  `introtext` text,
+  `submit_msg` text,
+  `noaccess_msg` text,
+  `noedit_msg` text,
+  `max_submit_msg` text,
   `captcha` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `inblock` tinyint(1) NOT NULL DEFAULT '0',
   `max_submit` int(5) unsigned NOT NULL DEFAULT '0',
@@ -157,8 +157,8 @@ $_FRM_UPGRADE_SQL = array(
     ),
     '0.1.8' => array(
         "ALTER TABLE {$_TABLES['forms_frmdef']}
-            ADD `max_submit_msg` text default '' AFTER `noaccess_msg`,
-            ADD `noedit_msg` text default '' AFTER `noaccess_msg`",
+            ADD `max_submit_msg` text AFTER `noaccess_msg`,
+            ADD `noedit_msg` text AFTER `noaccess_msg`",
     ),
     '0.2.0' => array(
         "ALTER TABLE {$_TABLES['forms_results']}
