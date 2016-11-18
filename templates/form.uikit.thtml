@@ -31,7 +31,7 @@
     {!if field}
       {field}
       {!if help_msg}
-      <i class="uk-icon-question-circle" data-uk-tooltip="{pos:'top-left'}"
+      <i class="uk-icon-question-circle tooltip"
         title="{help_msg}"></i>
       {!endif}
       {!if is_required}
