@@ -103,7 +103,6 @@ class frmField
         $res_id = (int)$res_id;
         if ($this->type == 'calc') {
             $valnames = explode(',', $this->options['value']);
-            if (empty($valnames)) continue;
             $values = array();
             foreach ($valnames as $val) {
                 if (is_numeric($val))
@@ -167,6 +166,7 @@ class frmField
                 $result = sprintf($format_str, $result);
             }
             $this->value = $result;
+            $value = $result;
         } elseif ($this->type == 'static') {
             $value = $this->options['value'];
             $value_text = $value;
@@ -183,7 +183,7 @@ class frmField
                 $this->value = $value;
             }
         }
-        return $this->value_text;
+        return $value;
     }
 
 
