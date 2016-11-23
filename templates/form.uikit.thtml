@@ -35,9 +35,7 @@
         title="{help_msg}"></i>
       {!endif}
       {!if is_required}
-      <i class="uk-icon-exclamation-triangle form_danger"
-        title="{safe_prompt} {$LANG_FORMS['is_required']}"
-        data-uk-tooltip="{pos:'top-left'}"></i>
+      <i class="uk-icon-exclamation-triangle form_danger tooltip" title="{safe_prompt} {$LANG_FORMS['is_required']}"></i>
       {!endif}
     {!else}
       &nbsp;
