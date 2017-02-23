@@ -115,9 +115,9 @@ function plugin_chkVersion_forms()
 */
 function plugin_cclabel_forms()
 {
-    global $LANG_FORMS, $_CONF_FRM;
+    global $LANG_FORMS;
 
-    if (SEC_hasRights($_CONF_FRM['pi_name'] . '.admin')) {
+    if (plugin_isadmin_forms()) {
         return array($LANG_FORMS['menu_title'],
                 FRM_ADMIN_URL . '/index.php',
                 plugin_geticon_forms());
@@ -128,15 +128,31 @@ function plugin_cclabel_forms()
 
 
 /**
+*   Check if the current user is a plugin admin
+*
+*   @see    SEC_hasRights()
+*   @return boolean     True if an admin, False if not
+*/
+function plugin_isadmin_forms()
+{
+    static $retval = NULL;
+    if ($retval === NULL) {
+        $retval = SEC_hasRights('forms.admin');
+    }
+    return $retval;
+}
+
+
+/**
 *   Put an option for forms management on the admin-only menu.
 *
 *   @return   mixed   array(title, url, num. banner), or void when not allowed
 */
 function plugin_getadminoption_forms()
 {
-    global $_CONF, $LANG_FORMS;
+    global  $LANG_FORMS;
 
-    if (SEC_hasRights('forms.admin')) {
+    if (plugin_isadmin_forms()) {
         return array ($LANG_FORMS['menu_title'],
                 FRM_ADMIN_URL . '/index.php',
                 );
@@ -582,6 +598,10 @@ function FRM_getPermSQL($type = 'WHERE', $access = FRM_ACCESS_ADMIN, $u_id = 0,
 {
     global $_USER, $_GROUPS;
 
+    if (plugin_isadmin_forms()) {
+        return '';
+    }
+
     if (!empty($table)) {
         $table = DB_escapeString($table) . '.';
     }
@@ -612,10 +632,6 @@ function FRM_getPermSQL($type = 'WHERE', $access = FRM_ACCESS_ADMIN, $u_id = 0,
         $uid = 1;
     }
     $GroupSQL = implode(',', $UserGroups);
-
-    if (SEC_hasRights('forms.admin')) {
-        return '';
-    }
 
     $sql = ' ' . $type . 
         " (owner_id = $uid OR group_id IN ($GroupSQL) ";

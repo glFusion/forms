@@ -102,7 +102,7 @@ function service_printForm_forms($args, &$output, &$svc_msg)
     USES_forms_class_result();
     $F = new frmForm($args['frm_id']);
     $F->ReadData($res_id);
-    if ($F->Result->uid == $_USER['uid'] || SEC_hasRights('forms.admin')) {
+    if ($F->Result->uid == $_USER['uid'] || plugin_isadmin_forms()) {
         $content .= $F->Prt($res_id);
         $content .= '<hr />' . LB;
         if ($args['viewtype'] == 'view') {

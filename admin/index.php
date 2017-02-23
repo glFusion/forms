@@ -27,7 +27,7 @@ if (!in_array('forms', $_PLUGINS)) {
 // Flag to indicate if this user is a "real" administrator for the plugin.
 // Some functions, like deleting definitions, are only available to 
 // plugin admins.
-$isAdmin = SEC_hasRights('forms.admin') ? true : false;
+$isAdmin = plugin_isadmin_forms();
 
 // Import administration functions
 USES_lib_admin();
@@ -56,8 +56,7 @@ $msg = isset($_GET['msg']) && !empty($_GET['msg']) ? $_GET['msg'] : '';
 
 // Get the permission SQL once, since it's used in a couple of places.
 // This determines if the current user is an admin for a particular form
-if (SEC_hasRights('forms.admin')) {
-//echo "herE";die;
+if ($isAdmin) {
     $perm_sql = '';
 } else {
     $perm_sql = " AND (owner_id='". (int)$_USER['uid'] . "'
@@ -390,15 +389,21 @@ function FRM_listForms()
     //FRM_reorderDef();
 
     $header_arr = array(
-        array('text' => $LANG_FORMS['frm_id'], 'field' => 'id', 'sort' => true),
-        array('text' => $LANG_ADMIN['edit'], 'field' => 'edit', 'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_ADMIN['copy'], 'field' => 'copy', 'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_FORMS['view_html'], 'field' => 'view_html', 'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_FORMS['submissions'], 'field' => 'submissions', 'sort' => false, 'align' => 'center'),
+        array('text' => 'ID', 'field' => 'id', 'sort' => true),
+        array('text' => $LANG_ADMIN['edit'], 'field' => 'edit', 
+                'sort' => false, 'align' => 'center'),
+        array('text' => $LANG_ADMIN['copy'], 'field' => 'copy', 
+                'sort' => false, 'align' => 'center'),
+        array('text' => $LANG_FORMS['view_html'], 'field' => 'view_html', 
+                'sort' => false, 'align' => 'center'),
+        array('text' => $LANG_FORMS['submissions'], 'field' => 'submissions', 
+                'sort' => false, 'align' => 'center'),
         array('text' => $LANG_FORMS['name'], 'field' => 'name', 'sort' => true),
-        array('text' => $LANG_FORMS['enabled'], 'field' => 'enabled', 'sort' => false),
-        array('text' => $LANG_FORMS['action'], 'field' => 'action', 'sort' => false),
-        array('text' => $LANG_ADMIN['delete'], 'field' => 'delete', 'sort' => false, 'align' => 'center'),
+        array('text' => $LANG_FORMS['enabled'], 'field' => 'enabled', 
+                'sort' => false),
+        array('text' => 'Action', 'field' => 'action', 'sort' => true),
+        array('text' => $LANG_ADMIN['delete'], 'field' => 'delete', 
+                'sort' => false, 'align' => 'center'),
     );
 
     $text_arr = array();
@@ -492,7 +497,6 @@ function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
         $url = FRM_ADMIN_URL . "/index.php?editform=x&amp;frm_id={$A['id']}";
         if ($_SYSTEM['framework'] == 'uikit') {
             $retval = COM_createLink('', $url, array(
-
                 'class' => 'uk-icon uk-icon-edit'
             ) );
         } else {
@@ -573,10 +577,10 @@ function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
             onchange="javascript: document.location.href=\'' .
             FRM_ADMIN_URL . '/index.php?frm_id=' . $A['id'] . 
             '&action=\'+this.options[this.selectedIndex].value">'. "\n";
-        $retval .= '<option value="">'.$LANG_FORMS['select'].'</option>'. "\n";
-        $retval .= '<option value="preview">'.$LANG_FORMS['preview'].'</option>'. "\n";
-        $retval .= '<option value="results">'.$LANG_FORMS['form_results'].'</option>'. "\n";
-        $retval .= '<option value="export">'.$LANG_FORMS['export'].'</option>'. "\n";
+        $retval .= '<option value="">--Select Action--</option>'. "\n";
+        $retval .= '<option value="preview">Preview</option>'. "\n";
+        $retval .= '<option value="results">Results</option>'. "\n";
+        $retval .= '<option value="export">Export CSV</option>'. "\n";
         $retval .= "</select>\n";
         break;
 

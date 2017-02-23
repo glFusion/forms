@@ -6,7 +6,7 @@
  *  @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
  *  @package    forms
  *  @version    0.0.1
- *  @license    http://opensource.org/licenses/gpl-2.0.php 
+ *  @license    http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  *  @filesource
  */
@@ -17,7 +17,7 @@
 require_once '../../../lib-common.php';
 
 // This is for administrators only
-if (!SEC_hasRights('forms.admin')) {
+if (!plugin_isadmin_forms()) {
     COM_accessLog("User {$_USER['username']} tried to illegally access the forms AJAX functions.");
     exit;
 }

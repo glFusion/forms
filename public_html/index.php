@@ -7,7 +7,7 @@
 *   @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.1.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
@@ -108,18 +108,18 @@ case 'results':
         $F = new frmForm($frm_id);
         $F->ReadData($res_id);
         if (($F->Result->uid == $_USER['uid'] && $F->Result->Token() == $token)
-                || SEC_hasRights('forms.admin')) {
+                || plugin_isadmin_forms()) {
             $content .= '<h1>';
-            $content .= $F->submit_msg == '' ? $LANG_FORMS['def_submit_msg'] : 
+            $content .= $F->submit_msg == '' ? $LANG_FORMS['def_submit_msg'] :
                     $F->submit_msg;
             $content .= '</h1>';
             $content .= $F->Prt($res_id);
             $content .= '<hr />' . LB;
-            $content .= '<center><a href="' . FRM_PI_URL . 
+            $content .= '<center><a href="' . FRM_PI_URL .
                 '/index.php?print=x&res_id=' . $res_id . '&frm_id=' . $frm_id .
                 '" target="_blank">' .
-                '<img src="' . $_CONF['layout_url'] . 
-                '/images/print.png" border="0" title="' . 
+                '<img src="' . $_CONF['layout_url'] .
+                '/images/print.png" border="0" title="' .
                 $LANG01[65] . '"></a></center>';
         }
     }
@@ -135,7 +135,7 @@ case 'print':
         if (empty($frm_id)) {
             USES_forms_class_result();
             $R = new frmResult($res_id);
-            if ($R->uid == $_USER['uid'] || SEC_hasRights('forms.admin')) {
+            if ($R->uid == $_USER['uid'] || plugin_isadmin_forms()) {
                 $content .= $R->Prt();
             }
         } else {

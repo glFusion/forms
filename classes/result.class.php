@@ -299,7 +299,6 @@ class frmResult
                 ip = '$ip',
                 token = '{$this->token}'";
         //echo $sql;die;
-        //if ($frm->moderate && !SEC_hasRights('forms.admin')) {
         if ($frm->moderate) {
             $sql .= ', approved=0';
         }
