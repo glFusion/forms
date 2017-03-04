@@ -3,7 +3,7 @@
 *   Class to handle individual form fields.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2013 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.2.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
@@ -105,13 +105,14 @@ class frmField
             $valnames = explode(',', $this->options['value']);
             $values = array();
             foreach ($valnames as $val) {
-                if (is_numeric($val))
+                if (is_numeric($val)) {     // Handle constants
                     $values[] = $val;
-                elseif ($val == $this->name)    // avoid recursive calculations
+                } elseif ($val == $this->name) {    // avoid recursion
                     continue;
-                else {
-                    $fld_id = DB_getItem($_TABLES['forms_flddef'],
-                        'fld_id', "name='".DB_escapeString($val)."'");
+                } else {
+                    $fld_id = DB_getItem($_TABLES['forms_flddef'], 'fld_id',
+                        "frm_id = '" . DB_escapeString($this->frm_id) .
+                        "' AND name = '" . DB_escapeString($val) . "'");
                     if (empty($fld_id)) continue;
                     $fld = new frmField($fld_id);
                     $values[] = $fld->GetValue($res_id);
