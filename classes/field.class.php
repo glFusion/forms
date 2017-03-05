@@ -1471,7 +1471,7 @@ class frmField
         $value = $def;      // by default
         if ($def[0] == '$') {
             // Look for something like "$_USER:fullname"
-            list($var, $valname) = split(':', $def);
+            list($var, $valname) = explode(':', $def);
             switch (strtoupper($var)) {
             case '$_USER':
                 if ($valname && isset($_USER[$valname])) 
