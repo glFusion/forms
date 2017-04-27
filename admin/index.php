@@ -88,7 +88,7 @@ case 'action':      // Got "?action=something".
         case 'rmfld':
         case 'killfld':
             $deldata = $fldaction = 'killfld' ? true : false;
-            $F = new frmField();
+            $F = new \Forms\frmField();
             foreach ($_POST['cb'] as $varname=>$val) {
                 $F->Read($varname);
                 if (!empty($F->id)) {
@@ -119,8 +119,8 @@ case 'reorder':
 case 'updateresult':
     USES_forms_class_form();
     USES_forms_class_result();
-    $F = new frmForm($_POST['frm_id']);
-    $R = new frmResult($_POST['res_id']);
+    $F = new \Forms\frmForm($_POST['frm_id']);
+    $R = new \Forms\frmResult($_POST['res_id']);
     $R->SaveData($_POST['frm_id'], $F->fields, $_POST, $R->uid);
     $view = 'results';
     break;
@@ -128,7 +128,7 @@ case 'updateresult':
 case 'updatefield':
     USES_forms_class_field();
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
-    $F = new frmField($fld_id, $frm_id);
+    $F = new \Forms\frmField($fld_id, $frm_id);
     $msg = $F->SaveDef($_POST);
     $view = 'editform';
     break;
@@ -152,7 +152,7 @@ case 'delbutton_x':
     
 case 'copyform':
     USES_forms_class_form();
-    $F = new frmForm($frm_id);
+    $F = new \Forms\frmForm($frm_id);
     $msg = $F->Duplicate();
     if (empty($msg)) {
         echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&amp;frm_id=' .
@@ -165,7 +165,7 @@ case 'copyform':
 
 case 'updateform':
     USES_forms_class_form();
-    $F = new frmForm($_POST['old_id']);
+    $F = new \Forms\frmForm($_POST['old_id']);
     $msg = $F->SaveDef($_POST);
     if ($msg != '') {                   // save operation failed
         $view = 'editform';
@@ -218,7 +218,7 @@ case 'export':
     USES_forms_class_result();
     USES_forms_class_field();
 
-    $Frm = new frmForm($frm_id);
+    $Frm = new \Forms\frmForm($frm_id);
 
     // Get the form result sets
     $sql = "SELECT r.* FROM {$_TABLES['forms_results']} r
@@ -229,7 +229,7 @@ case 'export':
             ORDER BY dt ASC";
     $res = DB_query($sql);
 
-    $R = new frmResult();
+    $R = new \Forms\frmResult();
     $fields = array('"UserID"', '"Submitted"');
     foreach ($Frm->fields as $F) {
         if (!$F->enabled) continue;     // ignore disabled fields
@@ -259,7 +259,7 @@ case 'preview':
     $content .= FRM_adminMenu($view, 'hdr_form_preview');
     if ($frm_id != '') {
         USES_forms_class_form();
-        $F = new frmForm($frm_id);
+        $F = new \Forms\frmForm($frm_id);
         $T = new Template($_CONF['path'] . '/plugins/forms/templates/');
         $T->set_file('header', 'preview_header.thtml');
         $T->set_var(array(
@@ -276,7 +276,7 @@ case 'preview':
 case 'showhtml':
     if ($frm_id != '') {
         USES_forms_class_form();
-        $F = new frmForm($frm_id);
+        $F = new \Forms\frmForm($frm_id);
         header('Content-type: text/html');
         echo '<html><body><pre>' . 
             htmlentities($F->Render('preview')) . 
@@ -289,7 +289,7 @@ case 'print':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
     if ($frm_id != '' && $res_id > 0) {
         USES_forms_class_form();
-        $F = new frmForm($frm_id);
+        $F = new \Forms\frmForm($frm_id);
         $content .= $F->Prt($res_id, true);
         echo $content;
         exit;
@@ -302,7 +302,7 @@ case 'editresult':
     $frm_id = DB_getItem($_TABLES['forms_results'], 'frm_id',
             "id={$res_id}"); 
     if (!empty($frm_id)) {
-        $F = new frmForm($frm_id);
+        $F = new \Forms\frmForm($frm_id);
         $F->ReadData($res_id);
         $content .= $F->Render('edit', $res_id);
     }
@@ -313,7 +313,7 @@ case 'editform':
     //if (!$isAdmin) COM_404();     // don't check here?
 
     USES_forms_class_form();
-    $F = new frmForm($frm_id);
+    $F = new \Forms\frmForm($frm_id);
     /*if ($msg) {
         $content .= COM_showMessageText($msg);
     }*/
@@ -331,7 +331,7 @@ case 'editfield':
     if (!$isAdmin) COM_404();
     $fld_id = isset($_GET['fld_id']) ? (int)$_GET['fld_id'] : 0;
     USES_forms_class_field();
-    $F = new frmField($fld_id, $frm_id);
+    $F = new \Forms\frmField($fld_id, $frm_id);
     $content .= FRM_adminMenu($view, 'hdr_field_edit');
     $content .= $F->EditDef();
     break;

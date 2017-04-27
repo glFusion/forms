@@ -6,11 +6,11 @@
 *   @copyright  Copyright (c) 2010-2013 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.2.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
-
+namespace Forms;
 
 USES_forms_class_field();
 
@@ -27,13 +27,20 @@ class frmForm
     *   @var array */
     var $fields = array();
 
+    /** Result object for a user submission
+    *   @var object */
+    var $Result;
+
+    /** Database ID of a result record
+    *   @var integer */
+    var $res_id;
+
+    var $allow_submit;  // Turn off the submit button when previewing
+    var $instance_id;   // Instance of this form, for tying to a plugin entry
     var $isNew;
     var $uid;
     var $access;
-    var $Result;
-    var $res_id;
-    var $allow_submit;  // Turn off the submit button when previewing
-    var $instance_id;   // Instance of this form, for tying to a plugin entry
+
 
 
     /**
@@ -72,7 +79,6 @@ class frmForm
             $this->enabled = 1;
             $this->id = COM_makeSid();
         }
-
     }
 
 
@@ -234,7 +240,6 @@ class frmForm
         if ($res_id > 0) {
             $this->Result = new frmResult($res_id);
             $this->Result->GetValues($this->fields);
-            //$this->Result = $R;
         }
     }
 
@@ -527,10 +532,10 @@ class frmForm
             }
 
             USES_class_date();
-            $dt = new Date('now', $_CONF['timezone']);
+            $dt = new \Date('now', $_CONF['timezone']);
             $subject = sprintf($LANG_FORMS['formsubmission'], $this->name);
 
-            $T = new Template(FRM_PI_PATH . '/templates/admin');
+            $T = new \Template(FRM_PI_PATH . '/templates/admin');
             $T->set_file('mailresults', 'mailresults.thtml');
 
             $T->set_var(array(
@@ -670,9 +675,7 @@ class frmForm
                     results_gid = '{$this->results_gid}'
                 WHERE frm_id = '{$this->id}'", 1);
         }
-
         return $msg;
-
     }
 
 
@@ -815,7 +818,6 @@ class frmForm
         if ($this->inblock) {
             $retval .= COM_endBlock(COM_getBlockTemplate('_forms_block', 'footer'));
         }
-
         return $retval;
     }
 
@@ -849,9 +851,9 @@ class frmForm
         }
 
         USES_class_date();
-        $dt = new Date($this->Result->dt, $_CONF['timezone']);
+        $dt = new \Date($this->Result->dt, $_CONF['timezone']);
 
-        $T = new Template(FRM_PI_PATH . '/templates');
+        $T = new \Template(FRM_PI_PATH . '/templates');
         $T->set_file('form', 'print.thtml');
         // Set template variables, without allowing caching
         $T->set_var(array(
@@ -890,10 +892,8 @@ class frmForm
 
             $T->parse('qrow', 'QueueRow', true);
         }
-
         $T->parse('output', 'form');
         return $T->finish($T->get_var('output'));
-
     }
 
 
@@ -962,9 +962,7 @@ class frmForm
             if (SEC_inGroup($this->group_id, $uid)) $retval = true;
             break;
         }
-
         return $retval;
-
     }
 
 
@@ -1032,6 +1030,5 @@ class frmForm
     }
 
 }
-
 
 ?>

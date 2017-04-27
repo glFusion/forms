@@ -11,7 +11,7 @@
 *               GNU Public License v2 or later
 *   @filesource
 */
-
+namespace Forms;
 
 /**
 *   Display the results for a given form in tabular format.
@@ -64,10 +64,10 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 
     $R = new frmResult();
     if ($fieldlist === true) {
-        $T = new Template(FRM_PI_PATH . '/templates/admin');
+        $T = new \Template(FRM_PI_PATH . '/templates/admin');
         $isAdmin = true;
     } else {
-        $T = new Template(FRM_PI_PATH . '/templates');
+        $T = new \Template(FRM_PI_PATH . '/templates');
         $isAdmin = false;
         if (is_array($fieldlist)) {
             $fields = $fieldlist;

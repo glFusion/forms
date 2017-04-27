@@ -10,6 +10,7 @@
 *               GNU Public License v2 or later
 *   @filesource
 */
+namespace Forms;
 
 /**
 *   Class for form fields

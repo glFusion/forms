@@ -195,48 +195,8 @@ function plugin_getuseroption_forms()
 */
 function plugin_upgrade_forms()
 {
-    global $_TABLES, $_CONF_FRM;
-
-    $pi_name = $_CONF_FRM['pi_name'];
-
-    // Get the current version, compare to the version in the plugin code
-    $current_ver = DB_getItem($_TABLES['plugins'], 'pi_version',
-        "pi_name = '$pi_name'");
-    if (!$current_ver) {
-        COM_errorLog("Error getting the $pi_name Plugin version",1);
-        return '3';
-    }
-
-    // if we're at the current version, what are we doing here?
-    if ($current_ver >= $_CONF_FRM['pi_version']) {
-        COM_errorLog("Current version $current_ver is already up to date");
-        return '6';
-    }
-
-    // If we're still here, import the upgrade functions.
-    require_once 'upgrade.inc.php';
-    $error = FRM_do_upgrade($current_ver);
-    if ($error) {
-        COM_errorLog("Error updating the $pi_name Plugin version",1);
-        return '4';
-    }
-
-    // now update the current version number.
-    DB_query("UPDATE {$_TABLES['plugins']} SET
-            pi_version = '{$_CONF_FRM['pi_version']}',
-            pi_gl_version = '{$_CONF_FRM['gl_version']}',
-            pi_homepage = '{$_CONF_FRM['pi_url']}'
-        WHERE
-            pi_name = '$pi_name'"
-        , 1);
-
-    if (DB_error()) {
-        COM_errorLog("Error updating the $pi_name Plugin version",1);
-        return '5';
-    }
-
-    COM_errorLog("Succesfully updated the $pi_name Plugin!",1);
-    return true;
+    require_once dirname(__FILE__) . '/upgrade.inc.php';
+    return FRM_do_upgrade();
 }
 
 
@@ -405,11 +365,12 @@ function FRM_stringFromValues($val, $A)
 *   Not used by this plugin, but intended to provide a basic API to
 *   other plugins.
 *
+*   @deprecated
 *   @param  string  $key    Name of item to retrieve
 *   @param  integer $uid    User ID, current user if zero
 *   @return array           array(value, value_text) for the requested item.
 */
-function FRM_getValue($key, $uid=0)
+function XXFRM_getValue($key, $uid=0)
 {
     global $_TABLES, $_USER;
 
@@ -515,7 +476,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         break;
                     }
 
-                    $F = new frmForm($frm_id, FRM_ACCESS_FILL);
+                    $F = new \Forms\frmForm($frm_id, FRM_ACCESS_FILL);
                     $F->setInstance($instance_id);
                     if ($F->enabled) {
                         $HTML = $F->Render($template);
@@ -587,13 +548,14 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
 *   Taken from COM_getPermSQL with some modifications, since the
 *   data is split between two tables in this plugin
 *
+*   @deprecated
 *   @param  string      $type     part of the SQL expr. e.g. 'WHERE', 'AND'
 *   @param  int         $u_id     user id or 0 = current user
 *   @param  int         $access   access to check for (2=read, 3=r&write)
 *   @param  string      $table    table name if ambiguous (e.g. in JOINs)
 *   @return string      SQL expression string (may be empty)
 */
-function FRM_getPermSQL($type = 'WHERE', $access = FRM_ACCESS_ADMIN, $u_id = 0, 
+function XXFRM_getPermSQL($type = 'WHERE', $access = FRM_ACCESS_ADMIN, $u_id = 0, 
                         $table= '')
 {
     global $_USER, $_GROUPS;
