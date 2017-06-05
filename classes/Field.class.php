@@ -5,8 +5,8 @@
 *   @author     Lee Garner <lee@leegarner.com>
 *   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.2.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @version    0.3.0
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
@@ -63,7 +63,7 @@ class frmField
                 $this->results_gid = $_CONF_FRM['def_results_gid'];
             }
         } else {
-            if ($this->Read($name)) {
+            if ($this->Read($id)) {
                 $this->isNew = false;
             }
         }
@@ -435,9 +435,7 @@ class frmField
     */
     public function Render($res_id = 0)
     {
-        global $_CONF, $LANG_FORMS, $_SYSTEM;
-
-        $class = '';
+        global $_CONF, $LANG_FORMS, $_CONF_FRM;
 
         // If POSTed form data, set the user variable to that.  Otherwise,
         // set it to the default or leave it alone. Since an empty checkbox
@@ -446,12 +444,9 @@ class frmField
         // If not, then this is a new form and should get the defaults.
         // Can't rely totally on $res_id since it only works for forms that
         // are saving data to the DB
-        $v = $this->value;
         if (isset($_POST[$this->name])) {
             $this->value = $_POST[$this->name];
-        //} elseif (empty($v)) {
         } elseif ($res_id == 0) {
-            //$this->value = $this->options['default'];
             $this->value = $this->GetDefault($this->options['default']);
         }
 
@@ -468,7 +463,7 @@ class frmField
             return $fld;
             break;
         case FRM_FIELD_REQUIRED:
-            $class .= $_SYSTEM['disable_jquery'] ? "class=\"fValidate['required']\"" : 'required';
+            $class .= 'required';
             break;
         default:
             break;
@@ -584,17 +579,17 @@ class frmField
             }
 
             $m_fld = $LANG_FORMS['month'] . 
-                    ": <select name=\"{$this->name}_month\">\n";
+                    ": <select $class id=\"{$this->name}_month\" name=\"{$this->name}_month\">\n";
             $m_fld .= "<option value=\"0\">--{$LANG_FORMS['select']}--</option>\n";
             $m_fld .= COM_getMonthFormOptions($dt[1]) . "</select>\n";
 
             $d_fld = $LANG_FORMS['day'] . 
-                    ": <select name=\"{$this->name}_day\">\n";
+                    ": <select $class id=\"{$this->name}_day\" name=\"{$this->name}_day\">\n";
             $d_fld .= "<option value=\"0\">--{$LANG_FORMS['select']}--</option>\n";
             $d_fld .= COM_getDayFormOptions($dt[2]) . "</select>\n";
 
             $y_fld = $LANG_FORMS['year'] . 
-                    ': <input type="text" name="'.$this->name.'_year" 
+                    ': <input ' . $class . ' type="text" id="' . $this->name.'_year" name="'.$this->name.'_year" 
                     size="5" value="' . $dt[0] . "\"/>\n";
 
             switch ($this->options['input_format']) {
@@ -608,8 +603,33 @@ class frmField
 
             if ($this->options['showtime'] == 1) {
                 $fld .= ' ' . $this->TimeField($datestr[1]);
+                $timeformat = $this->options['timeformat'];
+            } else {
+                $timeformat = 0;
             }
-            break;
+                $fld .= '<i id="' . $this->name .
+                        '_trigger" class="' . $_CONF_FRM['_iconset'] . '-calendar tooltip" ' .
+                        'title="' . $LANG_FORMS['datepicker'] . '"></i>';
+            $fld .= LB . "<script type=\"text/javascript\">
+Calendar.setup({
+    inputField  :    \"{$this->name}dummy\",
+    ifFormat    :    \"%Y-%m-%d\",
+    showsTime   :    false,
+    timeFormat  :    \"{$timeformat}\",
+    button      :   \"{$this->name}_trigger\",
+    onUpdate    :   {$this->name}_onUpdate
+});
+function {$this->name}_onUpdate(cal)
+{
+    var d = cal.date;
+
+    if (cal.dateClicked && d) {
+        FRM_updateDate(d, \"{$this->name}\", \"{$timeformat}\");
+    }
+    return true;
+}
+</script>" . LB;
+             break;
 
         case 'time':
             $fld .= $this->TimeField($this->value);
@@ -626,7 +646,6 @@ class frmField
             break;
 
         }
-
         return $fld;
     }
 
@@ -639,15 +658,12 @@ class frmField
     */
     public function EditDef()
     {
-        global $_TABLES, $_CONF, $LANG_FORMS, $LANG_ADMIN, $_CONF_FRM, $_SYSTEM;
+        global $_TABLES, $_CONF, $LANG_FORMS, $LANG_ADMIN, $_CONF_FRM;
 
         $retval = '';
         $format_str = '';
 
         $T = FRM_getTemplate('editfield', 'editform', '/admin');
-        //$T = new Template($_CONF['path'] . '/plugins/forms/templates/admin');
-        //$tpltype = $_SYSTEM['framework'] == 'uikit' ? '.uikit' : '';
-        //$T->set_file('editform', "editfield$tpltype.thtml");
 
         // Create the "Field Type" dropdown
         $type_options = '';
@@ -1025,22 +1041,12 @@ class frmField
     *
     *   @param  integer $fld_id     ID number of the field
     */
-    public function Delete($fld_id=0)
+    public static function Delete($fld_id=0)
     {
         global $_TABLES;
 
-        $fld_id = (int)$fld_id;
-        if ($fld_id == 0 && is_object($this)) {
-            $fld_id = $this->fld_id;
-        }
-        if ($fld_id == 0) return false;
-
         DB_delete($_TABLES['forms_values'], 'fld_id', $fld_id);
         DB_delete($_TABLES['forms_flddef'], 'fld_id', $fld_id);
-
-        if (is_object($this)) {
-            $this->fld_id = 0;
-        }
     }
 
 
@@ -1606,7 +1612,7 @@ class frmField
 
         return $retval;
     }
-}
 
+}
 
 ?>

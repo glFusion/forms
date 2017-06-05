@@ -82,13 +82,13 @@ function USES_forms_functions()
 {   require_once FRM_PI_PATH . '/forms_functions.inc.php';  }
 
 function USES_forms_class_form()
-{   require_once FRM_PI_PATH . '/classes/form.class.php';   }
+{   require_once FRM_PI_PATH . '/classes/Form.class.php';   }
 
 function USES_forms_class_field()
-{   require_once FRM_PI_PATH . '/classes/field.class.php';  }
+{   require_once FRM_PI_PATH . '/classes/Field.class.php';  }
 
 function USES_forms_class_result()
-{   require_once FRM_PI_PATH . '/classes/result.class.php'; }
+{   require_once FRM_PI_PATH . '/classes/Result.class.php'; }
 
 /** Include service functions */
 require_once FRM_PI_PATH . '/services.inc.php';
@@ -184,7 +184,6 @@ function plugin_getuseroption_forms()
             FRM_ADMIN_URL . '/index.php?view=listforms', 
             $form_cnt);
     return $menu;
-
 }
 
 
@@ -205,7 +204,7 @@ function plugin_upgrade_forms()
 *
 *   @return   string      URL of the icon
 */
-function plugin_geticon_forms ()
+function plugin_geticon_forms()
 {
     global $_CONF;
     return FRM_PI_URL . '/images/forms.png';
@@ -223,7 +222,7 @@ function plugin_geticon_forms ()
 *
 *   @return array       Elements to be removed
 */
-function plugin_autouninstall_forms ()
+function plugin_autouninstall_forms()
 {
     global $_CONF_FRM;
     $out = array (
@@ -254,12 +253,10 @@ function plugin_autouninstall_forms ()
 */
 function plugin_getheaderjs_forms()
 {
-    $scripts = array();
-
-    $scripts[] = FRM_PI_PATH . '/js/toggleEnabled.js';
-    //$scripts[] = FRM_PI_PATH . '/js/iMask.js';
-    
-	return $scripts;
+    return array(
+        FRM_PI_PATH . '/js/toggleEnabled.js',
+        FRM_PI_PATH . '/js/date.js',
+    );
 }
 
 
@@ -281,7 +278,7 @@ function plugin_getheadercss_forms()
     foreach ($files as $file) {
         if (@file_exists($layoutpath . $file)) {
             // check for custom layout first
-        	$styles[] = $layoutpath . $file;
+            $styles[] = $layoutpath . $file;
         } elseif (@file_exists(FRM_PI_PATH . '/css/custom/' . $file)) {
             // then custom plugin style
             $styles[] = FRM_PI_PATH . '/css/custom/' . $file;
@@ -290,8 +287,7 @@ function plugin_getheadercss_forms()
             $styles[] = FRM_PI_PATH . '/css/' . $file;
         }
     }
-
-	return $styles;
+    return $styles;
 }
 
 
@@ -805,5 +801,7 @@ function FRM_getTemplate($name, $id='', $path='')
 
 // Temporary until glFusion 1.6.0
 isset($_SYSTEM['framework']) || $_SYSTEM['framework'] = 'legacy';
+$_CONF_FRM['_is_uikit'] = $_SYSTEM['framework'] == 'uikit' ? true : false;
+$_CONF_FRM['_iconset'] = $_CONF_FRM['_is_uikit'] ? 'uk-icon' : 'fa fa';
 
 ?>

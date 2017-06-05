@@ -10,6 +10,7 @@
 *               GNU Public License v2 or later
 *   @filesource
 */
+namespace Forms;
 
 USES_forms_class_field();
 

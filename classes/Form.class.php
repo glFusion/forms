@@ -207,13 +207,19 @@ class frmForm
         $this->SetVars($A, true);
 
         // Now get field information
-        $sql = "SELECT fld_id, name FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id = '" . $this->id . "'
+        $sql = "SELECT fld_id, name, type
+                FROM {$_TABLES['forms_flddef']}
+                WHERE frm_id = '{$this->id}'
                 ORDER BY orderby ASC";
         //echo $sql;die;
         $res2 = DB_query($sql, 1);
         while ($A = DB_fetchArray($res2, false)) {
-            $this->fields[$A['name']] = new frmField($A['fld_id']);
+//            $cls = __NAMESPACE__ . '\\' . $A['type'] . 'Field';
+//            if (class_exists($cls)) {
+//                $this->fields[$A['name']] = new $cls($A['fld_id']);
+//            } else {
+                $this->fields[$A['name']] = new frmField($A['fld_id']);
+//            }
         }
         $this->access = $this->hasAccess($access);
         return true;
@@ -242,6 +248,7 @@ class frmForm
             $this->Result->GetValues($this->fields);
         }
     }
+
 
     /**
     *   Set all values for this form into local variables.
@@ -689,7 +696,7 @@ class frmForm
     */
     public function Render($mode='', $res_id=0)
     {
-        global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS;
+        global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS, $_CONF_FRM;
 
         USES_forms_class_field();
 
@@ -771,6 +778,7 @@ class frmForm
             'pi_url'        => FRM_PI_URL,
             'submit_disabled' => $allow_submit ? '' : 'disabled="disabled"',
             'instance_id'   => $this->instance_id,
+            'iconset'       => $_CONF_FRM['_iconset'],
         ), '', false, true );
 
         $T->set_block('form', 'QueueRow', 'qrow');

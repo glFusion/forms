@@ -110,9 +110,8 @@ function service_printForm_forms($args, &$output, &$svc_msg)
                 '/index.php?print=x&res_id=' . $res_id .
                 '&frm_id=' . $args['frm_id'] .
                 '" target="_blank">' .
-                '<img src="' . $_CONF['layout_url'] . 
-                '/images/print.png" border="0" title="' . 
-                $LANG01[65] . '"></a></center>';
+                '<i class="' . $_CONF_FRM['_iconset'] . '-print frm-icon-info tooltip" '.
+                'title="' . $LANG01[65] . '"></i></a></center>';
         }
     }
     $output = $content;

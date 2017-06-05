@@ -169,6 +169,7 @@ $LANG_FORMS = array(
 'showing_instance' => 'Showing results for instance &quot;%s&quot;',
 'clear_instance' => 'Show all',
 'datepicker' => 'Click for a date picker',
+'print' => 'Print',
 );
 
 $LANG_configsubgroups['form'] = array(
