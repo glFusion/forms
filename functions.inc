@@ -472,7 +472,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         break;
                     }
 
-                    $F = new \Forms\frmForm($frm_id, FRM_ACCESS_FILL);
+                    $F = new \Forms\Form($frm_id, FRM_ACCESS_FILL);
                     $F->setInstance($instance_id);
                     if ($F->enabled) {
                         $HTML = $F->Render($template);

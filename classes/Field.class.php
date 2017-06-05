@@ -15,7 +15,7 @@ namespace Forms;
 /**
 *   Class for form fields
 */
-class frmField
+class Field
 {
     var $isNew;
     var $options = array();
@@ -55,7 +55,7 @@ class frmField
             // field
             if (!empty($frm_id)) {
                 USES_forms_class_form();
-                $Frm = new frmForm($frm_id);
+                $Frm = new Form($frm_id);
                 $this->results_gid = $Frm->results_gid;
                 $this->fill_gid = $Frm->fill_gid;
             } else {
@@ -74,7 +74,7 @@ class frmField
     /**
     *   Read this field definition from the database.
     *
-    *   @see frmField::SetVars
+    *   @see Field::SetVars
     *   @param  string  $name   Optional field name
     *   @return boolean     Status from SetVars()
     */
@@ -115,7 +115,7 @@ class frmField
                         "frm_id = '" . DB_escapeString($this->frm_id) .
                         "' AND name = '" . DB_escapeString($val) . "'");
                     if (empty($fld_id)) continue;
-                    $fld = new frmField($fld_id);
+                    $fld = new Field($fld_id);
                     $values[] = $fld->GetValue($res_id);
                 }
             }
@@ -1342,7 +1342,7 @@ function {$this->name}_onUpdate(cal)
     /**
     *   Copy this field to another form.
     *
-    *   @see    frmForm::Duplicate()
+    *   @see    Form::Duplicate()
     */
     public function Duplicate()
     {

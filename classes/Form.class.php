@@ -17,7 +17,7 @@ USES_forms_class_field();
 /**
 *   Class for a user's custom forms.
 */
-class frmForm
+class Form
 {
     /** Local properties
     *   @var array */
@@ -218,7 +218,7 @@ class frmForm
 //            if (class_exists($cls)) {
 //                $this->fields[$A['name']] = new $cls($A['fld_id']);
 //            } else {
-                $this->fields[$A['name']] = new frmField($A['fld_id']);
+                $this->fields[$A['name']] = new Field($A['fld_id']);
 //            }
         }
         $this->access = $this->hasAccess($access);
@@ -238,13 +238,13 @@ class frmForm
         USES_forms_class_result();
 
         if ($res_id == 0) {
-            $res_id = frmResult::FindResult($this->id, $this->uid);
+            $res_id = Result::FindResult($this->id, $this->uid);
         } else {
             $res_id = (int)$res_id;
         }
 
         if ($res_id > 0) {
-            $this->Result = new frmResult($res_id);
+            $this->Result = new Result($res_id);
             $this->Result->GetValues($this->fields);
         }
     }
@@ -410,13 +410,13 @@ class frmForm
             if ($res_id == 0) {
                 // even if no result ID given, see if there is one
                 USES_forms_class_result();
-                $res_id = frmResult::FindResult($this->id, $this->uid);
+                $res_id = Result::FindResult($this->id, $this->uid);
             }
             if ($res_id > 0) return false;       // can't update the submission
         } elseif ($this->onetime == FRM_LIMIT_EDIT) {
             // check that the supplied result ID is the same as the saved one.
             USES_forms_class_result();
-            $real_res_id = frmResult::FindResult($this->id, $this->uid);
+            $real_res_id = Result::FindResult($this->id, $this->uid);
             if ($real_res_id != $res_id) {
                 return false;
             }
@@ -463,7 +463,7 @@ class frmForm
         $onsubmit = $this->onsubmit;
         if ($onsubmit & FRM_ACTION_STORE) {
             USES_forms_class_result();
-            $this->Result = new frmResult($res_id);
+            $this->Result = new Result($res_id);
             $this->Result->setInstance($this->instance_id);
             $this->res_id = $this->Result->SaveData($this->id, $this->fields, 
                     $vals, $this->uid);
@@ -750,14 +750,14 @@ class frmForm
             // this is a one-time form, so check that it hasn't already been
             // filled.
             USES_forms_class_result();
-            $res_id = frmResult::FindResult($this->id, $this->uid);
+            $res_id = Result::FindResult($this->id, $this->uid);
             if ($res_id > 0) {
                 if ($this->onetime == FRM_LIMIT_ONCE) {  // no editing
                     return $this->noedit_msg;
                 } elseif ($this->onetime == FRM_LIMIT_EDIT) {   // edit allowed
                     $this->ReadData($res_id);
                 }
-                //$R = new frmResult($res_id);
+                //$R = new Result($res_id);
                 //$R->GetValues($this->fields);
             }
         }
@@ -787,7 +787,7 @@ class frmForm
 
             // Don't render: calculated fields, disabled fields, or fields
             // that the submitter can't access.
-            // This is here instead of frmField->Render() to keep the prompt
+            // This is here instead of Field->Render() to keep the prompt
             // from being shown.
             if ($F->type == 'calc' || $F->enabled == 0 || 
                     !in_array($F->fill_gid, $_GROUPS)) {
@@ -910,7 +910,7 @@ class frmForm
     *   Deletes a form, removes the field associations, and deletes
     *   user data
     *
-    *   @uses   frmResult::Delete()
+    *   @uses   Result::Delete()
     *   @param  integer $frm_id     Optional form ID, current object if empty
     */
     function DeleteDef($frm_id='')
@@ -937,7 +937,7 @@ class frmForm
         if ($r) {
             USES_forms_class_result();
             while ($A = DB_fetchArray($r, false)) {
-                frmResult::Delete($A['id']);
+                Result::Delete($A['id']);
             }
         }
     }
@@ -978,7 +978,7 @@ class frmForm
     *   Duplicate this form.
     *   Creates a copy of this form with all its fields.
     *
-    *   @uses   frmField::Duplicate()
+    *   @uses   Field::Duplicate()
     *   @return string      Error message, empty if successful
     */
     function Duplicate()

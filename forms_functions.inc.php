@@ -37,7 +37,7 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     $fields = array();
 
     // Instantiate the form to verify View Results access
-    $Frm = new frmForm($frm_id, FRM_ACCESS_VIEW);
+    $Frm = new Form($frm_id, FRM_ACCESS_VIEW);
 
     // Return nothing if the form is invalid (e.g. no access)
     if ($Frm->id == '' || !$Frm->access)
@@ -62,7 +62,7 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     if (DB_numRows($res) < 1)
         return '';          // Nothing to show
 
-    $R = new frmResult();
+    $R = new Result();
     if ($fieldlist === true) {
         $T = new \Template(FRM_PI_PATH . '/templates/admin');
         $isAdmin = true;
@@ -353,6 +353,5 @@ function FRM_siteFooter()
     return $retval;
 
 }
-
 
 ?>

@@ -49,7 +49,7 @@ if ($action == 'mode') $action = $actionval;
 
 switch ($action) {
 case 'savedata':
-    $F = new \Forms\frmForm($_POST['frm_id']);
+    $F = new \Forms\Form($_POST['frm_id']);
     $redirect = str_replace('{site_url}', $_CONF['site_url'], $F->redirect);
     $errmsg = $F->SaveData($_POST);
     if (empty($errmsg)) {
@@ -105,7 +105,7 @@ case 'results':
     $token  = isset($_GET['token']) ? $_GET['token'] : '';
     echo COM_siteHeader();
     if ($res_id > 0 && $frm_id != '') {
-        $F = new \Forms\frmForm($frm_id);
+        $F = new \Forms\Form($frm_id);
         $F->ReadData($res_id);
         if (($F->Result->uid == $_USER['uid'] && $F->Result->Token() == $token)
                 || plugin_isadmin_forms()) {
@@ -134,12 +134,12 @@ case 'print':
     if ($res_id > 0) {
         if (empty($frm_id)) {
             USES_forms_class_result();
-            $R = new \Forms\frmResult($res_id);
+            $R = new \Forms\Result($res_id);
             if ($R->uid == $_USER['uid'] || plugin_isadmin_forms()) {
                 $content .= $R->Prt();
             }
         } else {
-            $F = new \Forms\frmForm($frm_id);
+            $F = new \Forms\Form($frm_id);
             $content .= $F->Prt($res_id);
         }
         echo $content;
@@ -172,9 +172,9 @@ function FRM_showForm($frm_id)
 
     // Instantiate the form and make sure the current user has access
     // to fill it out
-    $F = new \Forms\frmForm($frm_id, FRM_ACCESS_FILL);
+    $F = new \Forms\Form($frm_id, FRM_ACCESS_FILL);
 
-    echo FRM_siteHeader($F->name);
+    echo \Forms\FRM_siteHeader($F->name);
     if (isset($_GET['msg']) && !empty($_GET['msg'])) {
         echo COM_showMessage(
                 COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']);
@@ -189,7 +189,7 @@ function FRM_showForm($frm_id)
             echo COM_refresh($_CONF['site_url']);
         }
     }
-    echo FRM_siteFooter();
+    echo \Forms\FRM_siteFooter();
 }
 
 

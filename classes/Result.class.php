@@ -17,9 +17,9 @@ USES_forms_class_field();
 /**
 *   Class for a single form's result
 */
-class frmResult
+class Result
 {
-    /** Form fields, array of frmField objects
+    /** Form fields, array of Field objects
     *   @var array */
     var $fields = array();
 
@@ -123,7 +123,7 @@ class frmResult
                 ORDER BY orderby ASC";
         $res2 = DB_query($sql);
         while ($A = DB_fetchArray($res2, false)) {
-            $this->fields[$A['fld_id']] = new frmField($A['fld_id']);
+            $this->fields[$A['fld_id']] = new Field($A['fld_id']);
         }
 
         return true;
@@ -184,7 +184,7 @@ class frmResult
     /**
     *   Retrieve all the results for this set into the supplied field objects.
     *
-    *   @param  array   $fields     Array of frmField objects
+    *   @param  array   $fields     Array of Field objects
     */
     public function GetValues($fields)
     {
@@ -200,7 +200,7 @@ class frmResult
     *   Save the field results in a new result set
     *
     *   @param  string  $frm_id     Form ID
-    *   @param  array   $fields     Array of frmField objects
+    *   @param  array   $fields     Array of Field objects
     *   @param  array   $vals       Array of values ($_POST)
     *   @param  integer $uid        Optional user ID, default=$_USER['uid']
     *   @return mixed       False on failure/invalid, result ID on success
@@ -330,7 +330,7 @@ class frmResult
         if ($res_id == 0)
             return false;
 
-        frmResult::DeleteValues($res_id);
+        self::DeleteValues($res_id);
         DB_delete($_TABLES['forms_results'], 'id', $res_id);
     }
 

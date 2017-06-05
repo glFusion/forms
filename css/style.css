@@ -52,3 +52,21 @@ textarea.pluginForms {
 .form_danger {
     color: red;
 }
+
+.frm-icon-ok {
+    color: green;
+}
+.frm-icon-danger {
+    color: red;
+}
+.frm-icon-warning {
+    color: #FFD300;
+}
+.frm-icon-info {
+    color: #0077dd;
+}
+.frm-icon-unknown {
+    color: #530E53;
+}
+
+

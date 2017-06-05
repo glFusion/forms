@@ -29,7 +29,7 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
 {
     USES_forms_class_form();
 
-    $F = new frmForm($args['frm_id']);
+    $F = new \Forms\Form($args['frm_id']);
     if ($F->isNew) return PLG_RET_ERROR;
     $res_id = isset($args['res_id']) ? $args['res_id'] : '';
     if (isset($args['instance_id'])) {
@@ -64,13 +64,13 @@ function service_createForm_forms($args, &$output, &$svc_msg)
 
     // Create the form.  Return an error if the form ID already exists.
     // This is meant to create new forms only.
-    $F = new frmForm($frm['frm_id']);
+    $F = new \Forms\Form($frm['frm_id']);
     if (!$F->isNew) return PLG_RET_NOACCESS;
     $F->SaveDef($frm);
 
     // Create form fields
     foreach ($args['fields'] as $fld) {
-        $Fld = new frmField(0, $frm['frm_id']);
+        $Fld = \Forms\Field(0, $frm['frm_id']);
         $Fld->SaveDef($fld);
     }
 
@@ -100,7 +100,7 @@ function service_printForm_forms($args, &$output, &$svc_msg)
     $content = '';
     USES_forms_class_form();
     USES_forms_class_result();
-    $F = new frmForm($args['frm_id']);
+    $F = new \Forms\Form($args['frm_id']);
     $F->ReadData($res_id);
     if ($F->Result->uid == $_USER['uid'] || plugin_isadmin_forms()) {
         $content .= $F->Prt($res_id);

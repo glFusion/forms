@@ -88,7 +88,7 @@ case 'action':      // Got "?action=something".
         case 'rmfld':
         case 'killfld':
             $deldata = $fldaction = 'killfld' ? true : false;
-            $F = new \Forms\frmField();
+            $F = new \Forms\Field();
             foreach ($_POST['cb'] as $varname=>$val) {
                 $F->Read($varname);
                 if (!empty($F->id)) {
@@ -111,7 +111,7 @@ case 'reorder':
     $where = isset($_GET['where']) ? $_GET['where'] : '';
     if ($frm_id != '' && $fld_id > 0 && $where != '') {
         USES_forms_class_field();
-        $msg = frmField::Move($frm_id, $fld_id, $where);
+        $msg = Field::Move($frm_id, $fld_id, $where);
     }
     $view = 'editform';
     break;
@@ -119,8 +119,8 @@ case 'reorder':
 case 'updateresult':
     USES_forms_class_form();
     USES_forms_class_result();
-    $F = new \Forms\frmForm($_POST['frm_id']);
-    $R = new \Forms\frmResult($_POST['res_id']);
+    $F = new \Forms\Form($_POST['frm_id']);
+    $R = new \Forms\Result($_POST['res_id']);
     $R->SaveData($_POST['frm_id'], $F->fields, $_POST, $R->uid);
     $view = 'results';
     break;
@@ -128,7 +128,7 @@ case 'updateresult':
 case 'updatefield':
     USES_forms_class_field();
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
-    $F = new \Forms\frmField($fld_id, $frm_id);
+    $F = new \Forms\Field($fld_id, $frm_id);
     $msg = $F->SaveDef($_POST);
     $view = 'editform';
     break;
@@ -138,12 +138,12 @@ case 'delbutton_x':
         // Deleting one or more fields
         USES_forms_class_field();
         foreach ($_POST['delfield'] as $key=>$value) {
-            frmField::Delete($value);
+            Field::Delete($value);
         }
     } elseif (isset($_POST['delresmulti']) && is_array($_POST['delresmulti'])) {
         USES_forms_class_result();
         foreach ($_POST['delresmulti'] as $key=>$value) {
-            frmResult::Delete($value);
+            Result::Delete($value);
         }
         $view = 'results';
     }
@@ -152,7 +152,7 @@ case 'delbutton_x':
     
 case 'copyform':
     USES_forms_class_form();
-    $F = new \Forms\frmForm($frm_id);
+    $F = new \Forms\Form($frm_id);
     $msg = $F->Duplicate();
     if (empty($msg)) {
         echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&amp;frm_id=' .
@@ -165,7 +165,7 @@ case 'copyform':
 
 case 'updateform':
     USES_forms_class_form();
-    $F = new \Forms\frmForm($_POST['old_id']);
+    $F = new \Forms\Form($_POST['old_id']);
     $msg = $F->SaveDef($_POST);
     if ($msg != '') {                   // save operation failed
         $view = 'editform';
@@ -183,7 +183,7 @@ case 'deleteFrmDef':
     if (!$isAdmin) COM_404();
     $id = $_REQUEST['frm_id'];
     USES_forms_class_form();
-    $msg = frmForm::DeleteDef($id);
+    $msg = Form::DeleteDef($id);
     $view = 'listforms';
     break;
 
@@ -191,7 +191,7 @@ case 'deleteFldDef':
     if (!$isAdmin) COM_404();
     // Delete a field definition.  Also deletes user values.
     USES_forms_class_field();
-    $msg = frmField::Delete($_GET['fld_id']);
+    $msg = Field::Delete($_GET['fld_id']);
     $view = 'editform';
     break;
 
@@ -218,7 +218,7 @@ case 'export':
     USES_forms_class_result();
     USES_forms_class_field();
 
-    $Frm = new \Forms\frmForm($frm_id);
+    $Frm = new \Forms\Form($frm_id);
 
     // Get the form result sets
     $sql = "SELECT r.* FROM {$_TABLES['forms_results']} r
@@ -229,7 +229,7 @@ case 'export':
             ORDER BY dt ASC";
     $res = DB_query($sql);
 
-    $R = new \Forms\frmResult();
+    $R = new \Forms\Result();
     $fields = array('"UserID"', '"Submitted"');
     foreach ($Frm->fields as $F) {
         if (!$F->enabled) continue;     // ignore disabled fields
@@ -259,7 +259,7 @@ case 'preview':
     $content .= FRM_adminMenu($view, 'hdr_form_preview');
     if ($frm_id != '') {
         USES_forms_class_form();
-        $F = new \Forms\frmForm($frm_id);
+        $F = new \Forms\Form($frm_id);
         $T = new Template($_CONF['path'] . '/plugins/forms/templates/');
         $T->set_file('header', 'preview_header.thtml');
         $T->set_var(array(
@@ -276,7 +276,7 @@ case 'preview':
 case 'showhtml':
     if ($frm_id != '') {
         USES_forms_class_form();
-        $F = new \Forms\frmForm($frm_id);
+        $F = new \Forms\Form($frm_id);
         header('Content-type: text/html');
         echo '<html><body><pre>' . 
             htmlentities($F->Render('preview')) . 
@@ -289,7 +289,7 @@ case 'print':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
     if ($frm_id != '' && $res_id > 0) {
         USES_forms_class_form();
-        $F = new \Forms\frmForm($frm_id);
+        $F = new \Forms\Form($frm_id);
         $content .= $F->Prt($res_id, true);
         echo $content;
         exit;
@@ -302,7 +302,7 @@ case 'editresult':
     $frm_id = DB_getItem($_TABLES['forms_results'], 'frm_id',
             "id={$res_id}"); 
     if (!empty($frm_id)) {
-        $F = new \Forms\frmForm($frm_id);
+        $F = new \Forms\Form($frm_id);
         $F->ReadData($res_id);
         $content .= $F->Render('edit', $res_id);
     }
@@ -310,13 +310,8 @@ case 'editresult':
 
 case 'editform':
     // Edit a single definition
-    //if (!$isAdmin) COM_404();     // don't check here?
-
     USES_forms_class_form();
-    $F = new \Forms\frmForm($frm_id);
-    /*if ($msg) {
-        $content .= COM_showMessageText($msg);
-    }*/
+    $F = new \Forms\Form($frm_id);
     $content .= FRM_adminMenu($view, 'hlp_edit_form');
     $content .= $F->EditForm();
 
@@ -331,7 +326,7 @@ case 'editfield':
     if (!$isAdmin) COM_404();
     $fld_id = isset($_GET['fld_id']) ? (int)$_GET['fld_id'] : 0;
     USES_forms_class_field();
-    $F = new \Forms\frmField($fld_id, $frm_id);
+    $F = new \Forms\Field($fld_id, $frm_id);
     $content .= FRM_adminMenu($view, 'hdr_field_edit');
     $content .= $F->EditDef();
     break;
@@ -488,64 +483,44 @@ function FRM_listFields($frm_id = '')
 */
 function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 {
-    global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES, $_SYSTEM;
+    global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES, $_CONF_FRM, $_LANG_ADMIN;
 
     $retval = '';
 
     switch($fieldname) {
     case 'edit':
         $url = FRM_ADMIN_URL . "/index.php?editform=x&amp;frm_id={$A['id']}";
-        if ($_SYSTEM['framework'] == 'uikit') {
-            $retval = COM_createLink('', $url, array(
-                'class' => 'uk-icon uk-icon-edit'
-            ) );
-        } else {
-            $retval = COM_createLink($icon_arr['edit'], $url);
-        }
+        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
+                '-edit frm-icon-info tooltip" title="' . $LANG_ADMIN['edit'] .
+                '"></i>',
+                $url
+        );
         break;
 
     case 'copy':
         $url = FRM_ADMIN_URL . "/index.php?copyform=x&amp;frm_id={$A['id']}";
-        if ($_SYSTEM['framework'] == 'uikit') {
-            $retval = COM_createLink('', $url, array(
-                'class' => 'uk-icon uk-icon-clone'
-            ) );
-        } else {
-            $retval = COM_createLink($icon_arr['copy'], $url);
-        }
+        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
+                '-copy frm-icon-info"></i>',
+                $url
+        );
         break;
 
     case 'view_html':
         $url = FRM_ADMIN_URL . "/index.php?showhtml=x&amp;frm_id={$A['id']}";
-        if ($_SYSTEM['framework'] == 'uikit') {
-            $retval = COM_createLink('', $url, array(
-                'class' => 'uk-icon uk-icon-file-code-o',
-                'target' => '_new'
-            ) );
-        } else {
-            $retval = COM_createLink(
-                '<img src="' . FRM_PI_URL . '/images/show_html.png"
-                height="16" width="16" border="0">', $url,
-                array('target'=>'_new')
-            );
-        }
+        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
+                '-code frm-icon-info"></i>',
+                $url
+        );
         break;
 
     case 'delete':
         $url = FRM_ADMIN_URL . "/index.php?deleteFrmDef=x&frm_id={$A['id']}";
-        if ($_SYSTEM['framework'] == 'uikit') {
-            $retval = COM_createLink('', $url, array(
-                'class' => 'uk-icon uk-icon-trash-o form_danger',
-                'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}?');",
-            ) );
-        } else { 
-            $retval = COM_createLink(
-                "<img src=\"{$_CONF['layout_url']}/images/admin/delete.png\" 
-                    height=\"16\" width=\"16\" border=\"0\"
-                    onclick=\"return confirm('{$LANG_FORMS['confirm_delete']}?');\"
-                    >", $url
-            );
-        }
+        $retval = COM_createLink('<i class="'. $_CONF_FRM['_iconset'] .
+                '-trash-o frm-icon-danger" ' .
+                'onclick="return confirm(\'' .$LANG_FORMS['confirm_delete'] .
+                    '?\');"',
+                $url
+        );
         break;
 
     case 'enabled':
@@ -755,7 +730,7 @@ function FRM_listResults($frm_id, $instance_id='')
 */
 function FRM_getField_results($fieldname, $fieldvalue, $A, $icon_arr)
 {
-    global $_CONF;
+    global $_CONF, $_CONF_FRM, $LANG_ADMIN, $LANG_FORMS;
 
     $retval = '';
 
@@ -763,11 +738,11 @@ function FRM_getField_results($fieldname, $fieldvalue, $A, $icon_arr)
     case 'action':
         $retval = '<a href="' . FRM_ADMIN_URL . '/index.php?print=x&frm_id=' .
             $A['frm_id'] . '&res_id=' . $A['id'] . 
-            '" target="_blank"><img src="' . $_CONF['layout_url'] . 
-            '/images/print.png" border="0"></a>
-            <a href="' . FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' .
-            $A['id'] . '"><img src="' .
-            $_CONF['layout_url'] . '/images/edit.png" border="0"></a>';
+            '" target="_blank"><i class="' . $_CONF_FRM['_iconset'] . '-print frm-icon-info tooltip" ' .
+            'title="' . $LANG_FORMS['print'] . '"></i></a>' .
+            '&nbsp;<a href="' . FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' .
+            $A['id'] . '"><i class="' . $_CONF_FRM['_iconset'] . '-edit frm-icon-info tooltip"' . 
+            'title="' . $LANG_ADMIN['edit'] . '"></i></a>';
         break;
 
     case 'instance_id':
