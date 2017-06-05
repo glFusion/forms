@@ -168,6 +168,8 @@ $LANG_FORMS = array(
 'clear_instance' => 'Show all',
 'datepicker' => 'Click for a date picker',
 'print' => 'Print',
+'toggle_success' => 'Item has been updated.',
+'toggle_failure' => 'Error updating item.',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';

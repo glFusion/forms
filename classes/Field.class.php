@@ -1613,6 +1613,35 @@ function {$this->name}_onUpdate(cal)
         return $retval;
     }
 
+
+    /**
+    *   Toggle a boolean field in the database
+    *
+    *   @param  $id     Field def ID
+    *   @param  $fld    DB variable to change
+    *   @param  $oldval Original value
+    *   @return integer New value
+    */
+    public static function toggle($id, $fld, $oldval)
+    {
+        global $_TABLES;
+
+        $id = DB_escapeString($id);
+        $fld = DB_escapeString($fld);
+        $oldval = $oldval == 0 ? 0 : 1;
+        $newval = $oldval == 0 ? 1 : 0;
+        $sql = "UPDATE {$_TABLES['forms_flddef']}
+                SET $fld = $newval
+                WHERE fld_id = '$id'";
+        $res = DB_query($sql, 1);
+        if (DB_error($res)) {
+            COM_errorLog(__CLASS__ . '\\' . __FUNCTION__ . ':: ' . $sql);
+            return $oldval;
+        } else {
+            return $newval;
+        }
+    }
+
 }
 
 ?>
