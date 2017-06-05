@@ -170,6 +170,7 @@ $LANG_FORMS = array(
 'instance' => 'Instance',
 'showing_instance' => 'Showing results for instance &quot;%s&quot;',
 'clear_instance' => 'Show all',
+'datepicker' => 'Click for a date picker',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';

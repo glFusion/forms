@@ -103,7 +103,7 @@ function insertRow(list) {
 
 </script>
 
-<form id="frm1" class="uk-form-horizontal frmForms" method="post"
+<form id="frm1" class="uk-form uk-form-horizontal frmForms" method="post"
     action="{site_url}/admin/plugins/forms/index.php">
   <input type="hidden" name="fld_id" value="{fld_id}" />
   <input type="hidden" name="frm_id" value="{frm_id}" />

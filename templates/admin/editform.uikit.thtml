@@ -37,7 +37,7 @@ function confirmDelete()
 </script>
 
 <form id="forms_frm1" action="{site_url}/admin/plugins/forms/index.php"
-    class="uk-form-horizontal" method="post">
+    class="uk-form uk-form-horizontal" method="post">
   <input type="hidden" name="old_id" value="{old_id}" />
   <fieldset>
     <div class="uk-form-row">
@@ -111,12 +111,12 @@ function confirmDelete()
       </label>
       <div class="uk-form-controls">
         <span id="onsubmit" class="tooltip_cfg tooltipstered"></span>
-        <input type="checkbox" value="1" name="onsubmit[store]" {store_chk} />{$LANG_FORMS['save_to_db']}
-        <input type="checkbox" value="16" name="onsubmit[preview]" {preview_chk} />{$LANG_FORMS['preview_on_save']}
+        <input type="checkbox" value="1" name="onsubmit[store]" {store_chk} />&nbsp;{$LANG_FORMS['save_to_db']}
+        &nbsp;&nbsp;<input type="checkbox" value="16" name="onsubmit[preview]" {preview_chk} />&nbsp;{$LANG_FORMS['preview_on_save']}
         <br />
-        <input type="checkbox" value="2" name="onsubmit[emailowner]" {emailowner_chk} />{$LANG_FORMS['email_owner']}&nbsp;&nbsp;
-        <input type="checkbox" value="4" name="onsubmit[emailgroup]" {emailgroup_chk} />{$LANG_FORMS['email_group']}&nbsp;&nbsp;
-        <input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
+        <input type="checkbox" value="2" name="onsubmit[emailowner]" {emailowner_chk} />&nbsp;{$LANG_FORMS['email_owner']}&nbsp;&nbsp;
+        <input type="checkbox" value="4" name="onsubmit[emailgroup]" {emailgroup_chk} />&nbsp;{$LANG_FORMS['email_group']}&nbsp;&nbsp;
+        <input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />&nbsp;{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
         {$LANG_FORMS['other_emails']}: 
         <input type="text" size="40" maxlength="255" name="email" value="{email}" />
       </div>
