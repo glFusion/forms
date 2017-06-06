@@ -1,6 +1,10 @@
 {# begin {templatelocation} #}
 <div class="uk-form-horizontal">
+{!if additional}
+<span class="alert">
 {additional}
+</span>
+{!endif}
 <form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
 {introtext}
 {!if error_msg}

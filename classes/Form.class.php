@@ -762,6 +762,18 @@ class Form
             }
         }
 
+        // Get the result details for a heading when an admin is
+        // editing a submission. Have to do it here, after ReadData().
+        if ($mode == 'edit') {
+            $dt = new \Date($this->Result->dt, $_CONF['timezone']);
+            $username = COM_getDisplayName($this->Result->uid);
+            $additional = sprintf($LANG_FORMS['edit_result_header'],
+                $username,
+                $this->Result->uid,
+                $this->Result->ip,
+                $dt->toMySQL(true));
+        }
+
         $T = FRM_getTemplate('form', 'form');
         // Set template variables without allowing caching
         $T->set_var(array(
@@ -779,6 +791,7 @@ class Form
             'submit_disabled' => $allow_submit ? '' : 'disabled="disabled"',
             'instance_id'   => $this->instance_id,
             'iconset'       => $_CONF_FRM['_iconset'],
+            'additional'    => $additional,
         ), '', false, true );
 
         $T->set_block('form', 'QueueRow', 'qrow');

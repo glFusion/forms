@@ -1,13 +1,10 @@
 {# begin {templatelocation} #}
-<script type=text/javascript>
-{!if mootools}
-window.addEvent("domready", function() {
-    var exValidatorA = new fValidator("forms_form{frm_id}");
-});
-{!endif}
-</script>
 <div class="forms">
+{!if additional}
+<span class="alert">
 {additional}
+</span>
+{!endif}
 <form id="forms_form{frm_id}" action="{frm_action}" method="post">
 {introtext}
 {!if error_msg}
