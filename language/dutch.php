@@ -170,6 +170,7 @@ $LANG_FORMS = array(
 'print' => 'Print',
 'toggle_success' => 'Item has been updated.',
 'toggle_failure' => 'Error updating item.',
+'edit_result_header' => 'Editing the submission by %1$s (%2$d) from %3$s at %4$s',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
