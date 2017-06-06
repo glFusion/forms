@@ -1,6 +1,5 @@
- /*  Updates submission form fields based on changes in the category
- *  dropdown.
- */
+/*  Toggle DB fields based on checkbox actions.
+*/
 var FRMtoggleEnabled = function(cbox, id, type, component) {
     oldval = cbox.checked ? 0 : 1;
     var dataS = {

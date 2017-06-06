@@ -6,13 +6,14 @@
 *   access to this file.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.1.2
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @version    0.3.0
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
+namespace Forms;
 
 /** Import core glFusion libraries */
 require_once '../../../lib-common.php';
@@ -22,10 +23,8 @@ if (!in_array('forms', $_PLUGINS)) {
     COM_404();
 }
 
-//require_once '../../auth.inc.php';
-
 // Flag to indicate if this user is a "real" administrator for the plugin.
-// Some functions, like deleting definitions, are only available to 
+// Some functions, like deleting definitions, are only available to
 // plugin admins.
 $isAdmin = plugin_isadmin_forms();
 
@@ -37,7 +36,9 @@ $action = 'listforms';      // Default view
 $expected = array('edit','updateform','editfield', 'updatefield',
     'save', 'print', 'editresult', 'updateresult', 'reorder',
     'editform', 'copyform', 'delbutton_x', 'showhtml',
-    'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view');
+    'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
+    'results',
+);
 foreach($expected as $provided) {
     if (isset($_POST[$provided])) {
         $action = $provided;
@@ -88,7 +89,7 @@ case 'action':      // Got "?action=something".
         case 'rmfld':
         case 'killfld':
             $deldata = $fldaction = 'killfld' ? true : false;
-            $F = new \Forms\Field();
+            $F = new Field();
             foreach ($_POST['cb'] as $varname=>$val) {
                 $F->Read($varname);
                 if (!empty($F->id)) {
@@ -119,8 +120,8 @@ case 'reorder':
 case 'updateresult':
     USES_forms_class_form();
     USES_forms_class_result();
-    $F = new \Forms\Form($_POST['frm_id']);
-    $R = new \Forms\Result($_POST['res_id']);
+    $F = new Form($_POST['frm_id']);
+    $R = new Result($_POST['res_id']);
     $R->SaveData($_POST['frm_id'], $F->fields, $_POST, $R->uid);
     $view = 'results';
     break;
@@ -128,7 +129,7 @@ case 'updateresult':
 case 'updatefield':
     USES_forms_class_field();
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
-    $F = new \Forms\Field($fld_id, $frm_id);
+    $F = new Field($fld_id, $frm_id);
     $msg = $F->SaveDef($_POST);
     $view = 'editform';
     break;
@@ -149,10 +150,10 @@ case 'delbutton_x':
     }
     CTL_clearCache();   // so the autotags will pick it up.
     break;
-    
+
 case 'copyform':
     USES_forms_class_form();
-    $F = new \Forms\Form($frm_id);
+    $F = new Form($frm_id);
     $msg = $F->Duplicate();
     if (empty($msg)) {
         echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&amp;frm_id=' .
@@ -165,7 +166,7 @@ case 'copyform':
 
 case 'updateform':
     USES_forms_class_form();
-    $F = new \Forms\Form($_POST['old_id']);
+    $F = new Form($_POST['old_id']);
     $msg = $F->SaveDef($_POST);
     if ($msg != '') {                   // save operation failed
         $view = 'editform';
@@ -203,14 +204,14 @@ case 'results':
     $instance_id = isset($_GET['instance_id']) ? $_GET['instance_id'] : '';
     if (!empty($instance_id)) {
         $other_text = sprintf($LANG_FORMS['showing_instance'], $instance_id) .
-            ' <a href="' . FRM_ADMIN_URL . '/index.php?action=results&frm_id=' . $frm_id .
+            ' <a href="' . FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $frm_id .
             '">' . $LANG_FORMS['clear_instance'] . '</a>';
     } else {
         $other_text = '';
     }
-    $content .= FRM_adminMenu($view, 'hdr_form_results', $other_text);
+    $content .= adminMenu($view, 'hdr_form_results', $other_text);
     //$content .= FRM_ResultsTable($frm_id, true);
-    $content .= FRM_listResults($frm_id, $instance_id);
+    $content .= listResults($frm_id, $instance_id);
     break;
 
 case 'export':
@@ -218,7 +219,7 @@ case 'export':
     USES_forms_class_result();
     USES_forms_class_field();
 
-    $Frm = new \Forms\Form($frm_id);
+    $Frm = new Form($frm_id);
 
     // Get the form result sets
     $sql = "SELECT r.* FROM {$_TABLES['forms_results']} r
@@ -229,7 +230,7 @@ case 'export':
             ORDER BY dt ASC";
     $res = DB_query($sql);
 
-    $R = new \Forms\Result();
+    $R = new Result();
     $fields = array('"UserID"', '"Submitted"');
     foreach ($Frm->fields as $F) {
         if (!$F->enabled) continue;     // ignore disabled fields
@@ -256,11 +257,11 @@ case 'export':
     break;
 
 case 'preview':
-    $content .= FRM_adminMenu($view, 'hdr_form_preview');
+    $content .= adminMenu($view, 'hdr_form_preview');
     if ($frm_id != '') {
         USES_forms_class_form();
-        $F = new \Forms\Form($frm_id);
-        $T = new Template($_CONF['path'] . '/plugins/forms/templates/');
+        $F = new Form($frm_id);
+        $T = new \Template($_CONF['path'] . '/plugins/forms/templates/');
         $T->set_file('header', 'preview_header.thtml');
         $T->set_var(array(
             'frm_name'      => $F->name,
@@ -276,10 +277,10 @@ case 'preview':
 case 'showhtml':
     if ($frm_id != '') {
         USES_forms_class_form();
-        $F = new \Forms\Form($frm_id);
+        $F = new Form($frm_id);
         header('Content-type: text/html');
-        echo '<html><body><pre>' . 
-            htmlentities($F->Render('preview')) . 
+        echo '<html><body><pre>' .
+            htmlentities($F->Render('preview')) .
             '</pre></body></html>';
         exit;
     }
@@ -289,7 +290,7 @@ case 'print':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
     if ($frm_id != '' && $res_id > 0) {
         USES_forms_class_form();
-        $F = new \Forms\Form($frm_id);
+        $F = new Form($frm_id);
         $content .= $F->Prt($res_id, true);
         echo $content;
         exit;
@@ -300,9 +301,9 @@ case 'editresult':
     USES_forms_class_form();
     $res_id = (int)$_GET['res_id'];
     $frm_id = DB_getItem($_TABLES['forms_results'], 'frm_id',
-            "id={$res_id}"); 
+            "id={$res_id}");
     if (!empty($frm_id)) {
-        $F = new \Forms\Form($frm_id);
+        $F = new Form($frm_id);
         $F->ReadData($res_id);
         $content .= $F->Render('edit', $res_id);
     }
@@ -311,14 +312,14 @@ case 'editresult':
 case 'editform':
     // Edit a single definition
     USES_forms_class_form();
-    $F = new \Forms\Form($frm_id);
-    $content .= FRM_adminMenu($view, 'hlp_edit_form');
+    $F = new Form($frm_id);
+    $content .= adminMenu($view, 'hlp_edit_form');
     $content .= $F->EditForm();
 
     // Allow adding/removing fields from existing forms
     if ($frm_id != '') {
         $content .= "<br /><hr />\n";
-        $content .= FRM_listFields($frm_id);
+        $content .= listFields($frm_id);
     }
     break;
 
@@ -326,8 +327,8 @@ case 'editfield':
     if (!$isAdmin) COM_404();
     $fld_id = isset($_GET['fld_id']) ? (int)$_GET['fld_id'] : 0;
     USES_forms_class_field();
-    $F = new \Forms\Field($fld_id, $frm_id);
-    $content .= FRM_adminMenu($view, 'hdr_field_edit');
+    $F = new Field($fld_id, $frm_id);
+    $content .= adminMenu($view, 'hdr_field_edit');
     $content .= $F->EditDef();
     break;
 
@@ -342,14 +343,14 @@ case 'none':
 
 case 'fields':
     if (!$isAdmin) COM_404();
-    $content .= FRM_adminMenu($view, 'hdr_field_list');
-    $content .= FRM_listFields();
+    $content .= adminMenu($view, 'hdr_field_list');
+    $content .= listFields();
     break;
 
 case 'listforms':
 default:
-    $content .= FRM_adminMenu('listforms', 'hdr_form_list');
-    $content .= FRM_listForms();
+    $content .= adminMenu('listforms', 'hdr_form_list');
+    $content .= listForms();
     break;
 
 }
@@ -374,7 +375,7 @@ exit;
 *
 *   @return string HTML for the list
 */
-function FRM_listForms()
+function listForms()
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $perm_sql;
 
@@ -384,35 +385,59 @@ function FRM_listForms()
     //FRM_reorderDef();
 
     $header_arr = array(
-        array('text' => 'ID', 'field' => 'id', 'sort' => true),
-        array('text' => $LANG_ADMIN['edit'], 'field' => 'edit', 
-                'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_ADMIN['copy'], 'field' => 'copy', 
-                'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_FORMS['view_html'], 'field' => 'view_html', 
-                'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_FORMS['submissions'], 'field' => 'submissions', 
-                'sort' => false, 'align' => 'center'),
-        array('text' => $LANG_FORMS['name'], 'field' => 'name', 'sort' => true),
-        array('text' => $LANG_FORMS['enabled'], 'field' => 'enabled', 
-                'sort' => false),
-        array('text' => 'Action', 'field' => 'action', 'sort' => true),
-        array('text' => $LANG_ADMIN['delete'], 'field' => 'delete', 
-                'sort' => false, 'align' => 'center'),
+        array('text' => 'ID',
+            'field' => 'id',
+            'sort' => true,
+        ),
+        array('text' => $LANG_ADMIN['edit'],
+            'field' => 'edit',
+            'sort' => false,
+            'align' => 'center',
+        ),
+        array('text' => $LANG_ADMIN['copy'],
+            'field' => 'copy',
+            'sort' => false,
+            'align' => 'center',
+        ),
+        array('text' => $LANG_FORMS['view_html'],
+            'field' => 'view_html',
+            'sort' => false,
+            'align' => 'center'),
+        array('text' => $LANG_FORMS['submissions'],
+            'field' => 'submissions',
+            'sort' => false,
+            'align' => 'center',
+        ),
+        array('text' => $LANG_FORMS['name'],
+            'field' => 'name',
+            'sort' => true,
+        ),
+        array('text' => $LANG_FORMS['enabled'],
+            'field' => 'enabled',
+            'sort' => false,
+        ),
+        array('text' => $LANG_FORMS['action'],
+            'field' => 'action',
+            'sort' => true,
+        ),
+        array('text' => $LANG_ADMIN['delete'],
+            'field' => 'delete',
+            'sort' => false,
+            'align' => 'center',
+        ),
     );
 
     $text_arr = array();
     $query_arr = array('table' => 'forms_frmdef',
         'sql' => "SELECT *
-               FROM 
-                    {$_TABLES['forms_frmdef']}
+                FROM {$_TABLES['forms_frmdef']}
                 WHERE 1=1 $perm_sql",
         'query_fields' => array('name'),
         'default_filter' => ''
     );
     $defsort_arr = array('field' => 'name', 'direction' => 'ASC');
 
-    $retval .= ADMIN_list('forms', 'FRM_getField_form', $header_arr,
+    $retval .= ADMIN_list('forms', __NAMESPACE__ . '\getField_form', $header_arr,
                     $text_arr, $query_arr, $defsort_arr, '', '', '', $form_arr);
 
     return $retval;
@@ -424,45 +449,71 @@ function FRM_listForms()
 *
 *   @return string HTML for the list
 */
-function FRM_listFields($frm_id = '')
+function listFields($frm_id = '')
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_SYSTEM;
 
     $retval = '';
 
     $header_arr = array(
-        array('text' => $LANG_ADMIN['edit'], 'field' => 'edit', 'sort' => false),
-        array('text' => $LANG_FORMS['name'], 'field' => 'name', 'sort' => true),
-        array('text' => $LANG_FORMS['move'], 'field' => 'move', 'sort' => false),
-        array('text' => $LANG_FORMS['type'], 'field' => 'type', 'sort' => true),
-        array('text' => $LANG_FORMS['enabled'], 'field' => 'enabled', 'sort' => true),
+        array('text' => $LANG_ADMIN['edit'],
+            'field' => 'edit',
+            'sort' => false,
+            'align' => 'center',
+        ),
+        array('text' => $LANG_FORMS['name'],
+            'field' => 'name',
+            'sort' => false,
+        ),
+        array('text' => $LANG_FORMS['move'],
+            'field' => 'move',
+            'sort' => false,
+            'align' => 'center',
+        ),
+        array('text' => $LANG_FORMS['type'],
+            'field' => 'type',
+            'sort' => false,
+        ),
+        array('text' => $LANG_FORMS['enabled'],
+            'field' => 'enabled',
+            'sort' => false,
+            'align' => 'center',
+        ),
         //array('text' => $LANG_FORMS['required'], 'field' => 'required', 'sort' => true),
-        array('text' => $LANG_FORMS['fld_access'], 'field' => 'access', 'sort' => true),
-        array('text' => $LANG_ADMIN['delete'], 'field' => 'delete', 'sort' => false),
+        array('text' => $LANG_FORMS['fld_access'],
+            'field' => 'access',
+            'sort' => false,
+        ),
+        array('text' => $LANG_ADMIN['delete'],
+            'field' => 'delete',
+            'sort' => false,
+        ),
     );
 
     $defsort_arr = array('field' => 'orderby', 'direction' => 'asc');
     $text_arr = array('form_url' => FRM_ADMIN_URL . '/index.php');
-    $options_arr = array('chkdelete' => true, 'chkname' => 'delfield',
-                'chkfield' => 'fld_id');
+    $options_arr = array('chkdelete' => true,
+            'chkname' => 'delfield',
+            'chkfield' => 'fld_id',
+    );
     $query_arr = array('table' => 'forms_flddef',
         'sql' => "SELECT * FROM {$_TABLES['forms_flddef']}",
         'query_fields' => array('name', 'type', 'value'),
-        'default_filter' => ''
+        'default_filter' => '',
     );
     if ($frm_id != '') {
         $query_arr['sql'] .= " WHERE frm_id='" . DB_escapeString($frm_id) . "'";
     }
 
-    $T = new Template(FRM_PI_PATH . '/templates/admin');
+    $T = new \Template(FRM_PI_PATH . '/templates/admin');
     $T->set_file('formfields', 'formfields.thtml');
     $T->set_var(array(
         'action_url'    => FRM_ADMIN_URL . '/index.php',
         'frm_id'        => $frm_id,
         'pi_url'        => FRM_PI_URL,
-        'field_adminlist' => ADMIN_list('forms', 
-                    'FRM_getField_field', $header_arr,
-                    $text_arr, $query_arr, $defsort_arr, '', '', 
+        'field_adminlist' => ADMIN_list('forms',
+                    __NAMESPACE__ . '\getField_field', $header_arr,
+                    $text_arr, $query_arr, $defsort_arr, '', '',
                     $options_arr, $form_arr),
     ) );
 
@@ -481,7 +532,7 @@ function FRM_listFields($frm_id = '')
 *   @param  array   $icon_arr   Array of system icons
 *   @return string              HTML for the field cell
 */
-function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
+function getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES, $_CONF_FRM, $_LANG_ADMIN;
 
@@ -491,8 +542,7 @@ function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
     case 'edit':
         $url = FRM_ADMIN_URL . "/index.php?editform=x&amp;frm_id={$A['id']}";
         $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-edit frm-icon-info tooltip" title="' . $LANG_ADMIN['edit'] .
-                '"></i>',
+                '-edit frm-icon-info"></i>',
                 $url
         );
         break;
@@ -507,9 +557,12 @@ function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 
     case 'view_html':
         $url = FRM_ADMIN_URL . "/index.php?showhtml=x&amp;frm_id={$A['id']}";
-        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-code frm-icon-info"></i>',
-                $url
+        $retval = COM_createLink(
+            '<i class="' . $_CONF_FRM['_iconset'] . '-code frm-icon-info"></i>',
+            '#',
+            array(
+                'onclick' => "popupWindow('$url', '', 640, 480, 1)",
+            )
         );
         break;
 
@@ -531,31 +584,42 @@ function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
             $chk = '';
             $enabled = 0;
         }
-        $retval = 
-                "<input name=\"{$fieldname}_{$A['id']}\" " .
+        $retval = "<input name=\"{$fieldname}_{$A['id']}\" " .
                 "type=\"checkbox\" $chk " .
                 "onclick='FRMtoggleEnabled(this, \"{$A['id']}\", \"form\", \"{$fieldname}\", \"" . FRM_ADMIN_URL . "\");' " .
                 "/>\n";
     break;
 
     case 'name':
-        $retval = COM_createLink($fieldvalue, 
-            FRM_ADMIN_URL . '/index.php?action=preview&frm_id=' . $A['id']);
+        $retval = COM_createLink($fieldvalue,
+            FRM_ADMIN_URL . '/index.php?action=preview&frm_id=' . $A['id'],
+            array(
+                'class' => 'tooltip',
+                'title' => $LANG_FORMS['preview'],
+            )
+        );
         break;
 
     case 'submissions':
-        $retval = (int)DB_count($_TABLES['forms_results'], 'frm_id', $A['id']);
+        $url = FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $A['id'];
+        $txt = (int)DB_count($_TABLES['forms_results'], 'frm_id', $A['id']);
+        $retval = COM_createLink($txt, $url,
+            array(
+                'class' => 'tooltip',
+                'title' => $LANG_FORMS['form_results'],
+            )
+        );
         break;
 
     case 'action':
         $retval = '<select name="action"
             onchange="javascript: document.location.href=\'' .
-            FRM_ADMIN_URL . '/index.php?frm_id=' . $A['id'] . 
+            FRM_ADMIN_URL . '/index.php?frm_id=' . $A['id'] .
             '&action=\'+this.options[this.selectedIndex].value">'. "\n";
-        $retval .= '<option value="">--Select Action--</option>'. "\n";
-        $retval .= '<option value="preview">Preview</option>'. "\n";
-        $retval .= '<option value="results">Results</option>'. "\n";
-        $retval .= '<option value="export">Export CSV</option>'. "\n";
+        $retval .= '<option value="">--' . $LANG_FORMS['select'] . '--</option>'. "\n";
+        $retval .= '<option value="preview">' . $LANG_FORMS['preview'] . '</option>'. "\n";
+        $retval .= '<option value="results">' . $LANG_FORMS['form_results'] . '</option>'. "\n";
+        $retval .= '<option value="export">' . $LANG_FORMS['export'] . '</option>'. "\n";
         $retval .= "</select>\n";
         break;
 
@@ -578,32 +642,33 @@ function FRM_getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 *   @param  array   $icon_arr   Array of system icons
 *   @return string              HTML for the field cell
 */
-function FRM_getField_field($fieldname, $fieldvalue, $A, $icon_arr)
+function getField_field($fieldname, $fieldvalue, $A, $icon_arr)
 {
-    global $_CONF, $LANG_ACCESS, $LANG_FORMS;
+    global $_CONF, $_CONF_FRM, $LANG_ACCESS, $LANG_FORMS;
 
     $retval = '';
 
     switch($fieldname) {
     case 'edit':
-        $retval = COM_createLink($icon_arr['edit'],
-            FRM_ADMIN_URL . "/index.php?editfield=x&amp;fld_id={$A['fld_id']}");
+        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
+                '-edit frm-icon-info"></i>',
+            FRM_ADMIN_URL . "/index.php?editfield=x&amp;fld_id={$A['fld_id']}"
+        );
         break;
 
     case 'delete':
-            $retval = COM_createLink(
-                "<img src=\"{$_CONF['layout_url']}/images/admin/delete.png\" 
-                    height=\"16\" width=\"16\" border=\"0\"
-                    onclick=\"return confirm('{$LANG_FORMS['confirm_delete']}');\"
-                    >",
-                FRM_ADMIN_URL . '/index.php?deleteFldDef=x&fld_id=' .
-                    $A['fld_id'] . '&frm_id=' . $A['frm_id']
-            );
-
+        $retval = COM_createLink(
+            '<i class="' . $_CONF_FRM['_iconset'] . '-trash-o frm-icon-danger"></i>',
+            FRM_ADMIN_URL . '/index.php?deleteFldDef=x&fld_id=' .
+                    $A['fld_id'] . '&frm_id=' . $A['frm_id'],
+            array(
+                'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}');",
+            )
+        );
        break;
 
     case 'access':
-        $retval = 'Unknown';    
+        $retval = 'Unknown';
         switch ($fieldvalue) {
         case FRM_FIELD_NORMAL:
             $retval = $LANG_FORMS['normal'];
@@ -628,8 +693,7 @@ function FRM_getField_field($fieldname, $fieldvalue, $A, $icon_arr)
             $chk = '';
             $enabled = 0;
         }
-        $retval = 
-                "<input name=\"{$fieldname}_{$A['fld_id']}\" " .
+        $retval = "<input name=\"{$fieldname}_{$A['fld_id']}\" " .
                 "type=\"checkbox\" $chk " .
                 "onclick='FRMtoggleEnabled(this, \"{$A['fld_id']}\", \"field\", \"{$fieldname}\", \"" . FRM_ADMIN_URL . "\");' ".
                 "/>\n";
@@ -641,12 +705,12 @@ function FRM_getField_field($fieldname, $fieldvalue, $A, $icon_arr)
         break;
 
     case 'move':
-        $retval = '<a href="' . FRM_ADMIN_URL . '/index.php' . 
-            "?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}\"><img src=\"" . FRM_PI_URL . 
-            '/images/up.png" height="16" width="16" border="0" /></a>'."\n";
-        $retval .= '<a href="' . FRM_ADMIN_URL . '/index.php' . 
-            "?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}\"><img src=\"" . FRM_PI_URL .
-            '/images/down.png" height="16" width="16" border="0" /></a>' . "\n";
+        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
+                '-arrow-up frm-icon-info"></i>',
+            FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}") . '&nbsp;';
+        $retval .= COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
+                '-arrow-down frm-icon-info"></i>',
+            FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}");
         break;
 
     default:
@@ -666,7 +730,7 @@ function FRM_getField_field($fieldname, $fieldvalue, $A, $icon_arr)
 *   @param  string  $instance_id    Optional form instance ID
 *   @return string          HTML for the list
 */
-function FRM_listResults($frm_id, $instance_id='')
+function listResults($frm_id, $instance_id='')
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $perm_sql;
 
@@ -675,16 +739,27 @@ function FRM_listResults($frm_id, $instance_id='')
     if ($frm_id == '') return $retval;
 
     $header_arr = array(
-        array('text' => $LANG_FORMS['action'], 'field' => 'action', 
-                    'sort' => false),
-        array('text' => $LANG_FORMS['instance'], 'field' => 'instance_id', 
-                    'sort' => true),
-        array('text' => $LANG_FORMS['submitter'], 'field' => 'uid', 
-                    'sort' => true),
-        array('text' => $LANG_FORMS['submitted'], 'field' => 'submitted', 
-                    'sort' => true),
-        array('text' => $LANG_FORMS['ip_addr'], 'field' => 'ip', 
-                    'sort' => true),
+        array('text' => $LANG_FORMS['action'],
+            'field' => 'action',
+            'sort' => false,
+            'align' => 'center',
+        ),
+        array('text' => $LANG_FORMS['instance'],
+            'field' => 'instance_id',
+            'sort' => true,
+        ),
+        array('text' => $LANG_FORMS['submitter'],
+            'field' => 'uid',
+            'sort' => true,
+        ),
+        array('text' => $LANG_FORMS['submitted'],
+            'field' => 'submitted',
+            'sort' => true,
+        ),
+        array('text' => $LANG_FORMS['ip_addr'],
+            'field' => 'ip',
+            'sort' => true,
+        ),
     );
 
     $defsort_arr = array('field' => 'submitted', 'direction' => 'desc');
@@ -711,10 +786,9 @@ function FRM_listResults($frm_id, $instance_id='')
         'chkname' => 'delresmulti',
         'chkfield' => 'id',
     );
-    $retval .= ADMIN_list('forms', 'FRM_getField_results', $header_arr,
-                    $text_arr, $query_arr, $defsort_arr, '', '', 
-                    $options_arr, $form_arr);
-
+    $retval .= ADMIN_list('forms', __NAMESPACE__ . '\getField_results',
+                $header_arr, $text_arr, $query_arr, $defsort_arr, '', '',
+                $options_arr, $form_arr);
     return $retval;
 }
 
@@ -728,7 +802,7 @@ function FRM_listResults($frm_id, $instance_id='')
 *   @param  array   $icon_arr   Array of system icons
 *   @return string              HTML for the field cell
 */
-function FRM_getField_results($fieldname, $fieldvalue, $A, $icon_arr)
+function getField_results($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $_CONF_FRM, $LANG_ADMIN, $LANG_FORMS;
 
@@ -736,22 +810,26 @@ function FRM_getField_results($fieldname, $fieldvalue, $A, $icon_arr)
 
     switch($fieldname) {
     case 'action':
-        $retval = '<a href="' . FRM_ADMIN_URL . '/index.php?print=x&frm_id=' .
-            $A['frm_id'] . '&res_id=' . $A['id'] . 
-            '" target="_blank"><i class="' . $_CONF_FRM['_iconset'] . '-print frm-icon-info tooltip" ' .
-            'title="' . $LANG_FORMS['print'] . '"></i></a>' .
-            '&nbsp;<a href="' . FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' .
-            $A['id'] . '"><i class="' . $_CONF_FRM['_iconset'] . '-edit frm-icon-info tooltip"' . 
+        $url = FRM_ADMIN_URL . '/index.php?print=x&frm_id=' . $A['frm_id'] .
+                '&res_id=' . $A['id'];
+        $retval = COM_createLink(
+            '<i class="' . $_CONF_FRM['_iconset'] .
+                '-print frm-icon-info tooltip" title="' . $LANG_FORMS['print'] .
+                '"></i>',
+            '#',
+            array(
+                'onclick' => "popupWindow('$url', '', 640, 480, 1)",
+            )
+        );
+        $retval .= '&nbsp;<a href="' . FRM_ADMIN_URL .
+            '/index.php?editresult=x&res_id=' . $A['id'] . '"><i class="' .
+            $_CONF_FRM['_iconset'] . '-edit frm-icon-info tooltip"' .
             'title="' . $LANG_ADMIN['edit'] . '"></i></a>';
         break;
 
     case 'instance_id':
-        $url = FRM_ADMIN_URL . '/index.php?action=results&frm_id=' . $A['frm_id'];
+        $url = FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $A['frm_id'];
         $retval = '<a href="' . $url . '&instance_id=' . $fieldvalue . '">' . $fieldvalue . '</a>';
-        /*if (isset($_GET['instance_id'])) {
-            $retval .= '<a href="' . $url . '"><img src="' . $_CONF['layout_url'] .
-                '/images/admin/delete.png"></a>';
-        }*/
         break;
 
     case 'uid':
@@ -761,9 +839,7 @@ function FRM_getField_results($fieldname, $fieldvalue, $A, $icon_arr)
     default:
         $retval = $fieldvalue;
         break;
-
     }
-
     return $retval;
 }
 
@@ -775,7 +851,7 @@ function FRM_getField_results($fieldname, $fieldvalue, $A, $icon_arr)
 *   @param  string  $help_text  Text to display below menu
 *   @return string      HTML for admin menu section
 */
-function FRM_adminMenu($view ='', $help_text = '', $other_text='')
+function adminMenu($view ='', $help_text = '', $other_text='')
 {
     global $_CONF, $LANG_FORMS, $_CONF_FRM, $LANG01, $isAdmin;
 
@@ -800,6 +876,5 @@ function FRM_adminMenu($view ='', $help_text = '', $other_text='')
     return $retval;
 
 }
-
 
 ?>
