@@ -561,7 +561,7 @@ function getField_form($fieldname, $fieldvalue, $A, $icon_arr)
             '<i class="' . $_CONF_FRM['_iconset'] . '-code frm-icon-info"></i>',
             '#',
             array(
-                'onclick' => "popupWindow('$url', '', 640, 480, 1)",
+                'onclick' => "popupWindow('$url', '', 640, 480, 1); return false;",
             )
         );
         break;
@@ -818,7 +818,7 @@ function getField_results($fieldname, $fieldvalue, $A, $icon_arr)
                 '"></i>',
             '#',
             array(
-                'onclick' => "popupWindow('$url', '', 640, 480, 1)",
+                'onclick' => "popupWindow('$url', '', 640, 480, 1); return false;",
             )
         );
         $retval .= '&nbsp;<a href="' . FRM_ADMIN_URL .
