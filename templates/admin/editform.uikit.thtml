@@ -46,6 +46,7 @@ function confirmDelete()
       <div class="uk-form-controls">
         <span id="frm_id" class="tooltip_cfg tooltipstered"></span>
         <input required id="f_id" type="text" size="32" name="id" value="{id}" />
+        <i class="{iconset}-warning frm-icon-danger tooltip" title="{$LANG_FORMS['required']}"></i>
       </div>
     </div>
 
@@ -55,6 +56,7 @@ function confirmDelete()
       <div class="uk-form-controls">
         <span id="name" class="tooltip_cfg tooltipstered"></span>
         <input required id="f_name" type="text" size="32" name="name" value="{name}" />
+        <i class="{iconset}-warning frm-icon-danger tooltip" title="{$LANG_FORMS['required']}"></i>
       </div>
     </div>
 
@@ -164,9 +166,11 @@ function confirmDelete()
       </label>
       <div class="uk-form-controls">
         <span id="onetime" class="tooltip_cfg tooltipstered"></span>
-        <input type="radio" name="onetime" value="0" {one_chk_0} />{$LANG_FORMS['pul_mult']}
-        <input type="radio" name="onetime" value="1" {one_chk_1} />{$LANG_FORMS['pul_edit']}
-        <input type="radio" name="onetime" value="2" {one_chk_2} />{$LANG_FORMS['pul_once']}
+        <select name="onetime">
+          <option value="0" {one_chk_0} />{$LANG_FORMS['pul_mult']}</option>
+          <option value="1" {one_chk_1} />{$LANG_FORMS['pul_edit']}</option>
+          <option value="2" {one_chk_2} />{$LANG_FORMS['pul_once']}</option>
+        </select>
       </div>
     </div>
 

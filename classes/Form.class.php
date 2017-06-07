@@ -313,7 +313,7 @@ class Form
     */
     function EditForm($type = 'edit')
     {
-        global $_CONF, $_USER, $_TABLES, $LANG_FORMS;
+        global $_CONF, $_CONF_FRM, $_USER, $_TABLES, $LANG_FORMS;
 
         $T = FRM_getTemplate('editform', 'editform', 'admin');
         $T->set_var(array(
@@ -353,7 +353,8 @@ class Form
             'lang_confirm_delete' => $LANG_FORMS['confirm_form_delete'],
             'captcha_chk' => $this->captcha == 1 ? 'checked="checked"' : '',
             'inblock_chk' => $this->inblock == 1 ? 'checked="checked"' : '',
-            'one_chk_' . $this->onetime => 'checked="checked"',
+            'one_chk_' . $this->onetime => 'selected="selected"',
+            'iconset'   => $_CONF_FRM['_iconset'],
         ) );
         if (!$this->isNew) {
             $T->set_var('candelete', 'true');
