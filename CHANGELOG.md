@@ -5,6 +5,7 @@ Release TBD
 - Change Mootools elements to JQuery
 - Use standard icons across themes instead of images
 - Change AJAX from XML to JSON
+- Add "popup" autotag function for a modal popup form
 
 ## 0.1.8
 Released 2013-02-10

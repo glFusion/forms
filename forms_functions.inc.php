@@ -296,13 +296,14 @@ function FRM_GroupDropdown($group_id, $access)
 *   @param  string  $meta       Other meta info
 *   @return string              HTML for site header
 */
-function FRM_siteHeader($subject='', $meta='')
+function FRM_siteHeader($subject='', $meta='', $blocks = -1)
 {
     global $_CONF_FRM, $LANG_FRM;
 
     $retval = '';
 
-    switch($_CONF_FRM['displayblocks']) {
+    $blocks = $blocks > -1 ? $blocks : $_CONF_FRM['displayblocks'];
+    switch($blocks) {
     case 2:     // right only
     case 0:     // none
         $retval .= COM_siteHeader('none', $subject, $meta);
@@ -314,30 +315,38 @@ function FRM_siteHeader($subject='', $meta='')
         $retval .= COM_siteHeader('menu', $subject, $meta);
         break;
     }
-
     return $retval;
-
 }
 
 
 /**
 *   Show the site footer, with or without right blocks according to config.
+*   If zero is given as an argument, then COM_siteFooter() is called to
+*   finish output but is not displayed. This is so a popup form will not have
+*   the complete site content but only the form.
 *
 *   @see    COM_siteFooter()
-*   @return string              HTML for site header
+*   @param  integer $blocks Zero to hide sitefooter
+*   @return string          HTML for site header
 */
-function FRM_siteFooter()
+function FRM_siteFooter($blocks = -1)
 {
     global $_CONF_FRM, $_CONF;
 
     $retval = '';
 
+    if ($blocks == 0) {
+        // Run siteFooter to finish the page, but return nothing
+        COM_siteFooter();
+        return;
+    }
+
     if ($_CONF['show_right_blocks']) {
         $retval .= COM_siteFooter(true);
         return $retval;
     }
-
-    switch($_CONF_FRM['displayblocks']) {
+    $blocks = $blocks > -1 ? $blocks : $_CONF_FRM['displayblocks'];
+    switch($blocks) {
     case 2 : // right only
     case 3 : // left and right
         $retval .= COM_siteFooter(true);
@@ -349,9 +358,7 @@ function FRM_siteFooter()
         $retval .= COM_siteFooter();
         break;
     }
-
     return $retval;
-
 }
 
 ?>

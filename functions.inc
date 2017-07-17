@@ -194,7 +194,7 @@ function plugin_getuseroption_forms()
 */
 function plugin_upgrade_forms()
 {
-    require_once dirname(__FILE__) . '/upgrade.inc.php';
+    require_once __DIR__ . '/upgrade.inc.php';
     return FRM_do_upgrade();
 }
 
@@ -402,6 +402,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
         $HTML = '';
         $frm_id = '';
         $template = '';
+        $popup = false;
         // default to false to control admin true/false in results table
         $fldnames = false;
         $target = '_self';
@@ -411,38 +412,41 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
         case 'forms':
             USES_forms_class_form();
             $option = COM_applyFilter($autotag['parm1']);
+            //$option = $parms[0];
             $px = explode(' ', trim($autotag['parm2']));
             $skip = 0;
-
             if (is_array($px)) {
                 foreach($px as $part) {
-                    if (strstr($part, ':') !== false) {
-                        list($parm, $val) = explode(':', $part);
+                    list($parm, $val) = explode(':', $part);
 
-                        switch ($parm) {
-                        case 'form':
-                        case 'id':
-                            $frm_id = COM_sanitizeID($val);
-                            $skip++;
-                            break;
-                        case 'fields':
-                            $fldnames = explode(',', $val);
-                            $skip++;
-                            break;
-                        case 'template':
-                            $template = $val;
-                            $skip++;
-                            break;
-                        case 'target':      // for the "link" option
-                            $target = htmlspecialchars($val);
-                            $skip++;
-                            break;
-                        case 'instance':
-                            $instance_id = $val;
-                            $skip++;
-                            break;
-                        }
-                    }
+                    switch ($parm) {
+                    case 'form':
+                    case 'id':
+                        $frm_id = COM_sanitizeID($val);
+                        $skip++;
+                        break;
+                    case 'fields':
+                        $fldnames = explode(',', $val);
+                        $skip++;
+                        break;
+                    case 'template':
+                        $template = $val;
+                        $skip++;
+                        break;
+                    case 'target':      // for the "link" option
+                        $target = htmlspecialchars($val);
+                        $skip++;
+                        break;
+                    case 'instance':
+                        $instance_id = $val;
+                        $skip++;
+                        break;
+                    case 'popup':
+                        // "popup:true" or just "popup" to get a popup form
+                        $popup = empty($val) ? true : $val == true ? true : false;
+                        $skip++;
+                        break;
+                     }
                 }
 
                 // Any leftover parts become the caption.  Borrowed from
@@ -487,19 +491,24 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     break;
 
                 case 'link':
-                    $url = FRM_PI_URL . '/index.php?frm_id=' . $frm_id;
+                    $url = FRM_PI_URL . '/index.php?modal=x&frm_id=' . $frm_id;
                     if (!empty($instance_id))
                         $url .= '&instance_id=' . urlencode($instance_id);
-                    $url = COM_buildUrl($url);
                     if (empty($caption)) {
                         $caption = DB_getItem($_TABLES['forms_frmdef'], 'name',
                                 "id='$frm_id'");
                     }
+                    $opts = array(
+                        'title' => $caption,
+                        'target' => $target,
+                    );
+                    if ($popup) {
+                        $opts['onclick'] = "popupWindow('$url', '', 640, 480, 1); return false;";
+                        $url = '';
+                    }
                     // Need a caption for the link text
                     if (!empty($caption)) {
-                        $HTML = COM_createLink($caption, $url, 
-                                array('title'=>$caption,
-                                    'target' => $target) );
+                        $HTML = COM_createLink($caption, $url, $opts);
                     }
                     break;
 
