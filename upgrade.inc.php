@@ -28,7 +28,7 @@ require_once FRM_PI_PATH . "/sql/{$_DB_dbms}_install.php";
 *   @param  string  $current_ver    Current installed version to be upgraded
 *   @return integer                 Error code, 0 for success
 */
-function FRM_do_upgrade($current_ver)
+function FRM_do_upgrade()
 {
     global $_CONF_FRM, $_PLUGIN_INFO;
 
@@ -58,7 +58,7 @@ function FRM_do_upgrade($current_ver)
     }
 
     if (!COM_checkVersion($current_ver, '0.1.1')) {
-        $current_ver < '0.1.1') {
+        $current_ver = '0.1.1';
         COM_errorLog("Updating Plugin to $current_ver");
         if (!FRM_upgrade_0_1_1()) return false;
     }
@@ -118,6 +118,7 @@ function FRM_do_upgrade($current_ver)
         if (!FRM_do_set_version($current_ver)) return false;
     }
 
+    if (!FRM_do_set_version($current_ver)) return false;
     COM_errorLog('Successfully updated the Forms plugin');
     return true;
 }
