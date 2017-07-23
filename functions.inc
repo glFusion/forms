@@ -491,7 +491,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     break;
 
                 case 'link':
-                    $url = FRM_PI_URL . '/index.php?modal=x&frm_id=' . $frm_id;
+                    $url = FRM_PI_URL . '/index.php?frm_id=' . $frm_id;
                     if (!empty($instance_id))
                         $url .= '&instance_id=' . urlencode($instance_id);
                     if (empty($caption)) {
@@ -503,8 +503,10 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         'target' => $target,
                     );
                     if ($popup) {
+                        $url .= '&modal=x';
                         $opts['onclick'] = "popupWindow('$url', '', 640, 480, 1); return false;";
-                        $url = '';
+                        //$opts['data-uk-lightbox'] = '';
+                        //$url = '';
                     }
                     // Need a caption for the link text
                     if (!empty($caption)) {
