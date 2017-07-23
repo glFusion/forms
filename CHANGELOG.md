@@ -1,6 +1,6 @@
 # Changelog - Forms plugin for glFusion
 ## 0.3.0
-Release TBD
+Release 2017-07-23
 - Implement "Forms" namespace
 - Change Mootools elements to JQuery
 - Use standard icons across themes instead of images
