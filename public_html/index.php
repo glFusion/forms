@@ -81,13 +81,14 @@ case 'savedata':
         $q['msg'] = $msg;
         $q['plugin'] = $_CONF_FRM['pi_name'];
         $q['frm_id'] = $F->id;
-        $redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
+        //$redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
         $q_arr = array();
         foreach($q as $key=>$value) {
             $q_arr[] = "$key=" . urlencode($value);
         }
-        $redirect .= join('&', $q_arr);
-            echo COM_refresh($redirect);
+        $sep = strpos($redirect, '?') ? '&' : '?';
+        $redirect .= $sep . join('&', $q_arr);
+        echo COM_refresh($redirect);
     } else {
         $msg = '2';
         if (!isset($_POST['referrer']) || empty($_POST['referrer'])) {
@@ -154,7 +155,8 @@ default:
         echo COM_refresh($_CONF['site_url']);
         exit;
     } else {
-        echo FRM_showForm($frm_id);
+        $modal = isset($_POST['modal']) || isset($_GET['modal']) ? true : false;
+        echo FRM_showForm($frm_id, $modal);
     }
     break;
 }
@@ -166,7 +168,7 @@ default:
 *   @param  integer $frm_id     Form ID
 *   @return string              HTML for the displayed form
 */
-function FRM_showForm($frm_id)
+function FRM_showForm($frm_id, $modal = false)
 {
     global $_CONF_FRM, $_CONF;
 
@@ -174,7 +176,8 @@ function FRM_showForm($frm_id)
     // to fill it out
     $F = new \Forms\Form($frm_id, FRM_ACCESS_FILL);
 
-    echo \Forms\FRM_siteHeader($F->name);
+    $blocks = $modal ? 0 : -1;
+    echo \Forms\FRM_siteHeader($F->name, '', $blocks);
     if (isset($_GET['msg']) && !empty($_GET['msg'])) {
         echo COM_showMessage(
                 COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']);
@@ -189,8 +192,8 @@ function FRM_showForm($frm_id)
             echo COM_refresh($_CONF['site_url']);
         }
     }
-    echo \Forms\FRM_siteFooter();
+    $blocks = $modal ? 0 : -1;
+    echo \Forms\FRM_siteFooter($blocks);
 }
-
 
 ?>
