@@ -1,9 +1,9 @@
 {# begin {templatelocation} #}
 <div class="uk-form-horizontal">
 {!if additional}
-<span class="alert">
+<div class="uk-alert uk-alert-danger">
 {additional}
-</span>
+</div>
 {!endif}
 <form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
 {introtext}

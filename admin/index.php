@@ -451,7 +451,7 @@ function listForms()
 */
 function listFields($frm_id = '')
 {
-    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_SYSTEM;
+    global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_CONF_FRM;
 
     $retval = '';
 
@@ -509,6 +509,7 @@ function listFields($frm_id = '')
     $T->set_file('formfields', 'formfields.thtml');
     $T->set_var(array(
         'action_url'    => FRM_ADMIN_URL . '/index.php',
+        'is_uikit'      => $_CONF_FRM['_is_uikit'],
         'frm_id'        => $frm_id,
         'pi_url'        => FRM_PI_URL,
         'field_adminlist' => ADMIN_list('forms',
