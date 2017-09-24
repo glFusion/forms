@@ -487,7 +487,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
 
                 case 'results':
                     USES_forms_functions();
-                    $HTML = FRM_ResultsTable($frm_id, $fldnames, $instance_id);
+                    $HTML = Forms\FRM_ResultsTable($frm_id, $fldnames, $instance_id);
                     break;
 
                 case 'link':
