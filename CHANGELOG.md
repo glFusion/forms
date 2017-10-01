@@ -1,4 +1,8 @@
 # Changelog - Forms plugin for glFusion
+## 0.3.1
+Release TBD
+- Implement PHP class autoloader
+
 ## 0.3.0
 Release 2017-07-23
 - Implement "Forms" namespace

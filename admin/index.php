@@ -79,7 +79,6 @@ switch ($action) {
 case 'action':      // Got "?action=something".
     switch ($actionval) {
     case 'bulkfldaction':
-        USES_forms_class_field();
         if (!isset($_POST['cb']) || !isset($_POST['frm_id']))
             break;
         $id = $_POST['frm_id'];    // Override the usual 'id' parameter
@@ -111,15 +110,12 @@ case 'reorder':
     $fld_id = isset($_GET['fld_id']) ? $_GET['fld_id'] : 0;
     $where = isset($_GET['where']) ? $_GET['where'] : '';
     if ($frm_id != '' && $fld_id > 0 && $where != '') {
-        USES_forms_class_field();
         $msg = Field::Move($frm_id, $fld_id, $where);
     }
     $view = 'editform';
     break;
 
 case 'updateresult':
-    USES_forms_class_form();
-    USES_forms_class_result();
     $F = new Form($_POST['frm_id']);
     $R = new Result($_POST['res_id']);
     $R->SaveData($_POST['frm_id'], $F->fields, $_POST, $R->uid);
@@ -127,7 +123,6 @@ case 'updateresult':
     break;
 
 case 'updatefield':
-    USES_forms_class_field();
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
     $F = new Field($fld_id, $frm_id);
     $msg = $F->SaveDef($_POST);
@@ -137,12 +132,10 @@ case 'updatefield':
 case 'delbutton_x':
     if (isset($_POST['delfield']) && is_array($_POST['delfield'])) {
         // Deleting one or more fields
-        USES_forms_class_field();
         foreach ($_POST['delfield'] as $key=>$value) {
             Field::Delete($value);
         }
     } elseif (isset($_POST['delresmulti']) && is_array($_POST['delresmulti'])) {
-        USES_forms_class_result();
         foreach ($_POST['delresmulti'] as $key=>$value) {
             Result::Delete($value);
         }
@@ -152,7 +145,6 @@ case 'delbutton_x':
     break;
 
 case 'copyform':
-    USES_forms_class_form();
     $F = new Form($frm_id);
     $msg = $F->Duplicate();
     if (empty($msg)) {
@@ -165,7 +157,6 @@ case 'copyform':
     break;
 
 case 'updateform':
-    USES_forms_class_form();
     $F = new Form($_POST['old_id']);
     $msg = $F->SaveDef($_POST);
     if ($msg != '') {                   // save operation failed
@@ -183,7 +174,6 @@ case 'deleteFrmDef':
     // Delete a form definition.  Also deletes user values.
     if (!$isAdmin) COM_404();
     $id = $_REQUEST['frm_id'];
-    USES_forms_class_form();
     $msg = Form::DeleteDef($id);
     $view = 'listforms';
     break;
@@ -191,7 +181,6 @@ case 'deleteFrmDef':
 case 'deleteFldDef':
     if (!$isAdmin) COM_404();
     // Delete a field definition.  Also deletes user values.
-    USES_forms_class_field();
     $msg = Field::Delete($_GET['fld_id']);
     $view = 'editform';
     break;
@@ -215,10 +204,6 @@ case 'results':
     break;
 
 case 'export':
-    USES_forms_class_form();
-    USES_forms_class_result();
-    USES_forms_class_field();
-
     $Frm = new Form($frm_id);
 
     // Get the form result sets
@@ -259,7 +244,6 @@ case 'export':
 case 'preview':
     $content .= adminMenu($view, 'hdr_form_preview');
     if ($frm_id != '') {
-        USES_forms_class_form();
         $F = new Form($frm_id);
         $T = new \Template($_CONF['path'] . '/plugins/forms/templates/');
         $T->set_file('header', 'preview_header.thtml');
@@ -276,7 +260,6 @@ case 'preview':
 
 case 'showhtml':
     if ($frm_id != '') {
-        USES_forms_class_form();
         $F = new Form($frm_id);
         header('Content-type: text/html');
         echo '<html><body><pre>' .
@@ -289,7 +272,6 @@ case 'showhtml':
 case 'print':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
     if ($frm_id != '' && $res_id > 0) {
-        USES_forms_class_form();
         $F = new Form($frm_id);
         $content .= $F->Prt($res_id, true);
         echo $content;
@@ -298,7 +280,6 @@ case 'print':
     break;
 
 case 'editresult':
-    USES_forms_class_form();
     $res_id = (int)$_GET['res_id'];
     $frm_id = DB_getItem($_TABLES['forms_results'], 'frm_id',
             "id={$res_id}");
@@ -311,7 +292,6 @@ case 'editresult':
 
 case 'editform':
     // Edit a single definition
-    USES_forms_class_form();
     $F = new Form($frm_id);
     $content .= adminMenu($view, 'hlp_edit_form');
     $content .= $F->EditForm();
@@ -326,7 +306,6 @@ case 'editform':
 case 'editfield':
     if (!$isAdmin) COM_404();
     $fld_id = isset($_GET['fld_id']) ? (int)$_GET['fld_id'] : 0;
-    USES_forms_class_field();
     $F = new Field($fld_id, $frm_id);
     $content .= adminMenu($view, 'hdr_field_edit');
     $content .= $F->EditDef();

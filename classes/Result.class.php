@@ -3,16 +3,15 @@
 *   Class to handle the form results.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.0.3
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
 *               GNU Public License v2 or later
 *   @filesource
 */
 namespace Forms;
 
-USES_forms_class_field();
 
 /**
 *   Class for a single form's result
@@ -378,7 +377,6 @@ class Result
         // Retrieve the values for this result set
         $this->GetValues($this->fields);
 
-        USES_class_date();
         $dt = new Date($this->dt, $_CONF['timezone']);
 
         $T = new Template(FRM_PI_PATH . '/templates');

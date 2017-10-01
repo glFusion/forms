@@ -26,10 +26,6 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 {
     global $_TABLES, $_USER, $_GROUPS;
 
-    USES_forms_class_form();
-    USES_forms_class_result();
-    USES_forms_class_field();
-
     //$grp_list = implode(',', $_GROUPS);
     //$perm_sql = " AND (f.owner_id='". (int)$_USER['uid'] . "'
     //    OR f.results_gid IN ($grp_list) )";

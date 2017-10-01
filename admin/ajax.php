@@ -33,7 +33,6 @@ case 'toggleEnabled':
     if (isset($_POST['type'])) {
         switch ($_POST['type']) {
         case 'form':
-            USES_forms_class_form();
             $newval = \Forms\Form::toggle($_POST['id'], 'enabled', $_POST['oldval']);
             /*$type = 'form';
             $table = 'forms_frmdef';
@@ -45,8 +44,6 @@ case 'toggleEnabled':
             case 'required':
             case 'enabled':
             case 'user_reg':
-                USES_forms_class_field();
-COM_errorLog("here");
                 $newval = \Forms\Field::toggle($_POST['id'], $var, $_POST['oldval']);
                 break;
             }

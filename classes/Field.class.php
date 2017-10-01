@@ -5,7 +5,7 @@
 *   @author     Lee Garner <lee@leegarner.com>
 *   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.3.0
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
@@ -54,7 +54,6 @@ class Field
             // Get the group IDs that can fill out and view results for this
             // field
             if (!empty($frm_id)) {
-                USES_forms_class_form();
                 $Frm = new Form($frm_id);
                 $this->results_gid = $Frm->results_gid;
                 $this->fill_gid = $Frm->fill_gid;

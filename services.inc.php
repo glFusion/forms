@@ -4,9 +4,9 @@
 *   This allows other plugins to request data and forms.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2012 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2012-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.1.5
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
 *               GNU Public License v2 or later
 *   @filesource
@@ -27,8 +27,6 @@ if (!defined ('GVERSION')) {
 */
 function service_renderForm_forms($args, &$output, &$svc_msg)
 {
-    USES_forms_class_form();
-
     $F = new \Forms\Form($args['frm_id']);
     if ($F->isNew) return PLG_RET_ERROR;
     $res_id = isset($args['res_id']) ? $args['res_id'] : '';
@@ -57,8 +55,6 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
 */
 function service_createForm_forms($args, &$output, &$svc_msg)
 {
-    USES_forms_class_form();
-
     $frm = $args['form'];
     if (empty($frm['frm_id'])) $frm['frm_id'] = COM_makeSid();
 
@@ -98,8 +94,6 @@ function service_printForm_forms($args, &$output, &$svc_msg)
     if ($res_id < 1) return PLG_RET_ERROR;
 
     $content = '';
-    USES_forms_class_form();
-    USES_forms_class_result();
     $F = new \Forms\Form($args['frm_id']);
     $F->ReadData($res_id);
     if ($F->Result->uid == $_USER['uid'] || plugin_isadmin_forms()) {

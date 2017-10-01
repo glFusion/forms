@@ -4,9 +4,9 @@
 *   Used to either display a specific form, or to save the user-entered data.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.1.1
+*   @version    0.3.0
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
@@ -18,7 +18,6 @@ if (!in_array('forms', $_PLUGINS)) {
 }
 
 USES_forms_functions();
-USES_forms_class_form();
 
 $action = '';
 $actionval = '';
@@ -134,7 +133,6 @@ case 'print':
     $frm_id = isset($_GET['frm_id']) ? $_GET['frm_id'] : '';
     if ($res_id > 0) {
         if (empty($frm_id)) {
-            USES_forms_class_result();
             $R = new \Forms\Result($res_id);
             if ($R->uid == $_USER['uid'] || plugin_isadmin_forms()) {
                 $content .= $R->Prt();

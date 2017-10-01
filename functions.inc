@@ -3,9 +3,9 @@
 *   Public API functions for the Forms plugin for glFusion.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2011 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.1.5
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
 *               GNU Public License v2 or later
 *   @filesource
@@ -77,18 +77,21 @@ if (file_exists("$langpath/custom/$langfile")) {
     include_once "$langpath/custom/$langfile";
 }
 
+spl_autoload_register(function($class)
+{
+    if (strpos($class, 'Forms\\') === 0) {
+        $class = str_replace('Forms\\', '', $class);
+        $path = __DIR__ . '/classes/' . $class . '.class.php';
+        if (file_exists($path)) {
+            include $path;
+        }
+    }
+});
+
+
 // Import plugin-specific functions
 function USES_forms_functions()
 {   require_once FRM_PI_PATH . '/forms_functions.inc.php';  }
-
-function USES_forms_class_form()
-{   require_once FRM_PI_PATH . '/classes/Form.class.php';   }
-
-function USES_forms_class_field()
-{   require_once FRM_PI_PATH . '/classes/Field.class.php';  }
-
-function USES_forms_class_result()
-{   require_once FRM_PI_PATH . '/classes/Result.class.php'; }
 
 /** Include service functions */
 require_once FRM_PI_PATH . '/services.inc.php';
@@ -356,34 +359,6 @@ function FRM_stringFromValues($val, $A)
 
 
 /**
-*   Return a single value from the values table corresponding to
-*   a specific user ID and item name.
-*   Not used by this plugin, but intended to provide a basic API to
-*   other plugins.
-*
-*   @deprecated
-*   @param  string  $key    Name of item to retrieve
-*   @param  integer $uid    User ID, current user if zero
-*   @return array           array(value, value_text) for the requested item.
-*/
-function XXFRM_getValue($key, $uid=0)
-{
-    global $_TABLES, $_USER;
-
-    if ($key == '')
-        return '';
-    $uid = (int)$uid;
-    if ($uid == 0) $uid = $_USER['uid'];
-
-    $A = FRM_getDefs($uid, $key);
-    return array($A[$key]['value'], $A[$key]['value_text']);
-    //USES_forms_class_forms();
-    //$P = new Profile($uid, $key);
-    //return array($P->items[$key]->value, $P->items[$key]->value_text);
-}
-
-
-/**
 *   Implements autotags for forms.
 *
 *   @param  string  $op         Name of operation
@@ -410,7 +385,6 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
 
         switch ($autotag['tag']) {
         case 'forms':
-            USES_forms_class_form();
             $option = COM_applyFilter($autotag['parm1']);
             //$option = $parms[0];
             $px = explode(' ', trim($autotag['parm2']));

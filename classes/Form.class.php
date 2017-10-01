@@ -3,16 +3,15 @@
 *   Class to handle all forms items.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2013 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.2.1
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
 namespace Forms;
 
-USES_forms_class_field();
 
 /**
 *   Class for a user's custom forms.
@@ -235,8 +234,6 @@ class Form
     */
     public function ReadData($res_id = 0, $token = '')
     {
-        USES_forms_class_result();
-
         if ($res_id == 0) {
             $res_id = Result::FindResult($this->id, $this->uid);
         } else {
@@ -410,13 +407,11 @@ class Form
         if ($this->onetime == FRM_LIMIT_ONCE) {
             if ($res_id == 0) {
                 // even if no result ID given, see if there is one
-                USES_forms_class_result();
                 $res_id = Result::FindResult($this->id, $this->uid);
             }
             if ($res_id > 0) return false;       // can't update the submission
         } elseif ($this->onetime == FRM_LIMIT_EDIT) {
             // check that the supplied result ID is the same as the saved one.
-            USES_forms_class_result();
             $real_res_id = Result::FindResult($this->id, $this->uid);
             if ($real_res_id != $res_id) {
                 return false;
@@ -463,7 +458,6 @@ class Form
         // All fields are valid, carry on with the onsubmit actions
         $onsubmit = $this->onsubmit;
         if ($onsubmit & FRM_ACTION_STORE) {
-            USES_forms_class_result();
             $this->Result = new Result($res_id);
             $this->Result->setInstance($this->instance_id);
             $this->res_id = $this->Result->SaveData($this->id, $this->fields, 
@@ -539,7 +533,6 @@ class Form
                 }
             }
 
-            USES_class_date();
             $dt = new \Date('now', $_CONF['timezone']);
             $subject = sprintf($LANG_FORMS['formsubmission'], $this->name);
 
@@ -699,8 +692,6 @@ class Form
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS, $_CONF_FRM;
 
-        USES_forms_class_field();
-
         $retval = '';
         $isAdmin = false;
 
@@ -750,7 +741,6 @@ class Form
         } elseif ($this->onetime > FRM_LIMIT_MULTI) {
             // this is a one-time form, so check that it hasn't already been
             // filled.
-            USES_forms_class_result();
             $res_id = Result::FindResult($this->id, $this->uid);
             if ($res_id > 0) {
                 if ($this->onetime == FRM_LIMIT_ONCE) {  // no editing
@@ -857,8 +847,6 @@ class Form
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_USER;
 
-        USES_forms_class_field();
-
         $res_id = (int)$res_id;
         if ($res_id > 0) {
             // If data hasn't already been read.
@@ -872,7 +860,6 @@ class Form
             return $this->noaccess_msg;
         }
 
-        USES_class_date();
         $dt = new \Date($this->Result->dt, $_CONF['timezone']);
 
         $T = new \Template(FRM_PI_PATH . '/templates');
@@ -949,7 +936,6 @@ class Form
             WHERE frm_id='$frm_id'";
         $r = DB_query($sql, 1);
         if ($r) {
-            USES_forms_class_result();
             while ($A = DB_fetchArray($r, false)) {
                 Result::Delete($A['id']);
             }
