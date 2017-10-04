@@ -43,7 +43,7 @@ function FRM_do_upgrade()
     } else {
         return false;
     }
-    $installed_ver = plugin_chkVersion_forms();
+    $code_ver = plugin_chkVersion_forms();
 
     if (!COM_checkVersion($current_ver, '0.0.5')) {
         $current_ver = '0.0.5';
@@ -118,7 +118,9 @@ function FRM_do_upgrade()
         if (!FRM_do_set_version($current_ver)) return false;
     }
 
-    if (!FRM_do_set_version($current_ver)) return false;
+    if (!COM_checkVersion($current_ver, $code_ver)) {
+        if (!FRM_do_set_version($code_ver)) return false;
+    }
     COM_errorLog('Successfully updated the Forms plugin');
     return true;
 }
