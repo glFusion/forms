@@ -157,7 +157,7 @@ function insertRow(list) {
     </div>
 
     <div class="uk-form-row" id="cols">
-      <label for="f_cols" class="uk-form-label">{$LANG_FORMS['columnss']}</label>
+      <label for="f_cols" class="uk-form-label">{$LANG_FORMS['columns']}</label>
       <div class="uk-form-controls">
         <span id="columns" class="tooltip_cfg tooltipstered"></span>
         <input id="f_cols" type="text" size="4" name="cols" value="{cols}" />
