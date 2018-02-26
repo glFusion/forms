@@ -186,6 +186,12 @@ $PLG_forms_MESSAGE5 = 'Ein Datenbankfehler ist aufgetreten. Überprüfe die Datei 
 $PLG_forms_MESSAGE6 = 'Dein Formular wurde erstellt. Du kannst nun Felder erstellen.';
 $PLG_forms_MESSAGE7 = 'Die maximale Anzahl der Einsendungen wurde erreicht.';
 
+/** Language strings for the plugin configuration section */
+$LANG_configsections['forms'] = array(
+    'label' => 'Forms',
+    'title' => 'Forms Configuration'
+);
+
 $LANG_configsubgroups['forms'] = array(
     'sg_main'				=> 'Haupteinstellungen'
 );

@@ -54,6 +54,7 @@ foreach($expected as $provided) {
 $view = isset($_REQUEST['view']) ? $_REQUEST['view'] : $action;
 $frm_id = isset($_REQUEST['frm_id']) ? COM_sanitizeID($_REQUEST['frm_id']) : '';
 $msg = isset($_GET['msg']) && !empty($_GET['msg']) ? $_GET['msg'] : '';
+$content = '';
 
 // Get the permission SQL once, since it's used in a couple of places.
 // This determines if the current user is an admin for a particular form
@@ -415,7 +416,7 @@ function listForms()
         'default_filter' => ''
     );
     $defsort_arr = array('field' => 'name', 'direction' => 'ASC');
-
+    $form_arr = array();
     $retval .= ADMIN_list('forms', __NAMESPACE__ . '\getField_form', $header_arr,
                     $text_arr, $query_arr, $defsort_arr, '', '', '', $form_arr);
 
@@ -431,8 +432,6 @@ function listForms()
 function listFields($frm_id = '')
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_CONF_FRM;
-
-    $retval = '';
 
     $header_arr = array(
         array('text' => $LANG_ADMIN['edit'],
@@ -483,7 +482,7 @@ function listFields($frm_id = '')
     if ($frm_id != '') {
         $query_arr['sql'] .= " WHERE frm_id='" . DB_escapeString($frm_id) . "'";
     }
-
+    $form_arr = array();
     $T = new \Template(FRM_PI_PATH . '/templates/admin');
     $T->set_file('formfields', 'formfields.thtml');
     $T->set_var(array(
@@ -496,10 +495,8 @@ function listFields($frm_id = '')
                     $text_arr, $query_arr, $defsort_arr, '', '',
                     $options_arr, $form_arr),
     ) );
-
     $T->parse('output', 'formfields');
-    $retval .= $T->finish($T->get_var('output'));
-    return $retval;
+    return $T->finish($T->get_var('output'));
 }
 
 
@@ -852,9 +849,7 @@ function adminMenu($view ='', $help_text = '', $other_text='')
 
     $text = $LANG_FORMS[$help_text];
     if (!empty($other_text)) $text .= '<br />' . $other_text;
-    $retval .= ADMIN_createMenu($menu_arr, $text, plugin_geticon_forms());
-    return $retval;
-
+    return ADMIN_createMenu($menu_arr, $text, plugin_geticon_forms());
 }
 
 ?>

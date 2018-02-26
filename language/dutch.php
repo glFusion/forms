@@ -181,6 +181,12 @@ $PLG_forms_MESSAGE5 = 'A database error occurred.  Check your site\'s error.log'
 $PLG_forms_MESSAGE6 = 'Your form has been created. You may now create fields.';
 $PLG_forms_MESSAGE7 = 'Sorry, the maximum number of submissions has been reached.';
 
+/** Language strings for the plugin configuration section */
+$LANG_configsections['forms'] = array(
+    'label' => 'Forms',
+    'title' => 'Forms Configuration'
+);
+
 $LANG_configsubgroups['form'] = array(
     'sg_main' => 'Hoofd Instellingen'
 );

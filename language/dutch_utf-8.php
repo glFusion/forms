@@ -23,8 +23,7 @@ $LANG_FORMS = array(
   'autogen' => 'Auto-Genereren',
   'block_title' => 'Aangepaste Profielvelden',
   'calc_type' => 'Calculation Type',
-  'calc_types' =>
-  array (
+  'calc_types' => array (
     'add' => 'Addition',
     'sub' => 'Subtraction',
     'mul' => 'Multiplication',
@@ -53,8 +52,7 @@ $LANG_FORMS = array(
   'fieldtype' => 'Veldtype',
   'first' => 'Eerste',
   'fld_access' => 'Field Access',
-  'fld_types' =>
-  array (
+  'fld_types' => array (
     'text' => 'Text',
     'textarea' => 'TextArea',
     'numeric' => 'Numeric',
@@ -173,6 +171,20 @@ $LANG_FORMS = array(
 'toggle_success' => 'Item has been updated.',
 'toggle_failure' => 'Error updating item.',
 'edit_result_header' => 'Editing the submission by %1$s (%2$d) from %3$s at %4$s',
+);
+
+$PLG_forms_MESSAGE1 = 'Thank you for your submission.';
+$PLG_forms_MESSAGE2 = 'The form contains missing or invalid fields.';
+$PLG_forms_MESSAGE3 = 'The form has been updated.';
+$PLG_forms_MESSAGE4 = 'Error updating the Forms plugin version.';
+$PLG_forms_MESSAGE5 = 'A database error occurred.  Check your site\'s error.log';
+$PLG_forms_MESSAGE6 = 'Your form has been created. You may now create fields.';
+$PLG_forms_MESSAGE7 = 'Sorry, the maximum number of submissions has been reached.';
+
+/** Language strings for the plugin configuration section */
+$LANG_configsections['forms'] = array(
+    'label' => 'Forms',
+    'title' => 'Forms Configuration'
 );
 
 $LANG_configsubgroups['form'] = array(

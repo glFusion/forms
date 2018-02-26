@@ -72,11 +72,30 @@ class Form
             }
         } else {
             $this->isNew = true;
-            $this->fill_gid = $_CONF_FRM['def_fill_gid'];
-            $this->results_gid = $_CONF_FRM['def_results_gid'];
+            $this->fill_gid = $_CONF_FRM['fill_gid'];
+            $this->results_gid = $_CONF_FRM['results_gid'];
             $this->group_id = $def_group;
             $this->enabled = 1;
             $this->id = COM_makeSid();
+            $this->enabled = 1;
+            $this->id = COM_makeSid();
+            $this->introtext = '';
+            $this->submit_msg = '';
+            $this->noaccess_msg = '';
+            $this->noedit_msg = '';
+            $this->max_submit_msg = '';
+            $this->name = '';
+            $this->email = '';
+            $this->owner_id = 2;
+            $this->onsubmit = 0;
+            $this->filled_by = 0;
+            $this->inblock = 0;
+            $this->max_submit = 0;
+            $this->onetime = 0;
+            $this->moderate = 0;
+            $this->captcha = 0;
+            //$this->properties[$name] = $value == 0 ? 0 : 1;
+            $this->redirect = '';
         }
     }
 
@@ -141,6 +160,8 @@ class Form
     */
     function __get($name)
     {
+        global $_CONF;
+
         // Special handling, return the site_url by default
         if ($name == 'redirect') {
             if (isset($this->properties['redirect']) &&
@@ -267,7 +288,6 @@ class Form
         $this->fill_gid = $A['fill_gid'];
         $this->results_gid = $A['results_gid'];
         $this->onetime = $A['onetime'];
-        $this->moderate = $A['moderate'];
         $this->submit_msg = $A['submit_msg'];
         $this->noaccess_msg = $A['noaccess_msg'];
         $this->noedit_msg = $A['noedit_msg'];
@@ -282,11 +302,13 @@ class Form
             $this->captcha = $A['captcha'];
             $this->old_id = $A['id'];
             $this->inblock = $A['inblock'];
+            $this->moderate = $A['moderate'];
         } else {
             // This is coming from a form
             $this->enabled = isset($A['enabled']) ? 1 : 0;
             $this->captcha = isset($A['captcha']) ? 1 : 0;
             $this->inblock = isset($A['inblock']) ? 1 : 0;
+            $this->moderate = isset($A['moderate']) ? 1 : 0;
 
             $onsubmit = 0;      // start fresh
             if (isset($A['onsubmit']) && is_array($A['onsubmit'])) {
@@ -311,6 +333,14 @@ class Form
     function EditForm($type = 'edit')
     {
         global $_CONF, $_CONF_FRM, $_USER, $_TABLES, $LANG_FORMS;
+
+        if (isset($_POST['referrer'])) {
+            $referrer = $_POST['referrer'];
+        } elseif (isset($_SERVER['HTTP_REFERER'])) {
+            $referrer = $_SERVER['HTTP_REFERER'];
+        } else {
+            $referrer = '';
+        }
 
         $T = FRM_getTemplate('editform', 'editform', 'admin');
         $T->set_var(array(
@@ -345,8 +375,7 @@ class Form
             'preview_chk' => $this->onsubmit & FRM_ACTION_DISPLAY ? 
                         'checked="checked"' : '',
             'doc_url'   => FRM_getDocURL('form_def.html'),
-            'referrer'      => isset($_POST['referrer']) ? 
-                                $_POST['referrer'] : $_SERVER['HTTP_REFERER'],
+            'referrer'      => $referrer,
             'lang_confirm_delete' => $LANG_FORMS['confirm_form_delete'],
             'captcha_chk' => $this->captcha == 1 ? 'checked="checked"' : '',
             'inblock_chk' => $this->inblock == 1 ? 'checked="checked"' : '',
@@ -422,7 +451,7 @@ class Form
         // for the spam check.
         $spamcheck = '';
         foreach ($this->fields as $fld_id=>$fld) {
-            switch ($fld_type) {
+            switch ($fld->type) {
             case 'text':
             case 'textarea':
             case 'link':
@@ -460,6 +489,7 @@ class Form
         if ($onsubmit & FRM_ACTION_STORE) {
             $this->Result = new Result($res_id);
             $this->Result->setInstance($this->instance_id);
+            $this->Result->setModerate($this->moderate);
             $this->res_id = $this->Result->SaveData($this->id, $this->fields, 
                     $vals, $this->uid);
         } else {
@@ -474,8 +504,10 @@ class Form
                             $vals[$fname.'_hour'], $vals[$fname.'_minute']);
                     }
                     $this->fields[$fld_id]->value = self::_stripHtml($val);
-                } else {
+                } elseif (isset($vale[$field->name])) {
                     $this->fields[$fld_id]->value = $vals[$field->name];
+                } else {
+                    $this->fields[$fld_id] = '';
                 }
             }
             $this->res_id = false;
@@ -725,8 +757,13 @@ class Form
             $saveaction = 'updateresult';
             $isAdmin = true;
         } else {
-            $referrer = isset($_POST['referrer']) ? 
-                        $_POST['referrer'] : $_SERVER['HTTP_REFERER'];
+            if (isset($_POST['referrer'])) {
+                $referrer = $_POST['referrer'];
+            } elseif (isset($_SERVER['HTTP_REFERER'])) {
+                $referrer = $_SERVER['HTTP_REFERER'];
+            } else {
+                $referrer = '';
+            }
         }
         if ($this->inblock == 1) {
             $retval .= COM_startBlock($this->name, '', 
@@ -763,6 +800,8 @@ class Form
                 $this->Result->uid,
                 $this->Result->ip,
                 $dt->toMySQL(true));
+        } else {
+            $additional = '';
         }
 
         $T = FRM_getTemplate('form', 'form');
@@ -808,7 +847,7 @@ class Form
                     'fieldname' => $F->name,
                     'field'     => $F->Render($res_id),
                     'help_msg'  => self::_stripHtml($F->help_msg),
-                    'spancols'  => $F->options['spancols'] == 1 ? 'true' : '',
+                    'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
                     'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
                 ), '', false, true);
                 $T->parse('qrow', 'QueueRow', true);

@@ -42,6 +42,10 @@ class Result
     *   @var boolean */
     var $approved;
 
+    /** Moderation flag
+    *   @var boolean */
+    var $moderate;
+
     /** IP address of submitter
     *   @var string */
     var $ip;
@@ -103,9 +107,6 @@ class Result
         $sql = "SELECT r.*
             FROM {$_TABLES['forms_results']} r
             WHERE r.id = " . $this->id;
-        if ($hide_moderated) {
-            $sql .= " AND approved = 1";
-        }
         //echo $sql;die;
         $res1 = DB_query($sql);
         if (!$res1)
@@ -299,7 +300,7 @@ class Result
                 ip = '$ip',
                 token = '{$this->token}'";
         //echo $sql;die;
-        if ($frm->moderate) {
+        if ($this->moderate) {
             $sql .= ', approved=0';
         }
         DB_query($sql, 1);
@@ -309,6 +310,18 @@ class Result
             $this->id = 0;
         }
         return $this->id;
+    }
+
+
+    /**
+    *   Set the moderation flag.
+    *   Called from the Form class
+    *
+    *   @param  boolean $mod    True to moderate results, False to not
+    */
+    public function setModerate($mod = false)
+    {
+        $this->moderate = $mod ? true : false;
     }
 
 

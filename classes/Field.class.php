@@ -446,7 +446,11 @@ class Field
         if (isset($_POST[$this->name])) {
             $this->value = $_POST[$this->name];
         } elseif ($res_id == 0) {
-            $this->value = $this->GetDefault($this->options['default']);
+            if (isset($this->options['default'])) {
+                $this->value = $this->GetDefault($this->options['default']);
+            } else {
+                $this->value = '';
+            }
         }
 
         $readonly = '';
@@ -547,7 +551,7 @@ class Field
                 $sel = $this->value == $value ? 'checked="checked"' : '';
                 $fld .= "<input $class type=\"radio\" name=\"{$this->name}\" 
                         id=\"{$this->name}\"
-                        value=\"$value\" $sel $readonly>$value\n";
+                        value=\"$value\" $sel $readonly>&nbsp;$value&nbsp;\n";
             }
             break;
 
@@ -570,8 +574,11 @@ class Field
             // use the default.
             $value = $this->value;
             if (empty($dt)) {
-                if (empty($value)) {
+                if (empty($value) && isset($this->options['default']) && !empty($this->options['default'])) {
                     $this->value = $this->options['default'];
+                } else {
+                    $dt = new \Date('now', $_CONF['timezone']);
+                    $this->value = $dt->format('Y-m-d', true);
                 }
                 $datestr = explode(' ', $this->value);  // separate date & time
                 $dt = explode('-', $datestr[0]);        // get date components
@@ -661,7 +668,7 @@ function {$this->name}_onUpdate(cal)
 
         $retval = '';
         $format_str = '';
-
+        $listinput = '';
         $T = FRM_getTemplate('editfield', 'editform', '/admin');
 
         // Create the "Field Type" dropdown
@@ -819,21 +826,21 @@ function {$this->name}_onUpdate(cal)
             'name'      => $this->name,
             'type'      => $this->type,
             'valuestr'  => $value_str,
-            'defvalue'  => $this->options['default'],
+            'defvalue'  => isset($this->options['default']) ? $this->options['default'] : '',
             'prompt'    => $this->prompt,
-            'size'      => $this->options['size'],
-            'cols'      => $this->options['cols'],
-            'rows'      => $this->options['rows'],
-            'maxlength' => $this->options['maxlength'],
+            'size'      => isset($this->options['size']) ? $this->options['size'] : 0,
+            'cols'      => isset($this->options['cols']) ? $this->options['cols'] : 0,
+            'rows'      => isset($this->options['rows']) ? $this->options['rows'] : 0,
+            'maxlength' => isset($this->options['maxlength']) ? $this->options['maxlength'] : 0,
             'ena_chk'   => $this->enabled == 1 ? 'checked="checked"' : '',
             //'readonly_chk' => $A['readonly'] == 1 ? 'checked="checked"' : '',
             //'req_chk'   => $this->required == 1 ? 'checked="checked"' : '',
-            'span_chk'  => $this->options['spancols'] == 1 ? 'checked="checked"' : '',
+            'span_chk'  => isset($this->options['spancols']) && $this->options['spancols'] == 1 ? 'checked="checked"' : '',
             //'orderby'   => $A['orderby'],
             'format'    => $format_str,
             'doc_url'   => FRM_getDocURL('field_def.html'),
-            'mask'      => $this->options['mask'],
-            'vismask'   => $this->options['vismask'],
+            'mask'      => isset($this->options['mask']) ? $this->options['mask'] : '',
+            'vismask'   => isset($this->options['vismask']) ? $this->options['vismask'] : '',
             /*'autogen_chk' => (isset($this->options['autogen']) && 
                         $this->options['autogen']  == 1) ? 
                         'checked="checked"' : '',*/
@@ -1133,8 +1140,20 @@ function {$this->name}_onUpdate(cal)
             return $this->value_text;
 
         $dt_tm = explode(' ', $this->value);
-        list($year, $month, $day) = explode('-', $dt_tm[0]);
-        list($hour, $minute, $second) = explode(':', $dt_tm[1]);
+        if (strpos($dt_tm[0], '-')) {
+            list($year, $month, $day) = explode('-', $dt_tm[0]);
+        } else {
+            $year = '0000';
+            $month = '01';
+            $day = '01';
+        }
+        if (isset($dt_tm[1]) && strpos($dt_tm[1], ':')) {
+            list($hour, $minute, $second) = explode(':', $dt_tm[1]);
+        } else {
+            $hour = '00';
+            $minute = '00';
+            $second = '00';
+        }
 
         switch ($this->options['input_format']) {
         case 2:
@@ -1475,7 +1494,7 @@ function {$this->name}_onUpdate(cal)
         }
 
         $value = $def;      // by default
-        if ($def[0] == '$') {
+        if (isset($dev[0]) && $def[0] == '$') {
             // Look for something like "$_USER:fullname"
             list($var, $valname) = explode(':', $def);
             switch (strtoupper($var)) {
