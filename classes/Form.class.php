@@ -695,6 +695,7 @@ class Form
                         WHERE frm_id = '{$this->old_id}'", 1);
             }
             CTL_clearCache();       // so autotags pick up changes
+            Cache::clear();         // Clear plugin cache
             $msg = '';              // no error message if successful
         } else {
             $msg = 5;
