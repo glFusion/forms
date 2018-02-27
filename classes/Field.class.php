@@ -162,7 +162,7 @@ class Field
             }
             if (is_numeric($result)) {
                 $format_str = empty($this->options['format']) ?
-                            $_CONF_FRM['def_calc_format'] : 
+                            $_CONF_FRM['def_calc_format'] :
                             $this->options['format'];
                 $result = sprintf($format_str, $result);
             }
@@ -177,7 +177,7 @@ class Field
             if ($this->type == 'numeric') {
                 $val = (float)$value;
                 $format_str = empty($this->options['format']) ?
-                            $_CONF_FRM['def_calc_format'] : 
+                            $_CONF_FRM['def_calc_format'] :
                             $this->options['format'];
                 $this->value = sprintf($format_str, $val);
             } else {
@@ -228,7 +228,7 @@ class Field
             break;
         /*case 'options':
             $this->properties['options'] = unserialize($value);
-            if (!$this->properties['options']) 
+            if (!$this->properties['options'])
                 $this->properties['options'] = array();
             break;*/
 
@@ -274,7 +274,7 @@ class Field
                     foreach($this->value as $idx=>$val) {
                         $strings[] = $this->stringFromValues($val);
                     }*/
-                    $this->properties['value_text'] = 
+                    $this->properties['value_text'] =
                         implode(', ', $this->properties['value']);
                 } else {
                     $this->properties['value_text'] = $this->properties['value'];
@@ -286,14 +286,14 @@ class Field
                 break;
             case 'time':
                 $this->properties['value'] = trim($value);
-                list($hour, $min, $sec) = 
+                list($hour, $min, $sec) =
                             explode(':', $this->properties['value']);
                 if ($this->options['timeformat'] == '12') {
                     list($hour, $ampm) = $this->hour24to12($hour);
-                    $this->properties['value_text'] = sprintf('%02d:%02d %s', 
+                    $this->properties['value_text'] = sprintf('%02d:%02d %s',
                             $hour, $min, $ampm);
                 } else {
-                    $this->properties['value_text'] = sprintf('%02d:%02d', 
+                    $this->properties['value_text'] = sprintf('%02d:%02d',
                             $hour, $min);
                 }
                 break;
@@ -380,7 +380,7 @@ class Field
                 $tmpval = sprintf('%04d-%02d-%02d',
                         $dt[0] . '-' . $dt[1] . '-' . $dt[2]);
 
-                if (isset($this->options['showtime']) && 
+                if (isset($this->options['showtime']) &&
                         $this->options['showtime'] == 1) {
                     $hour = isset($_POST[$this->name . '_hour']) ?
                                 (int)$_POST[$this->name . '_hour'] : 0;
@@ -389,7 +389,7 @@ class Field
                     $tmpval .= sprintf(' %02d:%02d', $hour, $minute);
                 }
                 $this->value = $tmpval;
-                    
+                   
             } else {
                 $this->value = $A['value'];
             }
@@ -461,7 +461,7 @@ class Field
             break;
         case FRM_FIELD_HIDDEN:
             $fld = '<input type="hidden" name="' . $this->name .
-                    '" value="' . $this->value_text . 
+                    '" value="' . $this->value_text .
                     '" id="' . $this->name . '"/>';
             return $fld;
             break;
@@ -479,9 +479,9 @@ class Field
             $size = $this->options['size'];
             $maxlength = min($this->options['maxlength'], 255);
 
-            $fld = "<input $class name=\"{$this->name}\" 
+            $fld = "<input $class name=\"{$this->name}\"
                     id=\"{$this->name}\"
-                    size=\"$size\" maxlength=\"$maxlength\" 
+                    size=\"$size\" maxlength=\"$maxlength\"
                     type=\"text\" value=\"{$this->value_text}\" $readonly />\n";
             break;
 
@@ -496,28 +496,28 @@ class Field
 
         case 'checkbox':
             $chk = $this->value == 1 ? 'checked="checked"' : '';
-            $fld = "<input $class name=\"{$this->name}\" 
-                    id=\"{$this->name}\" type=\"checkbox\" value=\"1\" 
+            $fld = "<input $class name=\"{$this->name}\"
+                    id=\"{$this->name}\" type=\"checkbox\" value=\"1\"
                     $chk $readonly />\n";
             break;
 
         case 'multicheck':
             $values = FRM_getOpts($this->options['values']);
             if (!is_array($values)) {
-                // Have to have some values for radio buttons 
+                // Have to have some values for radio buttons
                 break;
             }
 
             $fld = '';
             foreach ($values as $id=>$value) {
                 if (is_array($this->value)) {
-                    $sel = in_array($value, $this->value) ? 
+                    $sel = in_array($value, $this->value) ?
                         'checked="checked"' : '';
                 } else {
                     $sel = $value == $this->value ? 'checked="checked"' : '';
                 }
                 $fld .= "<input $class type=\"checkbox\"
-                        name=\"{$this->name}[]\" 
+                        name=\"{$this->name}[]\"
                         id=\"{$this->name}\"
                         value=\"$value\" $sel $readonly>$value&nbsp;\n";
             }
@@ -527,7 +527,7 @@ class Field
             $values = FRM_getOpts($this->options['values']);
             if (empty($values)) break;
 
-            $fld = "<select $class name=\"{$this->name}\" 
+            $fld = "<select $class name=\"{$this->name}\"
                     id=\"{$this->name}\" $readonly>\n";
             $fld .= "<option value=\"\">{$LANG_FORMS['select']}</option>\n";
             foreach ($values as $id=>$value) {
@@ -549,7 +549,7 @@ class Field
             $fld = '';
             foreach ($values as $id=>$value) {
                 $sel = $this->value == $value ? 'checked="checked"' : '';
-                $fld .= "<input $class type=\"radio\" name=\"{$this->name}\" 
+                $fld .= "<input $class type=\"radio\" name=\"{$this->name}\"
                         id=\"{$this->name}\"
                         value=\"$value\" $sel $readonly>&nbsp;$value&nbsp;\n";
             }
@@ -584,18 +584,18 @@ class Field
                 $dt = explode('-', $datestr[0]);        // get date components
             }
 
-            $m_fld = $LANG_FORMS['month'] . 
+            $m_fld = $LANG_FORMS['month'] .
                     ": <select $class id=\"{$this->name}_month\" name=\"{$this->name}_month\">\n";
             $m_fld .= "<option value=\"0\">--{$LANG_FORMS['select']}--</option>\n";
             $m_fld .= COM_getMonthFormOptions($dt[1]) . "</select>\n";
 
-            $d_fld = $LANG_FORMS['day'] . 
+            $d_fld = $LANG_FORMS['day'] .
                     ": <select $class id=\"{$this->name}_day\" name=\"{$this->name}_day\">\n";
             $d_fld .= "<option value=\"0\">--{$LANG_FORMS['select']}--</option>\n";
             $d_fld .= COM_getDayFormOptions($dt[2]) . "</select>\n";
 
-            $y_fld = $LANG_FORMS['year'] . 
-                    ': <input ' . $class . ' type="text" id="' . $this->name.'_year" name="'.$this->name.'_year" 
+            $y_fld = $LANG_FORMS['year'] .
+                    ': <input ' . $class . ' type="text" id="' . $this->name.'_year" name="'.$this->name.'_year"
                     size="5" value="' . $dt[0] . "\"/>\n";
 
             switch ($this->options['input_format']) {
@@ -685,7 +685,7 @@ function {$this->name}_onUpdate(cal)
         $type_options = '';
         foreach ($LANG_FORMS['calc_types'] as $option => $opt_desc) {
             if (isset($this->options['calc_type'])) {
-                $sel = $this->options['calc_type'] == $option ? 
+                $sel = $this->options['calc_type'] == $option ?
                     'selected="selected"' : '';
             }
             $type_options .= "<option value=\"$option\" $sel>$opt_desc</option>\n";
@@ -705,13 +705,13 @@ function {$this->name}_onUpdate(cal)
                 $T->set_var('12h_sel', 'checked');
             }
 
-            $T->set_var('shtime_chk', $this->options['showtime'] == 1 ? 
+            $T->set_var('shtime_chk', $this->options['showtime'] == 1 ?
                 'checked="checked"' : '');
             $T->set_var('format', isset($this->options['format']) ?
                     $this->options['format'] : $_CONF_FRM['def_date_format']);
-            $curdtformat = (isset($this->options['input_format'])) ? 
+            $curdtformat = (isset($this->options['input_format'])) ?
                     (int)$this->options['input_format'] : 0;
-            $T->set_var('cent_chk', $this->options['century'] == 1 ? 
+            $T->set_var('cent_chk', $this->options['century'] == 1 ?
                 'checked="checked"' : '');
             break;
 
@@ -728,7 +728,7 @@ function {$this->name}_onUpdate(cal)
             if (isset($this->options['default']) && $this->options['default'] == 1) {
                 $T->set_var('defchk_chk', 'checked="checked"');
             }
-            //if (!isset($opts['values']) || !is_array($opts['values']) { 
+            //if (!isset($opts['values']) || !is_array($opts['values']) {
             //    $value_str = '1';
             //}
             break;
@@ -741,9 +741,9 @@ function {$this->name}_onUpdate(cal)
                 $listinput = '';
                 $i = 0;
                 foreach ($values as $valname) {
-                    $listinput .= '<li><input type="text" id="vName' . $i . 
+                    $listinput .= '<li><input type="text" id="vName' . $i .
                         '" value="' . $valname . '" name="selvalues[]" />';
-                    $sel = $this->options['default'] == $valname ? 
+                    $sel = $this->options['default'] == $valname ?
                         ' checked="checked"' : '';
                     $listinput .= "<input type=\"radio\" name=\"sel_default\"
                         value=\"$i\" $sel />";
@@ -752,7 +752,7 @@ function {$this->name}_onUpdate(cal)
                 }
             } else {
                 $values = array();
-                $listinput = '<li><input type="text" id="vName0" value="" 
+                $listinput = '<li><input type="text" id="vName0" value=""
                     name="selvalues[]" /></li>' . "\n";
             }
             break;
@@ -765,9 +765,9 @@ function {$this->name}_onUpdate(cal)
                 $listinput = '';
                 $i = 0;
                 foreach ($values as $valname) {
-                    $listinput .= '<li><input type="text" id="vName' . $i . 
+                    $listinput .= '<li><input type="text" id="vName' . $i .
                         '" value="' . $valname . '" name="selvalues[]" />';
-                    $sel = $valname == $this->options['default'] ? 
+                    $sel = $valname == $this->options['default'] ?
                         ' checked="checked"' : '';
                     $listinput .= "<input type=\"radio\" name=\"sel_default\"
                         value=\"$i\" $sel />";
@@ -776,14 +776,14 @@ function {$this->name}_onUpdate(cal)
                 }
             } else {
                 $values = array();
-                $listinput = '<li><input type="text" id="vName0" value="" 
+                $listinput = '<li><input type="text" id="vName0" value=""
                     name="selvalues[]" /></li>' . "\n";
             }
             break;
 
         case 'calc':
             $value_str = $this->options['value'];
-            $format_str = empty($this->options['format']) ? 
+            $format_str = empty($this->options['format']) ?
                     $_CONF_FRM['def_calc_format'] : $this->options['format'];
             break;
 
@@ -819,7 +819,7 @@ function {$this->name}_onUpdate(cal)
                     (int)$this->options['autogen'] : 0;
         $T->set_var(array(
             //'admin_url' => FRM_ADMIN_URL,
-            'frm_name'  => DB_getItem($_TABLES['forms_frmdef'], 'name', 
+            'frm_name'  => DB_getItem($_TABLES['forms_frmdef'], 'name',
                             "id='" . DB_escapeString($this->frm_id) . "'"),
             'frm_id'    => $this->frm_id,
             'fld_id'    => $this->fld_id,
@@ -841,12 +841,12 @@ function {$this->name}_onUpdate(cal)
             'doc_url'   => FRM_getDocURL('field_def.html'),
             'mask'      => isset($this->options['mask']) ? $this->options['mask'] : '',
             'vismask'   => isset($this->options['vismask']) ? $this->options['vismask'] : '',
-            /*'autogen_chk' => (isset($this->options['autogen']) && 
-                        $this->options['autogen']  == 1) ? 
+            /*'autogen_chk' => (isset($this->options['autogen']) &&
+                        $this->options['autogen']  == 1) ?
                         'checked="checked"' : '',*/
             'autogen_sel_' . $autogen_opt => ' selected="selected"',
-            'stripmask_chk' => (isset($this->options['stripmask']) && 
-                        $this->options['stripmask']  == 1) ? 
+            'stripmask_chk' => (isset($this->options['stripmask']) &&
+                        $this->options['stripmask']  == 1) ?
                         'checked="checked"' : '',
             'input_format' => self::DateFormatSelect($curdtformat),
             'orderby'   => $this->orderby,
@@ -897,7 +897,7 @@ function {$this->name}_onUpdate(cal)
         else
             $A['orderby'] = (int)$A['orderby'];
 
-        // Set the size and maxlength to reasonable values 
+        // Set the size and maxlength to reasonable values
         $A['maxlength'] = min((int)$A['maxlength'], 255);
         $A['size'] = min((int)$A['size'], 80);
 
@@ -917,9 +917,9 @@ function {$this->name}_onUpdate(cal)
         case 'textarea':
             $options['cols'] = (int)$A['cols'];
             $options['rows'] = (int)$A['rows'];
-            if ($options['rows'] == 0) 
+            if ($options['rows'] == 0)
                 $options['rows'] = $_CONF_FRM['def_textarea_rows'];
-            if ($options['cols'] == 0) 
+            if ($options['cols'] == 0)
                 $options['cols'] = $_CONF_FRM['def_textarea_cols'];
             break;
 
@@ -931,7 +931,7 @@ function {$this->name}_onUpdate(cal)
         case 'text':
             $options['size'] = (int)$A['size'];
             $options['maxlength'] = (int)$A['maxlength'];
-            $options['autogen'] = isset($A['autogen']) ? (int)$A['autogen'] : 
+            $options['autogen'] = isset($A['autogen']) ? (int)$A['autogen'] :
                         FRM_AUTOGEN_NONE;
             break;
 
@@ -939,7 +939,7 @@ function {$this->name}_onUpdate(cal)
             // For checkboxes, set the value to "1" automatically
             $A['value'] = '1';
             // Different default value for checkboxes
-            $options['default'] = isset($A['defvalue']) && 
+            $options['default'] = isset($A['defvalue']) &&
                 $A['defvalue'] == 1 ? 1 : 0;
             break;
 
@@ -1232,7 +1232,7 @@ function {$this->name}_onUpdate(cal)
         $result = '';
 
         // Can't calculate if this isn't a calc field.
-        if ($this->type != 'calc') 
+        if ($this->type != 'calc')
             return 0;
 
         // Get the calculation definition, return if none defined.
@@ -1299,7 +1299,7 @@ function {$this->name}_onUpdate(cal)
                 // Result really can't be non-numeric here, but make sure it
                 // is anyway before numeric formatting.
                 $format_str = empty($this->options['format']) ?
-                            $_CONF_FRM['def_calc_format'] : 
+                            $_CONF_FRM['def_calc_format'] :
                             $this->options['format'];
                 $result = sprintf($format_str, $result);
             }
@@ -1345,7 +1345,7 @@ function {$this->name}_onUpdate(cal)
             if (empty($vals[$this->name])) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
             }
-            break; 
+            break;
         default:
             if (empty($vals[$this->name])) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
@@ -1353,7 +1353,7 @@ function {$this->name}_onUpdate(cal)
             break;
         }
         return $msg;
-                
+               
     }
 
 
@@ -1396,7 +1396,7 @@ function {$this->name}_onUpdate(cal)
     *   @param  integer $id     Record ID to move
     *   @param  string  $where  Direction to move ('up' or 'down')
     */
-    public function Move($frm_id, $fld_id, $where)
+    public static function Move($frm_id, $fld_id, $where)
     {
         global $_CONF, $_TABLES, $LANG21;
 
@@ -1418,7 +1418,7 @@ function {$this->name}_onUpdate(cal)
             break;
         }
         $sql = "UPDATE {$_TABLES['forms_flddef']}
-                SET orderby = orderby $sign 11 
+                SET orderby = orderby $sign 11
                 WHERE frm_id = '$frm_id'
                 AND fld_id = '$fld_id'";
         //echo $sql;die;
@@ -1440,7 +1440,7 @@ function {$this->name}_onUpdate(cal)
     *
     *   @param  integer $frm_id     ID of form being reordered
     */
-    public function Reorder($frm_id)
+    public static function Reorder($frm_id)
     {
         global $_TABLES;
 
@@ -1499,7 +1499,7 @@ function {$this->name}_onUpdate(cal)
             list($var, $valname) = explode(':', $def);
             switch (strtoupper($var)) {
             case '$_USER':
-                if ($valname && isset($_USER[$valname])) 
+                if ($valname && isset($_USER[$valname]))
                     $value = $_USER[$valname];
                 else
                     $value = '';    // Empty if not available
@@ -1557,14 +1557,14 @@ function {$this->name}_onUpdate(cal)
         // Nothing selected by default, or invalid values
         if (empty($hour) || empty($minute) ||
             !is_numeric($hour) || !is_numeric($minute) ||
-            $hour < 0 || $hour > 23 || 
+            $hour < 0 || $hour > 23 ||
             $minute < 0 || $minute > 59) {
             list($hour, $minute) = array(0, 0);
         }
 
         if ($this->options['timeformat'] == '12') {
             list($hour, $ampm_sel) = $this->hour24to12($hour);
-            $ampm_fld = '&nbsp;&nbsp;' . 
+            $ampm_fld = '&nbsp;&nbsp;' .
                 COM_getAmPmFormSelection($this->name . '_ampm', $ampm_sel);
         }
 
@@ -1619,9 +1619,9 @@ function {$this->name}_onUpdate(cal)
         $var = $A['name'];
 
         $function = 'CUSTOM_forms_autogen';
-        if (function_exists($function . '_' . $type . '_' . $var)) 
+        if (function_exists($function . '_' . $type . '_' . $var))
             $retval = $function . '_' . $type . '_' . $var($A, $uid);
-        elseif (function_exists($function . '_' . $var)) 
+        elseif (function_exists($function . '_' . $var))
             $retval =  $function . '_' . $var($A, $uid);
         elseif (function_exists($function))
             $retval = $function($A, $uid);
