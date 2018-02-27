@@ -118,6 +118,14 @@ class Result
         $this->SetVars($A);
 
         // Now get field information
+        $key = 'result_' . $this->id . '_fields';
+        $this->fields = Cache::get($key);
+        if ($this->fields) {
+            return true;
+        }
+
+        // Not found in cache, read from DB
+        $this->fields = array();
         $sql = "SELECT fld_id FROM {$_TABLES['forms_flddef']}
                 WHERE frm_id = '{$this->frm_id}'
                 ORDER BY orderby ASC";
@@ -125,7 +133,7 @@ class Result
         while ($A = DB_fetchArray($res2, false)) {
             $this->fields[$A['fld_id']] = new Field($A['fld_id']);
         }
-
+        Cache::set($key, $this->fields, array('result_fields', 'result_' . $this->id));
         return true;
     }
 
@@ -188,8 +196,6 @@ class Result
     */
     public function GetValues($fields)
     {
-        global $_TABLES;
-
         foreach ($fields as $field) {
             $field->GetValue($this->id);
         }
@@ -278,6 +284,7 @@ class Result
                 break;
             }
         }
+        Cache::clear(array('result_fields', 'result_' . $res_id));
         return $res_id;
     }
 
