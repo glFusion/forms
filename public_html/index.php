@@ -4,9 +4,9 @@
 *   Used to either display a specific form, or to save the user-entered data.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.3.0
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
@@ -70,6 +70,7 @@ case 'savedata':
         $u = parse_url($redirect);
         if ($F->submit_msg != '') {
             LGLIB_storeMessage($F->submit_msg);
+            $msg = '';
         } else {
             $msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';
         }

@@ -6,9 +6,9 @@
 *   access to this file.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.3.0
+*   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
@@ -757,7 +757,7 @@ function listResults($frm_id, $instance_id='')
         //'query_fields' => array(''),
         'default_filter' => ''
     );
-
+    $form_arr = array();
     $options_arr = array(
         'chkdelete' => true,
         'chkname' => 'delresmulti',

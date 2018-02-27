@@ -3,7 +3,7 @@
 *   Class to handle all forms items.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php
@@ -358,11 +358,11 @@ class Form
             'mod_chk' => $this->moderate == 1 ? 'checked="checked"' : '',
             'owner_dropdown' => FRM_UserDropdown($this->owner_id),
             'email' => $this->email,
-            'admin_group_dropdown' => 
+            'admin_group_dropdown' =>
                     FRM_GroupDropdown($this->group_id, 3),
-            'user_group_dropdown' => 
+            'user_group_dropdown' =>
                     FRM_GroupDropdown($this->fill_gid, 3),
-            'results_group_dropdown' => 
+            'results_group_dropdown' =>
                     FRM_GroupDropdown($this->results_gid, 3),
             'emailowner_chk' => $this->onsubmit & FRM_ACTION_MAILOWNER ?
                         'checked="checked"' : '',
@@ -372,7 +372,7 @@ class Form
                         'checked="checked"' : '',
             'store_chk' => $this->onsubmit & FRM_ACTION_STORE ?
                         'checked="checked"' : '',
-            'preview_chk' => $this->onsubmit & FRM_ACTION_DISPLAY ? 
+            'preview_chk' => $this->onsubmit & FRM_ACTION_DISPLAY ?
                         'checked="checked"' : '',
             'doc_url'   => FRM_getDocURL('form_def.html'),
             'referrer'      => $referrer,
@@ -408,7 +408,7 @@ class Form
 
         // Check that the user has access to fill out this form
         if (!$this->hasAccess(FRM_ACCESS_FILL)) return false;
-        if ($this->captcha == 1 && 
+        if ($this->captcha == 1 &&
                 function_exists('plugin_itemPreSave_captcha') ) {
             $msg = plugin_itemPreSave_captcha('general', $vals['captcha']);
             if ($msg != '') return $msg;
@@ -480,7 +480,7 @@ class Form
         }
         if (!empty($invalid_flds)) {
             // If fields are invalid, return to the caller with a message
-            return $LANG_FORMS['frm_invalid'] . 
+            return $LANG_FORMS['frm_invalid'] .
                     "<br /><ul>\n$invalid_flds</ul>\n";
         }
 
@@ -490,13 +490,13 @@ class Form
             $this->Result = new Result($res_id);
             $this->Result->setInstance($this->instance_id);
             $this->Result->setModerate($this->moderate);
-            $this->res_id = $this->Result->SaveData($this->id, $this->fields, 
+            $this->res_id = $this->Result->SaveData($this->id, $this->fields,
                     $vals, $this->uid);
         } else {
             foreach ($this->fields as $fld_id=>$field) {
                 if ($field->type == 'date') {
                     $fname = $field->name;
-                    $val = sprintf('%d-%02d-%02d', 
+                    $val = sprintf('%d-%02d-%02d',
                         $vals[$fname.'_year'], $vals[$fname.'_month'],
                         $vals[$fname.'_day']);
                     if ($field->options['showtime'] == 1) {
@@ -519,9 +519,9 @@ class Form
 
             // Sending to the form owner
             if ($onsubmit & FRM_ACTION_MAILOWNER) {
-                $email = DB_getItem($_TABLES['users'], 'email', 
+                $email = DB_getItem($_TABLES['users'], 'email',
                         "uid='".$this->owner_id."'");
-                if (COM_isEmail($email)) 
+                if (COM_isEmail($email))
                     $emails[$email] = COM_getDisplayName($this->owner_id);
             }
 
@@ -536,13 +536,13 @@ class Form
             if ($onsubmit & FRM_ACTION_MAILGROUP) {
                 USES_lib_user();
                 $groups = implode(',', USER_getChildGroups($this->group_id));
-                $sql = "SELECT DISTINCT uid, username, fullname, email 
-                    FROM {$_TABLES['users']}, {$_TABLES['group_assignments']} 
-                    WHERE uid > 1 
-                    AND {$_TABLES['users']}.status = 3 
+                $sql = "SELECT DISTINCT uid, username, fullname, email
+                    FROM {$_TABLES['users']}, {$_TABLES['group_assignments']}
+                    WHERE uid > 1
+                    AND {$_TABLES['users']}.status = 3
                     AND email is not null
-                    AND email != '' 
-                    AND {$_TABLES['users']}.uid = ug_uid 
+                    AND email != ''
+                    AND {$_TABLES['users']}.uid = ug_uid
                     AND ug_main_grp_id IN ({$groups})";
                 $result = DB_query($sql, 1);
                 while ($A = DB_fetchArray($result, false)) {
@@ -660,14 +660,14 @@ class Form
             $sql = "INSERT INTO {$_TABLES['forms_frmdef']} ";
             $sql1 = '';
         }
-        $sql .= "SET 
+        $sql .= "SET
             id = '{$this->id}',
-            name = '" . DB_escapeString($this->name) . "', 
-            introtext = '" . DB_escapeString($this->introtext) . "', 
-            submit_msg = '" . DB_escapeString($this->submit_msg) . "', 
-            noaccess_msg = '" . DB_escapeString($this->noaccess_msg) . "', 
-            noedit_msg = '" . DB_escapeString($this->noedit_msg) . "', 
-            max_submit_msg = '" . DB_escapeString($this->max_submit_msg) . "', 
+            name = '" . DB_escapeString($this->name) . "',
+            introtext = '" . DB_escapeString($this->introtext) . "',
+            submit_msg = '" . DB_escapeString($this->submit_msg) . "',
+            noaccess_msg = '" . DB_escapeString($this->noaccess_msg) . "',
+            noedit_msg = '" . DB_escapeString($this->noedit_msg) . "',
+            max_submit_msg = '" . DB_escapeString($this->max_submit_msg) . "',
             enabled = '{$this->enabled}',
             moderate = '{$this->moderate}',
             onsubmit= '" . DB_escapeString($this->onsubmit) . "',
@@ -675,8 +675,8 @@ class Form
             group_id = '{$this->group_id}',
             fill_gid = '{$this->fill_gid}',
             results_gid = '{$this->results_gid}',
-            redirect = '" . DB_escapeString($this->redirect) . "', 
-            captcha = '{$this->captcha}', 
+            redirect = '" . DB_escapeString($this->redirect) . "',
+            captcha = '{$this->captcha}',
             inblock = '{$this->inblock}',
             max_submit = '{$this->max_submit}',
             email = '" . DB_escapeString($this->email) . "',
@@ -766,7 +766,7 @@ class Form
             }
         }
         if ($this->inblock == 1) {
-            $retval .= COM_startBlock($this->name, '', 
+            $retval .= COM_startBlock($this->name, '',
                COM_getBlockTemplate('_forms_block', 'header'), $this->id);
         }
 
@@ -811,7 +811,7 @@ class Form
             'btn_submit'    => $saveaction,
             'frm_id'        => $this->id,
             'introtext'     => $this->introtext,
-            'error_msg'     => isset($_POST['forms_error_msg']) ? 
+            'error_msg'     => isset($_POST['forms_error_msg']) ?
                                 $_POST['forms_error_msg'] : '',
             'referrer'      => $referrer,
             'res_id'        => $res_id,
@@ -832,7 +832,7 @@ class Form
             // that the submitter can't access.
             // This is here instead of Field->Render() to keep the prompt
             // from being shown.
-            if ($F->type == 'calc' || $F->enabled == 0 || 
+            if ($F->type == 'calc' || $F->enabled == 0 ||
                     !in_array($F->fill_gid, $_GROUPS)) {
                 continue;
             }
@@ -893,7 +893,7 @@ class Form
         }
 
         // Check that the current user has access and the result id is valid
-        if ((empty($this->Result) && $res_id == 0) || 
+        if ((empty($this->Result) && $res_id == 0) ||
                 ($this->Result->uid != $_USER['uid'] &&
                 !$this->hasAccess(FRM_ACCESS_VIEW)) ) {
             return $this->noaccess_msg;
@@ -935,9 +935,8 @@ class Form
                 'prompt'    => $prompt,
                 'fieldname' => $F->fieldname,
                 'data'      => $data,
-                'colspan'   => $F->options['spancols'] == 1 ? 'true' : '',
+                'colspan'   => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
             ), '', false, true);
-
             $T->parse('qrow', 'QueueRow', true);
         }
         $T->parse('output', 'form');

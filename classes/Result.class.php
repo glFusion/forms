@@ -3,7 +3,7 @@
 *   Class to handle the form results.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
@@ -237,11 +237,17 @@ class Result
                             (int)$vals[$field->name.'_month'] : 12;
                 $day = isset($vals[$field->name.'_day']) ?
                             (int)$vals[$field->name.'_day'] : 31;
-                if ($field->options['century'] == 1 && $year < 100) {
+                $timeformat = isset($field->options['timeformat']) ?
+                            $field->options['timeformat'] : '12';
+                $add_century = isset($field->options['century']) ?
+                            (int)$field->options['century'] : 0;
+                $ampm = isset($vals[$field->name.'_ampm']) ?
+                            $vals[$field->name.'_ampm'] : 'am';
+                if ($add_century == 1 && $year < 100) {
                     $year += ((int)strftime('%C', time()) * 100);
                 }
-                if ($field->options['timeformat'] == '12') {
-                    $hour = FRM_12to24($hour, $vals[$field->name.'_ampm']);
+                if ($timeformat == '12') {
+                    $hour = FRM_12to24($hour, $ampm);
                 }
                 $newval = sprintf('%04d-%02d-%02d %02d:%02d:%02d',
                         $year, $month, $day, $hour, $minute, $second);
@@ -255,8 +261,10 @@ class Result
                             (int)$vals[$field->name.'_minute'] : 0;
                 $second = isset($vals[$field->name.'_second']) ?
                             (int)$vals[$field->name.'_second'] : 0;
-                if ($field->options['timeformat'] == '12') {
-                    $hour = FRM_12to24($hour, $vals[$field->name.'_ampm']);
+                $ampm = isset($vals[$field->name.'_ampm']) ?
+                            $vals[$field->name.'_ampm'] : 'am';
+                if ($timeformat == '12') {
+                    $hour = FRM_12to24($hour, $ampm);
                 }
                 $newval = sprintf('%02d:%02d:%02d', $hour, $minute, $second);
                 $field->SaveData($newval, $res_id);
