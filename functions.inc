@@ -6,7 +6,7 @@
 *   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
@@ -28,7 +28,7 @@ define('FRM_PI_PATH', $_CONF['path'] . 'plugins/' . $_CONF_FRM['pi_name']);
 /** Define the base public url for the plugin */
 define('FRM_PI_URL', $_CONF['site_url'] . '/' . $_CONF_FRM['pi_name']);
 /** Define the administration url for the plugin */
-define('FRM_ADMIN_URL', 
+define('FRM_ADMIN_URL',
             $_CONF['site_admin_url'] . '/plugins/' . $_CONF_FRM['pi_name']);
 
 define('FRM_ACTION_NONE', 0);
@@ -112,7 +112,7 @@ function plugin_chkVersion_forms()
 
 
 /**
-*   This will put an option for forms administration in the command 
+*   This will put an option for forms administration in the command
 *   and control area
 *   @return   mixed   array(title, url, icon), or false when not allowed
 */
@@ -184,7 +184,7 @@ function plugin_getuseroption_forms()
     if ($form_cnt < 1) return '';
 
     $menu = array($LANG_FORMS['menu_title'],
-            FRM_ADMIN_URL . '/index.php?view=listforms', 
+            FRM_ADMIN_URL . '/index.php?view=listforms',
             $form_cnt);
     return $menu;
 }
@@ -229,11 +229,11 @@ function plugin_autouninstall_forms()
 {
     global $_CONF_FRM;
     $out = array (
-        // give the name of the tables, without $_TABLES[] 
+        // give the name of the tables, without $_TABLES[]
         'tables' => array(
-                'forms_frmdef', 
+                'forms_frmdef',
                 'forms_flddef',
-                'forms_results', 
+                'forms_results',
                 'forms_values',
         ),
         // give the full name of the group, as in the db
@@ -257,8 +257,9 @@ function plugin_autouninstall_forms()
 function plugin_getheaderjs_forms()
 {
     return array(
-        FRM_PI_PATH . '/js/toggleEnabled.js',
-        FRM_PI_PATH . '/js/date.js',
+        __DIR__ . '/js/toggleEnabled.js',
+        __DIR__ . '/js/date.js',
+        __DIR__ . '/js/ajax.js',
     );
 }
 
@@ -386,13 +387,13 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
         switch ($autotag['tag']) {
         case 'forms':
             $option = COM_applyFilter($autotag['parm1']);
-            //$option = $parms[0];
             $px = explode(' ', trim($autotag['parm2']));
             $skip = 0;
             if (is_array($px)) {
                 foreach($px as $part) {
-                    list($parm, $val) = explode(':', $part);
-
+                    $A = explode(':', $part);
+                    $parm = $A[0];
+                    $val = isset($A[1]) ? $A[1] : NULL;
                     switch ($parm) {
                     case 'form':
                     case 'id':
@@ -420,6 +421,17 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         $popup = empty($val) ? true : $val == true ? true : false;
                         $skip++;
                         break;
+                    case 'value':
+                        $fld_value = $val;
+                        $skip++;
+                        break;
+                    case 'name':
+                        $fld_name = $val;
+                        $skip++;
+                        break;
+                    case 'check':
+                        $is_default = true;
+                        break;
                      }
                 }
 
@@ -436,15 +448,15 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         $caption = '';
                     }
                 } else {
-                    // There weren't any control parameters, so all of parm2 is 
+                    // There weren't any control parameters, so all of parm2 is
                     // the caption.
                     $caption = trim($autotag['parm2']);
                 }
             }
 
-            if ($frm_id != '') {
-                switch ($option) {
-                case 'show':
+            switch ($option) {
+            case 'show':
+                if ($frm_id != '') {
                     // Don't insert a form into an e-mailed article.
                     if (isset($_POST['what']) && $_POST['what'] == 'sendstory') {
                         break;
@@ -457,14 +469,18 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     } else {
                         $HTML = $F->noaccess_msg;
                     }
-                    break;
+                }
+                break;
 
-                case 'results':
+            case 'results':
+                if ($frm_id != '') {
                     USES_forms_functions();
                     $HTML = Forms\FRM_ResultsTable($frm_id, $fldnames, $instance_id);
-                    break;
+                }
+                break;
 
-                case 'link':
+            case 'link':
+                if ($frm_id != '') {
                     $url = FRM_PI_URL . '/index.php?frm_id=' . $frm_id;
                     if (!empty($instance_id))
                         $url .= '&instance_id=' . urlencode($instance_id);
@@ -486,11 +502,30 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!empty($caption)) {
                         $HTML = COM_createLink($caption, $url, $opts);
                     }
-                    break;
+                }
+                break;
 
-                }   // switch ($option)
+            case 'radio':       // radio button field
+                if (!empty($fld_value)) {
+                    if (empty($fld_name)) $fld_name = 'radio1';
+                    $F = new Forms\Field_autotag('radio', $fld_name, $fld_value);
+                    $chk = isset($is_default) ? true : false;
+                    $HTML = $F->Render($chk);
+                }
+                break;
 
-            }   // if not empty $fld_id
+            case 'checkbox':
+                if (!empty($fld_name)) {
+                    if (!isset($fld_value) || empty($fld_value)) {
+                        $fld_value = 1;
+                    }
+                    $F = new Forms\Field_autotag('checkbox', $fld_name, $fld_value);
+                    $chk = isset($is_default) ? true : false;
+                    $HTML = $F->Render($chk);
+                }
+                break;
+
+            }   // switch ($option)
             break;
 
         case 'formlink':    // DEPRECATED
@@ -506,7 +541,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                 }
                 // Have to have a caption, otherwise there's no text to show
                 if (!empty($caption)) {
-                    $HTML = COM_createLink($caption, $url, 
+                    $HTML = COM_createLink($caption, $url,
                                     array('title'=>$caption));
                 }
             }
@@ -515,80 +550,10 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
         }   // switch($autotag['tag'])
 
         // Perform the text substitution with the final version of $HTML
-        $retval = str_replace($autotag['tagstr'], $HTML, $content);
+        $content = str_replace($autotag['tagstr'], $HTML, $content);
 
     }   // if op == 'parse'
-
-    return $retval;
-}
-
-
-/**
-*   Return SQL expression to check for permissions.
-*
-*   Taken from COM_getPermSQL with some modifications, since the
-*   data is split between two tables in this plugin
-*
-*   @deprecated
-*   @param  string      $type     part of the SQL expr. e.g. 'WHERE', 'AND'
-*   @param  int         $u_id     user id or 0 = current user
-*   @param  int         $access   access to check for (2=read, 3=r&write)
-*   @param  string      $table    table name if ambiguous (e.g. in JOINs)
-*   @return string      SQL expression string (may be empty)
-*/
-function XXFRM_getPermSQL($type = 'WHERE', $access = FRM_ACCESS_ADMIN, $u_id = 0, 
-                        $table= '')
-{
-    global $_USER, $_GROUPS;
-
-    if (plugin_isadmin_forms()) {
-        return '';
-    }
-
-    if (!empty($table)) {
-        $table = DB_escapeString($table) . '.';
-    }
-
-    if ($u_id <= 0) {
-        if (COM_isAnonUser()) {
-            $uid = 1;
-        } else {
-            $uid = (int)$_USER['uid'];
-        }
-    } else {
-        $uid = (int)$u_id;
-    }
-
-    $UserGroups = array();
-    if ((empty($_USER['uid']) && ($uid == 1)) || ($uid == $_USER['uid'])) {
-        if (empty($_GROUPS)) {
-            $_GROUPS = SEC_getUserGroups($uid);
-        }
-        $UserGroups = $_GROUPS;
-    } else {
-        $UserGroups = SEC_getUserGroups($uid);
-    }
-
-    if (empty($UserGroups)) {
-        // this shouldn't really happen, but if it does, handle user
-        // like an anonymous user
-        $uid = 1;
-    }
-    $GroupSQL = implode(',', $UserGroups);
-
-    $sql = ' ' . $type . 
-        " (owner_id = $uid OR group_id IN ($GroupSQL) ";
-    switch ($access) {
-    case FRM_ACCESS_FILL:
-        $sql .= " OR fill_gid IN ($GroupSQL) ";
-        break;
-    case FRM_ACCESS_VIEW:
-        $sql .= " OR results_gid IN ($GroupSQL) ";
-        break;
-    }
-    $sql .= ') ';
-
-    return $sql;
+    return $content;
 }
 
 
@@ -630,7 +595,7 @@ function FRM_getDocURL($file = '', $doclang='')
     global $_CONF, $_CONF_FRM;
 
     if ($doclang == '') $doclang = $_CONF['language'];
-    $doc_path = $_CONF['path_html'] . $_CONF_FRM['pi_name'] . 
+    $doc_path = $_CONF['path_html'] . $_CONF_FRM['pi_name'] .
                 "/docs/$doclang/";
     $doc_url = '';
 
@@ -695,7 +660,7 @@ function plugin_user_move_forms($origUID, $destUID)
 
 
 /**
-*   Create an array of groups. 
+*   Create an array of groups.
 *
 *   @param  boolean $nogroup    True if "No Group" is an option.
 *   @return array               Array of groups as name=>ID
@@ -765,7 +730,7 @@ function FRM_getTemplate($name, $id='', $path='')
         $templates = $name;
     }
 
-    // Add additional path info if needed   
+    // Add additional path info if needed
     if (substr($path, 0, 9) != 'templates') {
         $path = 'templates/' . $path;
     }

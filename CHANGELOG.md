@@ -2,6 +2,7 @@
 ## 0.3.1
 Release TBD
 - Implement PHP class autoloader
+- Implement autotags for checkbox and radio fields, updating session vars only
 
 ## 0.3.0
 Release 2017-07-23

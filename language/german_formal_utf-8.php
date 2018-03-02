@@ -176,6 +176,13 @@ $LANG_FORMS = array(
 'toggle_success' => 'Item has been updated.',
 'toggle_failure' => 'Error updating item.',
 'edit_result_header' => 'Editing the submission by %1$s (%2$d) from %3$s at %4$s',
+'form_type' => 'Form Type',
+'regular' => 'Regular Form',
+'field_updated' => 'Field updated',
+);
+
+$LANG_FORMS_HELP = array(
+'form_type' => 'AJAX forms are saved to session variables only, Regular forms offer more options',
 );
 
 $PLG_forms_MESSAGE1 = 'Vielen Dank für Ihre Formular-Einsendung.';
