@@ -133,7 +133,7 @@ class Result
         while ($A = DB_fetchArray($res2, false)) {
             $this->fields[$A['fld_id']] = new Field($A['fld_id']);
         }
-        Cache::set($key, $this->fields, array('result_fields', 'result_' . $this->id));
+        Cache::set($key, $this->fields, array('result_fields', 'result_' . $this->id, 'form_' . $this->frm_id));
         return true;
     }
 
