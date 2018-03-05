@@ -52,16 +52,21 @@
     <div class="frmfield">{captcha}</div>
   {!endif}
   {hidden_vars}
-  <label for="buttons">&nbsp;</label>
-  <div class="frmfield">
-    <button class="uk-button uk-button-success" type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled}>{$LANG_ADMIN['submit']}</button>
-    <button class="uk-button" type="reset" name="btnReset" value="{$LANG_FORMS['reset']}">{$LANG_FORMS['reset']}</button>
-    {!if referrer}
+{!if ajax}
+{!else}
+  <div class="uk-form-row">
+    <label class="uk-form-label" for="buttons">&nbsp;</label>
+    <div class="frmfield">
+      <button class="uk-button uk-button-success" type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled}>{$LANG_ADMIN['submit']}</button>
+      <button class="uk-button" type="reset" name="btnReset" value="{$LANG_FORMS['reset']}">{$LANG_FORMS['reset']}</button>
+{!if referrer}
       <input type="hidden" name="referrer" value="{referrer}" />
       <button class="uk-button uk-button-primary" type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}" 
         onclick="javascript:document.location.href='{referrer}';"/>{$LANG_ADMIN['cancel']}</button>
-    {!endif}
+{!endif}
+    </div>
   </div>
+{!endif}
 </form>
 </div>
 {# end {templatelocation} #}

@@ -60,11 +60,6 @@ case 'savedata':
                 $redirect .= '&token=' . $F->Result->Token();
             }
         } elseif (empty($redirect)) {
-            /*if (isset($_POST['referrer']) && !empty($_POST['referrer'])) {
-                $redirect = $_POST['referrer'];
-            } else {
-                $redirect = $_SERVER['HTTP_REFERER'];
-            }*/
             $redirect = $_CONF['site_url'];
         }
         $u = parse_url($redirect);

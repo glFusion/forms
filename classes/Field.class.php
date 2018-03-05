@@ -17,17 +17,18 @@ namespace Forms;
 */
 class Field
 {
-    var $isNew;
-    var $options = array();
-    var $properties = array();
+    public $isNew;
+    protected $options = array();
+    protected $properties = array();
+    private $Form = NULL;
 
     /**
     *   Constructor.  Sets the local properties using the array $item.
     *
-    *   @param  integer $id     ID of the existing field, empty if new.
-    *   @param  string  $frm_id ID of the form to which this field belongs.
+    *   @param  integer $id     ID of the existing field, empty if new
+    *   @param  object  $Form   Form object to which this field belongs
     */
-    public function __construct($id = 0, $frm_id = '')
+    public function __construct($id = 0, $Form = NULL)
     {
         global $_USER, $_CONF_FRM;
 
@@ -35,6 +36,14 @@ class Field
 
         $this->isNew = true;
         $this->fld_id = $id;
+        if (!empty($Form)) {
+            if (is_object($Form)) {
+                $this->Form = $Form;
+            } else {
+                // A form ID was passed in
+                $this->Form = new Form($Form);
+            }
+        }
 
         if ($id == 0) {
             $this->name = '';
@@ -49,14 +58,12 @@ class Field
                 'maxlength' => $_CONF_FRM['def_text_maxlen'],
                 'spancols' => 0,
             );
-            $this->frm_id = $frm_id;
 
             // Get the group IDs that can fill out and view results for this
             // field
-            if (!empty($frm_id)) {
-                $Frm = new Form($frm_id);
-                $this->results_gid = $Frm->results_gid;
-                $this->fill_gid = $Frm->fill_gid;
+            if (is_object($this->Form)) {
+                $this->results_gid = $this->Form->results_gid;
+                $this->fill_gid = $this->Form->fill_gid;
             } else {
                 $this->fill_gid = $_CONF_FRM['def_fill_gid'];
                 $this->results_gid = $_CONF_FRM['def_results_gid'];
@@ -65,8 +72,8 @@ class Field
             if ($this->Read($id)) {
                 $this->isNew = false;
             }
+            if (empty($this->Form)) $this->Form = new Form($this->frm_id);
         }
-
     }
 
 
@@ -446,7 +453,9 @@ class Field
         if (isset($_POST[$this->name])) {
             $this->value = $_POST[$this->name];
         } elseif ($res_id == 0) {
-            if (isset($this->options['default'])) {
+            if ($this->Form->sub_type == 'ajax' && SESS_isSet($this->_elemID())) {
+                $this->value = SESS_getVar($this->_elemID());
+            } elseif (isset($this->options['default'])) {
                 $this->value = $this->GetDefault($this->options['default']);
             } else {
                 $this->value = '';
@@ -455,6 +464,7 @@ class Field
 
         $readonly = '';
         $class = '';
+        $elem_id = $this->_elemID();
         switch ($this->access) {
         case FRM_FIELD_READONLY:
             $readonly = 'disabled="disabled"';
@@ -462,7 +472,7 @@ class Field
         case FRM_FIELD_HIDDEN:
             $fld = '<input type="hidden" name="' . $this->name .
                     '" value="' . $this->value_text .
-                    '" id="' . $this->name . '"/>';
+                    '" id="' . $elem_id . '"/>';
             return $fld;
             break;
         case FRM_FIELD_REQUIRED:
@@ -471,7 +481,17 @@ class Field
         default:
             break;
         }
-
+        if ($this->Form->sub_type = 'ajax') {
+/*            if ($this->type == 'select') {
+                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
+                    "',this);\"";
+            } else {*/
+            $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
+                    "',this);\"";
+            //}
+        } else {
+            $js = '';
+        }
         //  Create the field HTML based on the type of field.
         switch ($this->type) {
         case 'text':
@@ -480,7 +500,7 @@ class Field
             $maxlength = min($this->options['maxlength'], 255);
 
             $fld = "<input $class name=\"{$this->name}\"
-                    id=\"{$this->name}\"
+                    id=\"$elem_id\"
                     size=\"$size\" maxlength=\"$maxlength\"
                     type=\"text\" value=\"{$this->value_text}\" $readonly />\n";
             break;
@@ -489,7 +509,7 @@ class Field
             $cols = $this->options['cols'];
             $rows = $this->options['rows'];
             $fld = "<textarea name=\"{$this->name}\"
-                    id=\"{$this->name}\"
+                    id=\"$elem_id\"
                     cols=\"$cols\" rows=\"$rows\"
                     >{$this->value_text}</textarea>\n";
             break;
@@ -497,8 +517,8 @@ class Field
         case 'checkbox':
             $chk = $this->value == 1 ? 'checked="checked"' : '';
             $fld = "<input $class name=\"{$this->name}\"
-                    id=\"{$this->name}\" type=\"checkbox\" value=\"1\"
-                    $chk $readonly />\n";
+                    id=\"$elem_id\" type=\"checkbox\" value=\"1\"
+                    $chk $readonly $js />\n";
             break;
 
         case 'multicheck':
@@ -518,8 +538,8 @@ class Field
                 }
                 $fld .= "<input $class type=\"checkbox\"
                         name=\"{$this->name}[]\"
-                        id=\"{$this->name}\"
-                        value=\"$value\" $sel $readonly>$value&nbsp;\n";
+                        id=\"" . $elem_id . '_' . $value . "\"
+                        value=\"$value\" $sel $readonly $js>$value&nbsp;\n";
             }
             break;
 
@@ -528,7 +548,7 @@ class Field
             if (empty($values)) break;
 
             $fld = "<select $class name=\"{$this->name}\"
-                    id=\"{$this->name}\" $readonly>\n";
+                    id=\"$elem_id\" $readonly $js>\n";
             $fld .= "<option value=\"\">{$LANG_FORMS['select']}</option>\n";
             foreach ($values as $id=>$value) {
                 $sel = $this->value == $value ? 'selected="selected"' : '';
@@ -550,8 +570,8 @@ class Field
             foreach ($values as $id=>$value) {
                 $sel = $this->value == $value ? 'checked="checked"' : '';
                 $fld .= "<input $class type=\"radio\" name=\"{$this->name}\"
-                        id=\"{$this->name}\"
-                        value=\"$value\" $sel $readonly>&nbsp;$value&nbsp;\n";
+                        id=\"" . $elem_id . '_' . $value . "\"
+                        value=\"$value\" $sel $readonly $js>&nbsp;$value&nbsp;\n";
             }
             break;
 
@@ -673,7 +693,12 @@ function {$this->name}_onUpdate(cal)
 
         // Create the "Field Type" dropdown
         $type_options = '';
+        $ajax_opts = array('checkbox', 'radio', 'select');
+//var_dump($this->Form);die;
         foreach ($LANG_FORMS['fld_types'] as $option => $opt_desc) {
+            if ($this->Form->sub_type == 'ajax' && !in_array($option, $ajax_opts)) {
+                continue;
+            }
             $sel = $this->type == $option ? 'selected="selected"' : '';
             $type_options .= "<option value=\"$option\" $sel>$opt_desc</option>\n";
         }
@@ -821,7 +846,7 @@ function {$this->name}_onUpdate(cal)
             //'admin_url' => FRM_ADMIN_URL,
             'frm_name'  => DB_getItem($_TABLES['forms_frmdef'], 'name',
                             "id='" . DB_escapeString($this->frm_id) . "'"),
-            'frm_id'    => $this->frm_id,
+            'frm_id'    => $this->Form->id,
             'fld_id'    => $this->fld_id,
             'name'      => $this->name,
             'type'      => $this->type,
@@ -1008,14 +1033,14 @@ function {$this->name}_onUpdate(cal)
 
         if ($fld_id > 0) {
             // Existing record, perform update
-            $sql = "UPDATE {$_TABLES['forms_flddef']} SET ";
-            $sql1 .= " WHERE fld_id = $fld_id";
+            $sql1 = "UPDATE {$_TABLES['forms_flddef']} SET ";
+            $sql3 = " WHERE fld_id = $fld_id";
         } else {
-            $sql = "INSERT INTO {$_TABLES['forms_flddef']} SET ";
-            $sql1 = '';
+            $sql1 = "INSERT INTO {$_TABLES['forms_flddef']} SET ";
+            $sql3 = '';
         }
 
-        $sql .= "frm_id = '" . DB_escapeString($A['frm_id']) . "',
+        $sql2 = "frm_id = '" . DB_escapeString($A['frm_id']) . "',
                 name = '" . DB_escapeString($A['name']) . "',
                 type = '" . DB_escapeString($A['type']) . "',
                 enabled = '" . (int)$A['enabled'] . "',
@@ -1025,8 +1050,8 @@ function {$this->name}_onUpdate(cal)
                 orderby = '" . (int)$A['orderby'] . "',
                 help_msg = '" . DB_escapeString($A['help_msg']) . "',
                 fill_gid = '{$this->fill_gid}',
-                results_gid = '{$this->results_gid}'
-                $sql1";
+                results_gid = '{$this->results_gid}'";
+        $sql = $sql1 . $sql2 . $sql3;
         //echo $sql;die;
         DB_query($sql, 1);
 
@@ -1658,6 +1683,12 @@ function {$this->name}_onUpdate(cal)
         } else {
             return $newval;
         }
+    }
+
+
+    private function _elemID()
+    {
+        return 'forms_' . $this->frm_id . '_' . $this->name;
     }
 
 }

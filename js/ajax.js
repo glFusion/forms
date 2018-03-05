@@ -15,9 +15,10 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
         var elem_stat = elem.checked;
         fld_set = elem.checked ? true : false;
         break;
-    case "select":
+    case "select-one":
         var elem_stat = elem.selected;
-        fld_set = elem.selected ? true : false;
+        //fld_set = elem.selected ? true : false;
+        fld_set = elem.value;
         break;
     }
 
@@ -26,6 +27,7 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
         "fld_id" : fld_id,
         "elem_id" : elem.id,
         "fld_set" : fld_set,
+        "fld_type": elem.type,
         "action" : "ajax_fld_post",
     };
     data = $.param(dataS);

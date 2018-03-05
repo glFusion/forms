@@ -118,6 +118,13 @@ function FRM_do_upgrade()
         if (!FRM_do_set_version($current_ver)) return false;
     }
 
+    if (!COM_checkVersion($current_ver, '0.3.1')) {
+        $current_ver = '0.3.1';
+        COM_errorLog("Updating Plugin to $current_ver");
+        if (!FRM_do_upgrade_sql($current_ver)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
+    }
+
     if (!COM_checkVersion($current_ver, $code_ver)) {
         if (!FRM_do_set_version($code_ver)) return false;
     }

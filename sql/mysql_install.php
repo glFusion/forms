@@ -6,7 +6,7 @@
 *   @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.1.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
@@ -20,6 +20,7 @@ $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
   `onsubmit` tinyint(1) NOT NULL DEFAULT '2',
   `email` varchar(80) DEFAULT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `sub_type` varchar(10) NOT NULL DEFAULT 'regular',
   `moderate` tinyint(1) NOT NULL DEFAULT '0',
   `owner_id` mediumint(8) unsigned NOT NULL DEFAULT '2',
   `group_id` mediumint(8) unsigned NOT NULL DEFAULT '1',
@@ -78,32 +79,32 @@ $_SQL['forms_values'] = "CREATE TABLE {$_TABLES['forms_values']} (
 global $FRM_sampledata;
 $FRM_sampledata = array();
 $FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} VALUES (
-    'testform', 'Test Profile Form', 
+    'testform', 'Test Profile Form',
     1, '{$_CONF['site_mail']}', 1, 0, 2, 1, 1, 1,
     '', 0, '', '', '', '', '', 0, 0, 0)";
 
 $insert = "INSERT INTO {$_TABLES['forms_flddef']} VALUES (";
 $FRM_sampledata[] = "$insert 1, 'testform', 'address1', 'text', 1, 1,
-    'Address Line 1', 
+    'Address Line 1',
     'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 10, '', 1, 1)";
 $FRM_sampledata[] = "$insert 2, 'testform', 'address2', 'text', 1, 0,
-    'Address Line 2', 
+    'Address Line 2',
     'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 20, '', 1, 1)";
 $FRM_sampledata[] = "$insert 3, 'testform', 'city', 'text', 1, 1,
-    'City', 
+    'City',
     'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 30, '', 1, 1)";
 $FRM_sampledata[] = "$insert 4, 'testform', 'state', 'text', 1, 1,
-    'State', 
+    'State',
     'a:2:{s:4:\"size\";i:2;s:9:\"maxlength\";i:2;}', 40, '', 1, 1)";
 $FRM_sampledata[] = "$insert 5, 'testform', 'zip', 'text', 1, 1,
-    'Zip Code', 
+    'Zip Code',
     'a:2:{s:4:\"size\";i:10;s:9:\"maxlength\";i:10;}', 50, '', 1, 1)";
-$FRM_sampledata[] = "$insert 6, 'testform', 'favcolor', 'radio', 1, 1, 
-    'Favorite color', 
+$FRM_sampledata[] = "$insert 6, 'testform', 'favcolor', 'radio', 1, 1,
+    'Favorite color',
     'a:2:{s:7:\"default\";s:4:\"Blue\";s:6:\"values\";s:51:\"a:3:{i:0;s:3:\"Red\";i:1;s:4:\"Blue\";i:2;s:5:\"Green\";}\";}', 60, 'Select your favorite color',
     1, 1)";
-$FRM_sampledata[] = "$insert 7, 'testform', 'birthdate', 'date', 1, 1, 
-    'BirthDate', 
+$FRM_sampledata[] = "$insert 7, 'testform', 'birthdate', 'date', 1, 1,
+    'BirthDate',
     'a:5:{s:7:\"default\";s:0:\"\";s:8:\"showtime\";i:0;s:10:\"timeformat\";s:2:\"12\";s:6:\"format\";N;s:12:\"input_format\";i:1;}', 70, '', 1, 1)";
 
 
@@ -129,7 +130,6 @@ $_FRM_UPGRADE_SQL = array(
             ADD captcha TINYINT(1) UNSIGNED NOT NULL DEFAULT 0",
         "ALTER TABLE {$_TABLES['forms_results']} ADD ip VARCHAR(16)",
     ),
-    
     '0.1.3' => array(
         "ALTER TABLE {$_TABLES['forms_flddef']}
             ADD `help_msg` varchar(255)",
@@ -167,6 +167,10 @@ $_FRM_UPGRADE_SQL = array(
     '0.2.2' => array(
         "ALTER TABLE {$_TABLES['forms_flddef']}
             CHANGE orderby orderby smallint(5) unsigned NOT NULL DEFAULT '0'",
+    ),
+    '0.3.1' => array(
+        "ALTER TABLE {$_TABLES['forms_frmdef']}
+            ADD `sub_type` varchar(10) NOT NULL DEFAULT 'regular'",
     ),
 );
 

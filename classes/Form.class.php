@@ -41,7 +41,6 @@ class Form
     var $access;
 
 
-
     /**
     *   Constructor.  Create a forms object for the specified user ID,
     *   or the current user if none specified.  If a key is requested,
@@ -60,8 +59,8 @@ class Form
                 "grp_name='forms Admin'");
         if ($def_group < 1) $def_group = 1;     // default to Root
         $this->instance_id = '';
-
         $this->Result = NULL;
+
         if (!empty($id)) {
             $id = COM_sanitizeID($id);
             $this->id = $id;
@@ -141,14 +140,14 @@ class Form
         case 'max_submit_msg':
         case 'name':
         case 'email':
-            $this->properties[$name] = trim($value);
-            break;
-
         case 'redirect':
             $this->properties[$name] = trim($value);
             break;
-        }
 
+        case 'sub_type':    // submission type, only "ajax" or "regular"
+            $this->properties[$name] = $value == 'ajax' ? 'ajax' : 'regular';
+            break;
+        }
     }
 
 
@@ -233,15 +232,15 @@ class Form
                 ORDER BY orderby ASC";
         //echo $sql;die;
         $res2 = DB_query($sql, 1);
+        $this->access = $this->hasAccess($access);
         while ($A = DB_fetchArray($res2, false)) {
 //            $cls = __NAMESPACE__ . '\\' . $A['type'] . 'Field';
 //            if (class_exists($cls)) {
 //                $this->fields[$A['name']] = new $cls($A['fld_id']);
 //            } else {
-                $this->fields[$A['name']] = new Field($A['fld_id']);
+                $this->fields[$A['name']] = new Field($A['fld_id'], $this);
 //            }
         }
-        $this->access = $this->hasAccess($access);
         return true;
     }
 
@@ -294,6 +293,7 @@ class Form
         $this->max_submit_msg = $A['max_submit_msg'];
         $this->redirect = $A['redirect'];
         $this->max_submit = $A['max_submit'];
+        $this->sub_type = $A['sub_type'];
 
         if ($fromdb) {
             // Coming from the database
@@ -381,6 +381,8 @@ class Form
             'inblock_chk' => $this->inblock == 1 ? 'checked="checked"' : '',
             'one_chk_' . $this->onetime => 'selected="selected"',
             'iconset'   => $_CONF_FRM['_iconset'],
+            'chk_' . $this->sub_type => 'checked="checked"',
+            'sub_type' => $this->sub_type,
         ) );
         if (!$this->isNew) {
             $T->set_var('candelete', 'true');
@@ -617,9 +619,7 @@ class Form
                 );
             }
         }
-
         CTL_clearCache();   // So results autotag will work.
-
         return '';
     }
 
@@ -695,7 +695,7 @@ class Form
                         WHERE frm_id = '{$this->old_id}'", 1);
             }
             CTL_clearCache();       // so autotags pick up changes
-            Cache::clear();         // Clear plugin cache
+            Cache::clear('form_' . $this->id);      // Clear plugin cache
             $msg = '';              // no error message if successful
         } else {
             $msg = 5;
@@ -823,6 +823,7 @@ class Form
             'instance_id'   => $this->instance_id,
             'iconset'       => $_CONF_FRM['_iconset'],
             'additional'    => $additional,
+            'ajax'          => $this->sub_type == 'ajax' ? true : false,
         ), '', false, true );
 
         $T->set_block('form', 'QueueRow', 'qrow');
@@ -846,7 +847,7 @@ class Form
                     'prompt'    => PLG_replaceTags($F->prompt),
                     'safe_prompt' => self::_stripHtml($F->prompt),
                     'fieldname' => $F->name,
-                    'field'     => $F->Render($res_id),
+                    'field'     => $F->Render($res_id, $this),
                     'help_msg'  => self::_stripHtml($F->help_msg),
                     'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
                     'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',

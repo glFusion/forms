@@ -1,8 +1,9 @@
 # Changelog - Forms plugin for glFusion
 ## 0.3.1
 Release TBD
-- Implement PHP class autoloader
+- Implement ajax type form with radio buttons, checkboxes and dropdowns available
 - Implement autotags for checkbox and radio fields, updating session vars only
+- Implement PHP class autoloader
 
 ## 0.3.0
 Release 2017-07-23
