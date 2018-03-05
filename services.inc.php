@@ -27,9 +27,10 @@ if (!defined ('GVERSION')) {
 */
 function service_renderForm_forms($args, &$output, &$svc_msg)
 {
+    if (!isset($args['frm_id'])) return PLG_RET_ERROR;
     $F = new \Forms\Form($args['frm_id']);
     if ($F->isNew) return PLG_RET_ERROR;
-    $res_id = isset($args['res_id']) ? $args['res_id'] : '';
+    $res_id = isset($args['res_id']) ? (int)$args['res_id'] : '';
     if (isset($args['instance_id'])) {
         if (!isset($args['pi_name'])) $args['pi_name'] = 'unknown';
         $F->setInstance(array($args['pi_name'], $args['instance_id']));
