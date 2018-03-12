@@ -10,6 +10,13 @@ Submitted data can be saved or used in any combination of several ways:
 * Emailed to any other email addresses
 * Simply displayed in a new page
 
+Forms can also use AJAX to save fields to session variables as they are changed.
+The &quot;onchange&quote; Javascript function is used so the field must be changed
+to record a value. Some field types (radio buttons, checkboxes, dropdowns) are
+better suited to AJAX submission than others such as text fields, but all should work.
+
+When using AJAX fields none of the usual form-action selections are available.
+
 ## Autotags
 The Forms plugin supports sevaral autotags
 
