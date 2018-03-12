@@ -25,17 +25,21 @@ case 'ajax_fld_post':
     if (empty($frm_id) || empty($fld_id) || empty($elem_id) || empty($fld_type)) {
         $msg = "missing form element";
         $status = 1;
-    } else {
-        if ($fld_type == 'select-one') {
-            $value = isset($_POST['fld_set']) ? $_POST['fld_set'] : '';
-        } else {
-            $value = isset($_POST['fld_set']) && $_POST['fld_set'] == 'true' ? true : false;
-        }
-        //COM_errorLog("forms.$frm_id.$fld_id - " . $fld_set);
-        SESS_setVar($elem_id, $value);
-        $status = 0;
-        $msg = $LANG_FORMS['field_updated'];
+        break;
     }
+    switch ($fld_type) {
+    case 'select-one':
+    case 'text':
+        $value = isset($_POST['fld_value']) ? $_POST['fld_value'] : '';
+        break;
+    default:
+        $value = isset($_POST['fld_set']) && $_POST['fld_set'] == 'true' ? true : false;
+        break;
+    }
+    //COM_errorLog("forms.$frm_id.$fld_id - $elem_id - $value");
+    SESS_setVar($elem_id, $value);
+    $status = 0;
+    $msg = $LANG_FORMS['field_updated'];
     break;
 
 case 'ajax_autotag_post':

@@ -234,12 +234,7 @@ class Form
         $res2 = DB_query($sql, 1);
         $this->access = $this->hasAccess($access);
         while ($A = DB_fetchArray($res2, false)) {
-//            $cls = __NAMESPACE__ . '\\' . $A['type'] . 'Field';
-//            if (class_exists($cls)) {
-//                $this->fields[$A['name']] = new $cls($A['fld_id']);
-//            } else {
-                $this->fields[$A['name']] = new Field($A['fld_id'], $this);
-//            }
+            $this->fields[$A['name']] = Field::getInstance($A['fld_id'], $this);
         }
         return true;
     }
@@ -654,14 +649,13 @@ class Form
         }
 
         if (!$this->isNew && $this->old_id != '') {
-            $sql = "UPDATE {$_TABLES['forms_frmdef']} ";
-            $sql1 = " WHERE id = '{$this->old_id}'";
+            $sql1 = "UPDATE {$_TABLES['forms_frmdef']} ";
+            $sql3 = " WHERE id = '{$this->old_id}'";
         } else {
-            $sql = "INSERT INTO {$_TABLES['forms_frmdef']} ";
-            $sql1 = '';
+            $sql1 = "INSERT INTO {$_TABLES['forms_frmdef']} ";
+            $sql3 = '';
         }
-        $sql .= "SET
-            id = '{$this->id}',
+        $sql2 = "SET id = '{$this->id}',
             name = '" . DB_escapeString($this->name) . "',
             introtext = '" . DB_escapeString($this->introtext) . "',
             submit_msg = '" . DB_escapeString($this->submit_msg) . "',
@@ -680,8 +674,9 @@ class Form
             inblock = '{$this->inblock}',
             max_submit = '{$this->max_submit}',
             email = '" . DB_escapeString($this->email) . "',
-            onetime = '{$this->onetime}'
-            $sql1";
+            onetime = '{$this->onetime}',
+            sub_type = '{$this->sub_type}'";
+        $sql = $sql1 . $sql2 . $sql3;
         DB_query($sql, 1);
 
         if (!DB_error()) {
@@ -843,16 +838,19 @@ class Form
                 $hidden .= $F->Render() . LB;
                 continue;
             } else {
-                $T->set_var(array(
-                    'prompt'    => PLG_replaceTags($F->prompt),
-                    'safe_prompt' => self::_stripHtml($F->prompt),
-                    'fieldname' => $F->name,
-                    'field'     => $F->Render($res_id, $this),
-                    'help_msg'  => self::_stripHtml($F->help_msg),
-                    'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
-                    'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
-                ), '', false, true);
-                $T->parse('qrow', 'QueueRow', true);
+                $rendered = $F->Render($res_id, $this);
+                if ($rendered !== NULL) {
+                    $T->set_var(array(
+                        'prompt'    => PLG_replaceTags($F->prompt),
+                        'safe_prompt' => self::_stripHtml($F->prompt),
+                        'fieldname' => $F->name,
+                        'field'     => $F->Render($res_id, $this),
+                        'help_msg'  => self::_stripHtml($F->help_msg),
+                        'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
+                        'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
+                    ), '', false, true);
+                    $T->parse('qrow', 'QueueRow', true);
+                }
             }
         }
 

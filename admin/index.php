@@ -75,7 +75,6 @@ if ($frm_id != '') {
     }
 }
 
-
 switch ($action) {
 case 'action':      // Got "?action=something".
     switch ($actionval) {

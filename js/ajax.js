@@ -20,6 +20,9 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
         //fld_set = elem.selected ? true : false;
         fld_set = elem.value;
         break;
+    case "text":
+        var elem_stat = "";
+        fld_set = elem.value;
     }
 
     var dataS = {
@@ -28,6 +31,7 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
         "elem_id" : elem.id,
         "fld_set" : fld_set,
         "fld_type": elem.type,
+        "fld_value": elem.value,
         "action" : "ajax_fld_post",
     };
     data = $.param(dataS);
@@ -39,7 +43,9 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
         success: function(result, textStatus, jqXHR) {
             try {
                 if (result.status == 0) {
-                    elem_stat = elem_stat ? false : true;   // toggle checkbox
+                    if (elem_stat != "") {
+                        elem_stat = elem_stat ? false : true;   // toggle checkbox
+                    }
                     $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
                 } else {
                     $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});

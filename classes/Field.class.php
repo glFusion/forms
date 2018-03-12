@@ -20,7 +20,7 @@ class Field
     public $isNew;
     protected $options = array();
     protected $properties = array();
-    private $Form = NULL;
+    protected $Form = NULL;
 
     /**
     *   Constructor.  Sets the local properties using the array $item.
@@ -74,6 +74,17 @@ class Field
             }
             if (empty($this->Form)) $this->Form = new Form($this->frm_id);
         }
+    }
+
+
+    public static function getInstance($fld_id, $frm_obj = NULL)
+    {
+        static $_fields = array();
+        $fld_id = (int)$fld_id;
+        if (!array_key_exists($fld_id, $_fields)) {
+            $_fields[$fld_id] = new self($fld_id, $frm_obj);
+        }
+        return $_fields[$fld_id];
     }
 
 
@@ -396,7 +407,6 @@ class Field
                     $tmpval .= sprintf(' %02d:%02d', $hour, $minute);
                 }
                 $this->value = $tmpval;
-                   
             } else {
                 $this->value = $A['value'];
             }
@@ -482,13 +492,8 @@ class Field
             break;
         }
         if ($this->Form->sub_type = 'ajax') {
-/*            if ($this->type == 'select') {
-                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
-                    "',this);\"";
-            } else {*/
             $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
                     "',this);\"";
-            //}
         } else {
             $js = '';
         }
@@ -502,7 +507,7 @@ class Field
             $fld = "<input $class name=\"{$this->name}\"
                     id=\"$elem_id\"
                     size=\"$size\" maxlength=\"$maxlength\"
-                    type=\"text\" value=\"{$this->value_text}\" $readonly />\n";
+                    type=\"text\" value=\"{$this->value_text}\" $readonly $js />\n";
             break;
 
         case 'textarea':
@@ -527,19 +532,23 @@ class Field
                 // Have to have some values for radio buttons
                 break;
             }
-
             $fld = '';
             foreach ($values as $id=>$value) {
-                if (is_array($this->value)) {
-                    $sel = in_array($value, $this->value) ?
-                        'checked="checked"' : '';
+                if ($this->Form->sub_type == 'ajax') {
+                    $tmp = SESS_getVar($this->_elemID($value));
+                    $sel = $tmp == 1 ? 'checked="checked"' : '';
                 } else {
-                    $sel = $value == $this->value ? 'checked="checked"' : '';
+                    if (is_array($this->value)) {
+                        $sel = in_array($value, $this->value) ?
+                            'checked="checked"' : '';
+                    } else {
+                        $sel = $value == $this->value ? 'checked="checked"' : '';
+                    }
                 }
-                $fld .= "<input $class type=\"checkbox\"
+                    $fld .= "<input $class type=\"checkbox\"
                         name=\"{$this->name}[]\"
-                        id=\"" . $elem_id . '_' . $value . "\"
-                        value=\"$value\" $sel $readonly $js>$value&nbsp;\n";
+                        id=\"" . $elem_id . '_' . str_replace(' ', '', $value) . "\"
+                        value=\"$value\" $sel $readonly $js>&nbsp;$value&nbsp;\n";
             }
             break;
 
@@ -693,12 +702,11 @@ function {$this->name}_onUpdate(cal)
 
         // Create the "Field Type" dropdown
         $type_options = '';
-        $ajax_opts = array('checkbox', 'radio', 'select');
-//var_dump($this->Form);die;
+//        $ajax_opts = array('checkbox', 'radio', 'select');
         foreach ($LANG_FORMS['fld_types'] as $option => $opt_desc) {
-            if ($this->Form->sub_type == 'ajax' && !in_array($option, $ajax_opts)) {
-                continue;
-            }
+//            if ($this->Form->sub_type == 'ajax' && !in_array($option, $ajax_opts)) {
+//                continue;
+//            }
             $sel = $this->type == $option ? 'selected="selected"' : '';
             $type_options .= "<option value=\"$option\" $sel>$opt_desc</option>\n";
         }
@@ -784,8 +792,6 @@ function {$this->name}_onUpdate(cal)
 
         case 'multicheck':
             $values = FRM_getOpts($this->options['values']);
-            //foreach ($vals as $val=>$valname) {
-            //if (is_array($this->options['values'])) {
             if (is_array($values)) {
                 $listinput = '';
                 $i = 0;
@@ -823,7 +829,7 @@ function {$this->name}_onUpdate(cal)
         $sql = "SELECT orderby, name
                 FROM {$_TABLES['forms_flddef']}
                 WHERE fld_id <> '{$this->fld_id}'
-                AND frm_id = '{$this->frm_id}'
+                AND frm_id = '{$this->Form->id}'
                 ORDER BY orderby ASC";
         $res1 = DB_query($sql, 1);
         $orderby_list = '';
@@ -1378,7 +1384,6 @@ function {$this->name}_onUpdate(cal)
             break;
         }
         return $msg;
-               
     }
 
 
@@ -1686,9 +1691,24 @@ function {$this->name}_onUpdate(cal)
     }
 
 
-    private function _elemID()
+    /**
+    *   Get the HTML element ID based on the form and field ID.
+    *   This is for ajax fields that store values in session variables
+    *   instead of result sets.
+    *   Also uses the field value if available and needed, such as for
+    *   multi-checkboxes.
+    *
+    *   @param  string  $val    Optional field value
+    *   @return string          ID string for the field element
+    */
+    protected function _elemID($val = '')
     {
-        return 'forms_' . $this->frm_id . '_' . $this->name;
+        $name  = str_replace(' ', '', $this->name);
+        $id = 'forms_' . $this->frm_id . '_' . $name;
+        if (!empty($val)) {
+            $id .= '_' . str_replace(' ', '', $val);
+        }
+        return $id;
     }
 
 }
