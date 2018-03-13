@@ -100,6 +100,23 @@ class Form
 
 
     /**
+    *   Get a form instance.
+    *
+    *   @param  mixed   $frm_id     Form ID
+    *   @param  object  $frm_obj    Form object (optional)
+    *   @return object      Field object
+    */
+    public static function getInstance($frm_id, $access = FRM_ACCESS_ADMIN)
+    {
+        static $_forms = array();
+        if (!array_key_exists($frm_id, $_forms)) {
+            $_forms[$frm_id] = new self($frm_id, $access);
+        }
+        return $_forms[$frm_id];
+    }
+
+
+    /**
     *   Set a local property
     *
     *   @param  string  $name   Name of property to set
@@ -257,7 +274,8 @@ class Form
 
         if ($res_id > 0) {
             $this->Result = new Result($res_id);
-            $this->Result->GetValues($this->fields);
+            //$this->Result->GetValues($this->fields);
+            $this->Result->setValues();
         }
     }
 
@@ -914,7 +932,7 @@ class Form
         if ($admin) $T->set_var('ip_addr', $this->Result->ip);
 
         $T->set_block('form', 'QueueRow', 'qrow');
-        foreach ($this->fields as $F) {
+        foreach ($this->Result->fields as $F) {
             if (!$F->enabled) continue;     // ignore disabled fields
             switch ($F->type) {
             case 'static':
@@ -926,11 +944,13 @@ class Form
                 $prompt = $F->prompt == '' ? $F->name : $F->prompt;
                 break;
             default;
-                $data = $F->value_text;
-                $prompt = $F->prompt == '' ? $F->name : $F->prompt;
+                $tmp = $F->renderData($this->Result->fields);
+                $data = $tmp['data'];
+                $prompt = $tmp['prompt'];
+                //$data = $F->value_text;
+                //$prompt = $F->prompt == '' ? $F->name : $F->prompt;
                 break;
             }
-
             $T->set_var(array(
                 'prompt'    => $prompt,
                 'fieldname' => $F->fieldname,

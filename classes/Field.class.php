@@ -35,17 +35,20 @@ class Field
         $id = (int)$id;
 
         $this->isNew = true;
-        $this->fld_id = $id;
         if (!empty($Form)) {
             if (is_object($Form)) {
                 $this->Form = $Form;
             } else {
                 // A form ID was passed in
-                $this->Form = new Form($Form);
+                //$this->Form = new Form($Form);
+                $this->Form = Form::getInstance($Form);
             }
         }
 
-        if ($id == 0) {
+        if (is_array($id)) {        // Already read data from the DB
+            $this->setVars($id);
+        } elseif ($id == 0) {       // Create new, empty object
+            $this->fld_id = $id;
             $this->name = '';
             $this->type = 'text';
             $this->enabled = 1;
@@ -68,21 +71,33 @@ class Field
                 $this->fill_gid = $_CONF_FRM['def_fill_gid'];
                 $this->results_gid = $_CONF_FRM['def_results_gid'];
             }
-        } else {
+        } else {                // A valid field record ID was passed in
             if ($this->Read($id)) {
                 $this->isNew = false;
             }
-            if (empty($this->Form)) $this->Form = new Form($this->frm_id);
+            //if (empty($this->Form)) $this->Form = new Form($this->frm_id);
+            if (empty($this->Form)) $this->Form = Form::getInstance($this->frm_id);
         }
     }
 
 
-    public static function getInstance($fld_id, $frm_obj = NULL)
+    /**
+    *   Get a field instance.
+    *
+    *   @param  mixed   $fld        Field ID or array of data
+    *   @param  object  $frm_obj    Form object (optional)
+    *   @return object      Field object
+    */
+    public static function getInstance($fld, $frm_obj = NULL)
     {
         static $_fields = array();
-        $fld_id = (int)$fld_id;
+        if (is_array($fld)) {
+            $fld_id = $fld['fld_id'];
+        } else {
+            $fld_id = $fld;
+        }
         if (!array_key_exists($fld_id, $_fields)) {
-            $_fields[$fld_id] = new self($fld_id, $frm_obj);
+            $_fields[$fld_id] = new self($fld, $frm_obj);
         }
         return $_fields[$fld_id];
     }
@@ -105,6 +120,26 @@ class Field
         $res = DB_query($sql, 1);
         if (!$res) return false;
         return $this->SetVars(DB_fetchArray($res, false), true);
+    }
+
+
+    protected function _getValue($val)
+    {
+            if ($this->type == 'numeric') {
+                $val = (float)$value;
+                $format_str = empty($this->options['format']) ?
+                            $_CONF_FRM['def_calc_format'] :
+                            $this->options['format'];
+                $this->value = sprintf($format_str, $val);
+            } else {
+                $this->value = $value;
+            }
+    }
+
+
+    public function setValue($val)
+    {
+        $this->value = $val;
     }
 
 
@@ -491,7 +526,7 @@ class Field
         default:
             break;
         }
-        if ($this->Form->sub_type = 'ajax') {
+        if ($this->Form->sub_type == 'ajax') {
             $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
                     "',this);\"";
         } else {
@@ -683,6 +718,21 @@ function {$this->name}_onUpdate(cal)
         }
         return $fld;
     }
+
+
+    /**
+    *   Get the formatted field prompt and data to display with the results.
+    *
+    *   @param  object  $Result     Optional result to allow access to other fields
+    *   @return array   Array of data, prompt
+    */
+    public function renderData($Result=NULL)
+    {
+        return array(
+            'data' => $this->value_text,
+            'prompt' => $this->prompt == '' ? $this->name : $this->prompt,
+        );
+     }
 
 
     /**
@@ -942,7 +992,7 @@ function {$this->name}_onUpdate(cal)
 
         // Options that should be in any field, used or not.  Checkboxes get
         // their default differently, so this may be overridden.
-        $options['default'] = trim($A['defvalue']);
+        //$options['default'] = trim($A['defvalue']);
 
         switch ($A['type']) {
         case 'textarea':
@@ -987,9 +1037,12 @@ function {$this->name}_onUpdate(cal)
             $options['timeformat'] = $A['timeformat'] == '24' ? '24' : '12';
             break;
 
+        case 'multicheck':
+            $options = $this->defForDB($A);
+            break;
+
         case 'select':
         case 'radio':
-        case 'multicheck':
             $newvals = array();
             foreach ($A['selvalues'] as $val) {
                 if (!empty($val)) {
@@ -1016,7 +1069,10 @@ function {$this->name}_onUpdate(cal)
         case 'static':
             $options['default'] = trim($A['valuetext']);
             break;
+        }
 
+        if (!array_key_exists('default', $options)) {
+            $options['default'] = trim($A['defvalue']);
         }
 
         // Mask and Visible Mask may exist for any field type, but are set
@@ -1088,6 +1144,19 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
+    *   Get the data formatted for saving to the database
+    *   Field types can override this as needed.
+    *
+    *   @param  mixed   $newval     New data to save
+    *   @return mixed       Data formatted for the DB
+    */
+    protected function dataForDB($newval)
+    {
+        return DB_escapeString(COM_checkWords(strip_tags($newval)));
+    }
+
+
+    /**
     *   Save this field to the database.
     *
     *   @uses   AutoGen()
@@ -1107,6 +1176,8 @@ function {$this->name}_onUpdate(cal)
             $this->options['autogen'] == FRM_AUTOGEN_SAVE) {
             $newval = self::AutoGen($this->properties, 'save');
         }
+
+        $newval = $this->dataForDB($newval);
 
         switch ($this->type) {
         // Set the $newval for special cases
@@ -1131,7 +1202,7 @@ function {$this->name}_onUpdate(cal)
             break;
 
         default:
-            $newval = COM_checkWords(strip_tags($newval));
+            $newval = $this->dataForDB($newval);
             break;
         }
 
@@ -1356,7 +1427,6 @@ function {$this->name}_onUpdate(cal)
         if (!$this->enabled) return $msg;   // not enabled
         if (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED)
             return $msg;        // not required
-        //if ($this->required != 1) return $msg;    // only checking required
 
         switch ($this->type) {
         case 'date':
@@ -1378,10 +1448,44 @@ function {$this->name}_onUpdate(cal)
             }
             break;
         default:
-            if (empty($vals[$this->name])) {
+            $msg = $this->_Validate($vals);
+            /*if (empty($vals[$this->name])) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
-            }
+            }*/
             break;
+        }
+        return $msg;
+    }
+
+
+    protected function _required()
+    {
+        return ($this->access == FRM_FIELD_REQUIRED) ? 'required' : '';
+    }
+
+
+    protected function _readonly()
+    {
+        return ($this->access == FRM_FIELD_READONLY) ? 'disabled="disabled"' : '';
+    }
+
+    protected function _ajax()
+    {
+        if ($this->Form->sub_type == 'ajax') {
+            return "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
+                    "',this);\"";
+        } else {
+            return '';
+        }
+    }
+
+    protected function _Validate($vals)
+    {
+        global $LANG_FORMS;
+
+        $msg = '';
+        if (empty($vals[$this->name])) {
+            $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
         }
         return $msg;
     }

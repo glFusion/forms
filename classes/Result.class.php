@@ -22,6 +22,11 @@ class Result
     *   @var array */
     var $fields = array();
 
+    /**
+    *   Field values associated with a result set
+    *   @var array */
+    private $values = array();
+
     /** Result record ID
     *   @var integer */
     var $id;
@@ -120,20 +125,28 @@ class Result
         // Now get field information
         $key = 'result_' . $this->id . '_fields';
         $this->fields = Cache::get($key);
-        if ($this->fields) {
-            return true;
+        if (!$this->fields) {
+            // Not found in cache, read from DB
+            $this->fields = array();
+            $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
+                    WHERE frm_id = '{$this->frm_id}'
+                    ORDER BY orderby ASC";
+            $res2 = DB_query($sql);
+            while ($A = DB_fetchArray($res2, false)) {
+                //$this->fields[$A['fld_id']] = new Field($A['fld_id']);
+                $this->fields[$A['fld_id']] = Field::getInstance($A);
+            }
+            Cache::set($key, $this->fields, array('result_fields', 'result_' . $this->id, 'form_' . $this->frm_id));
         }
 
-        // Not found in cache, read from DB
-        $this->fields = array();
-        $sql = "SELECT fld_id FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id = '{$this->frm_id}'
-                ORDER BY orderby ASC";
-        $res2 = DB_query($sql);
-        while ($A = DB_fetchArray($res2, false)) {
-            $this->fields[$A['fld_id']] = new Field($A['fld_id']);
+        // Now get the field values
+        $sql = "SELECT * FROM {$_TABLES['forms_values']}
+                WHERE results_id = {$this->id}";
+        $res = DB_query($sql);
+        while ($A = DB_fetchArray($res, false)) {
+            $this->values[$A['fld_id']] = $A;   
         }
-        Cache::set($key, $this->fields, array('result_fields', 'result_' . $this->id, 'form_' . $this->frm_id));
+
         return true;
     }
 
@@ -197,7 +210,22 @@ class Result
     public function GetValues($fields)
     {
         foreach ($fields as $field) {
-            $field->GetValue($this->id);
+            $val = array_key_exists($field->fld_id, $this->values) ? $this->values[$field->fld_id]['value'] : NULL;
+            $field->GetValue($this->id, $val);
+        }
+    }
+
+
+    /**
+    *   Retrieve all the results for this set into the supplied field objects.
+    *
+    *   @param  array   $fields     Array of Field objects
+    */
+    public function setValues()
+    {
+        foreach ($this->fields as $field) {
+            $val = array_key_exists($field->fld_id, $this->values) ? $this->values[$field->fld_id]['value'] : NULL;
+            $field->setValue($val);
         }
     }
 
