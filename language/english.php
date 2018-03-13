@@ -178,6 +178,7 @@ $LANG_FORMS = array(
 'form_type' => 'Form Type',
 'regular' => 'Regular Form',
 'field_updated' => 'Field updated',
+'save_disabled' => 'Saving disabled in form preview.',
 );
 
 $LANG_FORMS_HELP = array(

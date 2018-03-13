@@ -101,9 +101,6 @@ class Result
         $id = (int)$id;
         if ($id > 0) $this->id = (int)$id;
 
-        // Clear out any existing items, in case we're reusing this instance.
-        $this->fields = array();
-
         $sql = "SELECT r.*
             FROM {$_TABLES['forms_results']} r
             WHERE r.id = " . $this->id;
@@ -116,24 +113,6 @@ class Result
         if (empty($A)) return false;
 
         $this->SetVars($A);
-
-        // Now get field information
-        $key = 'result_' . $this->id . '_fields';
-        $this->fields = Cache::get($key);
-        if ($this->fields) {
-            return true;
-        }
-
-        // Not found in cache, read from DB
-        $this->fields = array();
-        $sql = "SELECT fld_id FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id = '{$this->frm_id}'
-                ORDER BY orderby ASC";
-        $res2 = DB_query($sql);
-        while ($A = DB_fetchArray($res2, false)) {
-            $this->fields[$A['fld_id']] = new Field($A['fld_id']);
-        }
-        Cache::set($key, $this->fields, array('result_fields', 'result_' . $this->id, 'form_' . $this->frm_id));
         return true;
     }
 

@@ -20,7 +20,7 @@ class Field
     public $isNew;
     protected $options = array();
     protected $properties = array();
-    protected $Form = NULL;
+    protected $sub_type = 'regular';
 
     /**
     *   Constructor.  Sets the local properties using the array $item.
@@ -28,7 +28,7 @@ class Field
     *   @param  integer $id     ID of the existing field, empty if new
     *   @param  object  $Form   Form object to which this field belongs
     */
-    public function __construct($id = 0, $Form = NULL)
+    public function __construct($id = 0, $frm_id=NULL)
     {
         global $_USER, $_CONF_FRM;
 
@@ -36,14 +36,6 @@ class Field
 
         $this->isNew = true;
         $this->fld_id = $id;
-        if (!empty($Form)) {
-            if (is_object($Form)) {
-                $this->Form = $Form;
-            } else {
-                // A form ID was passed in
-                $this->Form = new Form($Form);
-            }
-        }
 
         if ($id == 0) {
             $this->name = '';
@@ -59,30 +51,22 @@ class Field
                 'spancols' => 0,
             );
 
-            // Get the group IDs that can fill out and view results for this
-            // field
-            if (is_object($this->Form)) {
-                $this->results_gid = $this->Form->results_gid;
-                $this->fill_gid = $this->Form->fill_gid;
-            } else {
-                $this->fill_gid = $_CONF_FRM['def_fill_gid'];
-                $this->results_gid = $_CONF_FRM['def_results_gid'];
-            }
+            $this->fill_gid = $_CONF_FRM['def_fill_gid'];
+            $this->results_gid = $_CONF_FRM['def_results_gid'];
         } else {
             if ($this->Read($id)) {
                 $this->isNew = false;
             }
-            if (empty($this->Form)) $this->Form = new Form($this->frm_id);
         }
     }
 
 
-    public static function getInstance($fld_id, $frm_obj = NULL)
+    public static function getInstance($fld_id, $frm_id = '')
     {
         static $_fields = array();
         $fld_id = (int)$fld_id;
         if (!array_key_exists($fld_id, $_fields)) {
-            $_fields[$fld_id] = new self($fld_id, $frm_obj);
+            $_fields[$fld_id] = new self($fld_id, $frm_id);
         }
         return $_fields[$fld_id];
     }
@@ -328,9 +312,7 @@ class Field
                 break;
 
             }
-
         }
-
     }
 
 
@@ -449,9 +431,12 @@ class Field
     *   @param  integer     Results ID, zero for new form
     *   @return string      HTML for this field, including prompt
     */
-    public function Render($res_id = 0)
+    public function Render($res_id = 0, $mode=NULL)
     {
         global $_CONF, $LANG_FORMS, $_CONF_FRM;
+
+        $form = Form::getInstance($this->frm_id);
+        $sub_type = $form->sub_type;
 
         // If POSTed form data, set the user variable to that.  Otherwise,
         // set it to the default or leave it alone. Since an empty checkbox
@@ -462,14 +447,16 @@ class Field
         // are saving data to the DB
         if (isset($_POST[$this->name])) {
             $this->value = $_POST[$this->name];
-        } elseif ($res_id == 0) {
-            if ($this->Form->sub_type == 'ajax' && SESS_isSet($this->_elemID())) {
-                $this->value = SESS_getVar($this->_elemID());
-            } elseif (isset($this->options['default'])) {
+        } elseif ($res_id == 0 || $mode == 'preview') {
+            // If no saved value, load the default if available
+            if (isset($this->options['default'])) {
                 $this->value = $this->GetDefault($this->options['default']);
             } else {
                 $this->value = '';
             }
+        } elseif ($sub_type == 'ajax' && SESS_isSet($this->_elemID())) {
+            // Get the value from the session variable for ajax-type forms
+            $this->value = SESS_getVar($this->_elemID());
         }
 
         $readonly = '';
@@ -491,12 +478,18 @@ class Field
         default:
             break;
         }
-        if ($this->Form->sub_type == 'ajax') {
-            $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
+
+        if ($sub_type == 'ajax') {
+            if ($mode == 'preview') {
+                $js = 'onchange="FORMS_ajaxDummySave(\'' . $LANG_FORMS['save_disabled'] . '\')"';
+            } else {
+                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
                     "',this);\"";
+            }
         } else {
             $js = '';
         }
+
         //  Create the field HTML based on the type of field.
         switch ($this->type) {
         case 'text':
@@ -534,7 +527,7 @@ class Field
             }
             $fld = '';
             foreach ($values as $id=>$value) {
-                if ($this->Form->sub_type == 'ajax') {
+                if ($sub_type == 'ajax') {
                     $tmp = SESS_getVar($this->_elemID($value));
                     $sel = $tmp == 1 ? 'checked="checked"' : '';
                 } else {
@@ -603,11 +596,13 @@ class Field
             // use the default.
             $value = $this->value;
             if (empty($dt)) {
-                if (empty($value) && isset($this->options['default']) && !empty($this->options['default'])) {
-                    $this->value = $this->options['default'];
-                } else {
-                    $dt = new \Date('now', $_CONF['timezone']);
-                    $this->value = $dt->format('Y-m-d', true);
+                if (empty($value)) {
+                    if (isset($this->options['default']) && !empty($this->options['default'])) {
+                        $this->value = $this->options['default'];
+                    } else {
+                        $dt = new \Date('now', $_CONF['timezone']);
+                        $this->value = $dt->format('Y-m-d', true);
+                    }
                 }
                 $datestr = explode(' ', $this->value);  // separate date & time
                 $dt = explode('-', $datestr[0]);        // get date components
@@ -698,15 +693,20 @@ function {$this->name}_onUpdate(cal)
         $retval = '';
         $format_str = '';
         $listinput = '';
+
+        // Get defaults from the form, if defined
+        if ($this->frm_id > 0) {
+            $form = Form::getInstance($this->frm_id);
+            if (!$form->isNew) {
+                $this->results_gid = $form->results_gid;
+                $this->fill_gid = $form->fill_gid;
+            }
+        }
         $T = FRM_getTemplate('editfield', 'editform', '/admin');
 
         // Create the "Field Type" dropdown
         $type_options = '';
-//        $ajax_opts = array('checkbox', 'radio', 'select');
         foreach ($LANG_FORMS['fld_types'] as $option => $opt_desc) {
-//            if ($this->Form->sub_type == 'ajax' && !in_array($option, $ajax_opts)) {
-//                continue;
-//            }
             $sel = $this->type == $option ? 'selected="selected"' : '';
             $type_options .= "<option value=\"$option\" $sel>$opt_desc</option>\n";
         }
@@ -829,7 +829,7 @@ function {$this->name}_onUpdate(cal)
         $sql = "SELECT orderby, name
                 FROM {$_TABLES['forms_flddef']}
                 WHERE fld_id <> '{$this->fld_id}'
-                AND frm_id = '{$this->Form->id}'
+                AND frm_id = '{$this->frm_id}'
                 ORDER BY orderby ASC";
         $res1 = DB_query($sql, 1);
         $orderby_list = '';
@@ -852,7 +852,8 @@ function {$this->name}_onUpdate(cal)
             //'admin_url' => FRM_ADMIN_URL,
             'frm_name'  => DB_getItem($_TABLES['forms_frmdef'], 'name',
                             "id='" . DB_escapeString($this->frm_id) . "'"),
-            'frm_id'    => $this->Form->id,
+//            'frm_id'    => $this->Form->id,
+            'frm_id'    => $this->frm_id,
             'fld_id'    => $this->fld_id,
             'name'      => $this->name,
             'type'      => $this->type,
@@ -1149,7 +1150,7 @@ function {$this->name}_onUpdate(cal)
                 )
                 ON DUPLICATE KEY
                     UPDATE value = '$db_value'";
-        //COM_errorLog($sql);
+        COM_errorLog($sql);
         DB_query($sql, 1);
         $status = DB_error();
         return $status ? false : true;

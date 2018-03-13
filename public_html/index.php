@@ -127,15 +127,12 @@ case 'results':
 case 'print':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
     $frm_id = isset($_GET['frm_id']) ? $_GET['frm_id'] : '';
-    if ($res_id > 0) {
-        if (empty($frm_id)) {
-            $R = new \Forms\Result($res_id);
-            if ($R->uid == $_USER['uid'] || plugin_isadmin_forms()) {
-                $content .= $R->Prt();
-            }
-        } else {
-            $F = new \Forms\Form($frm_id);
-            $content .= $F->Prt($res_id);
+    if ($frm_id != '' && $res_id > 0) {
+        $F = Forms\Form::getInstance($frm_id);
+        $F->ReadData($res_id);
+        if ((!empty($F->Result) && $F->Result->uid == $_USER['uid']) ||
+                plugin_isadmin_forms() ) {
+            $content .= $F->Prt($res_id, true);
         }
         echo $content;
         exit;

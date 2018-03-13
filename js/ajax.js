@@ -65,6 +65,19 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
 };
 
 /**
+*   Just display a message, don't actually save anything. Used in form preview.
+*/
+function FORMS_ajaxDummySave(msg)
+{
+    try {
+        $.UIkit.notify(msg, {timeout: 1000,pos:'top-center'});
+    }
+    catch(err) {
+        $.UIkit.notify(msg, {timeout: 1000,pos:'top-center'});
+    }
+}
+
+/**
 *   Save a field from an autotag
 *
 *   @param  integer fld_name    Field name, to create session var

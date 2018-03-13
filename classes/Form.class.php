@@ -99,6 +99,17 @@ class Form
     }
 
 
+    public static function getInstance($frm_id)
+    {
+        static $_forms = array();
+        //$frm_id = COM_sanitizeID($frm_id);
+        if (!array_key_exists($frm_id, $_forms)) {
+            $_forms[$frm_id] = new self($frm_id);
+        }
+        return $_forms[$frm_id];
+    }
+
+
     /**
     *   Set a local property
     *
@@ -224,6 +235,7 @@ class Form
 
         $A = DB_fetchArray($res1, false);
         $this->SetVars($A, true);
+        $this->access = $this->hasAccess($access);
 
         // Now get field information
         $sql = "SELECT fld_id, name, type
@@ -232,9 +244,8 @@ class Form
                 ORDER BY orderby ASC";
         //echo $sql;die;
         $res2 = DB_query($sql, 1);
-        $this->access = $this->hasAccess($access);
         while ($A = DB_fetchArray($res2, false)) {
-            $this->fields[$A['name']] = Field::getInstance($A['fld_id'], $this);
+            $this->fields[$A['name']] = Field::getInstance($A['fld_id'], $this->id);
         }
         return true;
     }
@@ -744,6 +755,7 @@ class Form
             $this->onetime = FRM_LIMIT_MULTI; // otherwise admin might not be able to view
             $allow_submit = false;
         } elseif ($mode == 'edit') {    // admin editing submission
+            //$this->ReadData();
             $this->onetime = FRM_LIMIT_EDIT; // allow editing of result
             $success_msg = 3;
             // Refer the submitter back to the results page.
@@ -823,8 +835,8 @@ class Form
 
         $T->set_block('form', 'QueueRow', 'qrow');
         $hidden = '';
-        foreach ($this->fields as $F) {
 
+        foreach ($this->fields as $F) {
             // Don't render: calculated fields, disabled fields, or fields
             // that the submitter can't access.
             // This is here instead of Field->Render() to keep the prompt
@@ -838,13 +850,13 @@ class Form
                 $hidden .= $F->Render() . LB;
                 continue;
             } else {
-                $rendered = $F->Render($res_id, $this);
+                $rendered = $F->Render($res_id, $mode);
                 if ($rendered !== NULL) {
                     $T->set_var(array(
                         'prompt'    => PLG_replaceTags($F->prompt),
                         'safe_prompt' => self::_stripHtml($F->prompt),
                         'fieldname' => $F->name,
-                        'field'     => $F->Render($res_id, $this),
+                        'field'     => $rendered,
                         'help_msg'  => self::_stripHtml($F->help_msg),
                         'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
                         'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
