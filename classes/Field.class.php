@@ -491,7 +491,7 @@ class Field
         default:
             break;
         }
-        if ($this->Form->sub_type = 'ajax') {
+        if ($this->Form->sub_type == 'ajax') {
             $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
                     "',this);\"";
         } else {
