@@ -6,14 +6,15 @@
 *   @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
+*   @since      0.3.1
+*   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
 */
 namespace Forms;
 
 /**
-*   Class for Meetup events
+*   Class for caching forms, fields and results
 *   @package forms
 */
 class Cache
@@ -25,7 +26,7 @@ class Cache
     *
     *   @param  string  $key    Item key
     *   @param  mixed   $data   Data, typically an array
-    *   @param  
+    *   @param  mixed   $tag    Single tag, or an array
     */
     public static function set($key, $data, $tag='')
     {
