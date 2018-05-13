@@ -17,10 +17,10 @@ global $_CONF, $_CONF_FRM;
 /**
  *  Make the installation default values available to these functions.
  */
-require_once FRM_PI_PATH . '/install_defaults.php';
+require_once __DIR__ . '/install_defaults.php';
 
 global $_DB_dbms;
-require_once FRM_PI_PATH . "/sql/{$_DB_dbms}_install.php";
+require_once __DIR__ . "/sql/{$_DB_dbms}_install.php";
 
 /**
 *   Perform the upgrade starting at the current version.

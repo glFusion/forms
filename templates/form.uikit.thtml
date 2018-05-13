@@ -1,49 +1,48 @@
 {# begin {templatelocation} #}
-<div class="uk-form-horizontal">
 {!if additional}
-<div class="uk-alert uk-alert-danger">
-{additional}
-</div>
+<div class="uk-alert uk-alert-danger">{additional}</div>
 {!endif}
 <form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
 {introtext}
 {!if error_msg}
-<div class="uk-alert uk-alert-danger">{error_msg}</div>
+  <div class="uk-alert uk-alert-danger">{error_msg}</div>
 {!endif}
-<input type="hidden" name="frm_id" value="{frm_id}" />
-<input type="hidden" name="res_id" value="{res_id}" />
-<input type="hidden" name="instance_id" value="{instance_id}" />
+  <input type="hidden" name="frm_id" value="{frm_id}" />
+  <input type="hidden" name="res_id" value="{res_id}" />
+  <input type="hidden" name="instance_id" value="{instance_id}" />
 {!if success_msg}
-<input type="hidden" name="success_msg" value="{success_msg}" />
+  <input type="hidden" name="success_msg" value="{success_msg}" />
 {!endif}
-
   <!-- BEGIN QueueRow -->
   <div class="uk-form-row">
-    {!if spancols}
-    {!else}
-      {!if prompt}
+{!if spancols}
+{!else}
+{!if prompt}
     <label class="uk-form-label" for="{fieldname}">{prompt}:</label>
-      {!else}
-        &nbsp;
-      {!endif}
-    {!endif}
+{!else}
+    &nbsp;
+{!endif}
+{!endif}
 
-    {!if spancols}
-    {!else}
+{!if spancols}
+{!else}
     <div class="uk-form-controls">
-    {!endif}
-    {!if field}
+{!endif}
+{!if field}
       {field}
-      {!if help_msg}
+{!if help_msg}
       <i class="{iconset}-question-circle tooltip" title="{help_msg}"></i>
-      {!endif}
-      {!if is_required}
+{!endif}
+{!if is_required}
       <i class="{iconset}-exclamation-triangle form_danger tooltip" title="{safe_prompt} {$LANG_FORMS['is_required']}"></i>
-      {!endif}
-    {!else}
+{!endif}
+{!else}
       &nbsp;
-    {!endif}
+{!endif}
+{!if spancols}
+{!else}
     </div>
+{!endif}
   </div>
   <!-- END QueueRow -->
 
@@ -68,5 +67,4 @@
   </div>
 {!endif}
 </form>
-</div>
 {# end {templatelocation} #}
