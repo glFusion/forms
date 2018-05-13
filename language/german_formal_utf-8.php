@@ -182,10 +182,6 @@ $LANG_FORMS = array(
 'save_disabled' => 'Saving disabled in form preview.',
 );
 
-$LANG_FORMS_HELP = array(
-'form_type' => 'AJAX forms are saved to session variables only, Regular forms offer more options',
-);
-
 $PLG_forms_MESSAGE1 = 'Vielen Dank für Ihre Formular-Einsendung.';
 $PLG_forms_MESSAGE2 = 'Das Formular enthält fehlende oder ungültige Felder.';
 $PLG_forms_MESSAGE3 = 'Das Plugin wurde aktualisiert';

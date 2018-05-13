@@ -15,20 +15,20 @@ $(document).ready(function() {
         iconDesktop: true,
         iconTouch: true,
         functionBefore: function(origin, continueTooltip) {
-            continueTooltip();
+            //continueTooltip();
             var attrHref = ConfigDocUrl;
             var ajobj = $(this);
             $.get(attrHref, function(data) {
                 var confVar = ajobj.attr('id');
                 if (data.indexOf(confVar) > 0) {
-                    var a = $(data).find('a[name=desc_' + confVar + ']');
-                    var tds = a.parent().parent().children("td");
-                    var desc = tds.eq(1).html();
+                    var desc = $(data).find('#desc_' + confVar + ' dd:first').text();
                     origin.tooltipster('content', desc);
+                    //console.log('Have tooltip: ' + desc);
                 } else {
                     origin.tooltipster('content', 'No Help Text Found');
-                    console.log('Unable to find help text for desc_%s',confVar);
+                    //console.log('Unable to find help text for desc_%s',confVar);
                 }
+                continueTooltip();
             });
         }
     });
@@ -68,10 +68,10 @@ function isAjax(status)
   <input type="hidden" name="old_id" value="{old_id}" />
   <fieldset>
     <div class="uk-form-row">
-      <label for="f_id" class="uk-form-label">{$LANG_FORMS['frm_id']}
+      <label for="f_id" class="uk-form-label">{$LANG_FORMS['frm_id']}:
       </label>
       <div class="uk-form-controls">
-        <span id="frm_id" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_frm_id" class="tooltip_cfg tooltipstered"></span>
         <input required id="f_id" type="text" size="32" name="id" value="{id}" />
         <i class="{iconset}-warning frm-icon-danger tooltip" title="{$LANG_FORMS['required']}"></i>
       </div>
@@ -81,7 +81,7 @@ function isAjax(status)
       <label for="f_name" class="uk-form-label">{$LANG_FORMS['name']}
       </label>
       <div class="uk-form-controls">
-        <span id="name" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_frm_name" class="tooltip_cfg tooltipstered"></span>
         <input required id="f_name" type="text" size="32" name="name" value="{name}" />
         <i class="{iconset}-warning frm-icon-danger tooltip" title="{$LANG_FORMS['required']}"></i>
       </div>
@@ -91,7 +91,7 @@ function isAjax(status)
       <label for="f_introtext" class="uk-form-label">{$LANG_FORMS['introtext']}
       </label>
       <div class="uk-form-controls">
-        <span id="introtext" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_introtext" class="tooltip_cfg tooltipstered"></span>
         <textarea id="f_introtext" rows="2" name="introtext" cols="40"
           class="pluginForms">{introtext}</textarea>
       </div>
@@ -101,7 +101,7 @@ function isAjax(status)
       <label for="f_submit_msg" class="uk-form-label">{$LANG_FORMS['submit_msg']}
       </label>
       <div class="uk-form-controls">
-        <span id="submit_msg" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_submit_msg" class="tooltip_cfg tooltipstered"></span>
         <textarea id="f_submit_msg" rows="2" name="submit_msg" cols="40" 
           class="pluginForms">{submit_msg}</textarea>
       </div>
@@ -111,17 +111,17 @@ function isAjax(status)
       <label for="f_noaccess_msg" class="uk-form-label">{$LANG_FORMS['noaccess_msg']}
       </label>
       <div class="uk-form-controls">
-        <span id="noaccess_msg" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_noaccess_msg" class="tooltip_cfg tooltipstered"></span>
         <textarea id="f_noaccess_mag" rows="2" name="noaccess_msg" cols="40" 
          class="pluginForms">{noaccess_msg}</textarea>
       </div>
     </div>
 
     <div class="uk-form-row">
-      <label for="f_redirect" class="uk-form-label">{$LANG_FORMS['form_type']}:
-        <i class="uk-icon uk-icon-question-circle tooltip" title="{$LANG_FORMS_HELP['form_type']}"></i>
+      <label class="uk-form-label">{$LANG_FORMS['form_type']}:
       </label>
       <div class="uk-form-controls">
+        <span id="hlp_frm_type" class="tooltip_cfg tooltipstered"></span>
         <input id="f_isAjax" type="radio" name="sub_type" value="ajax" {chk_ajax}
             onclick="javascript:isAjax(true);"/>&nbsp;AJAX&nbsp;&nbsp;
         <input id="f_isRegular" type="radio" name="sub_type" value="regular" {chk_regular}
@@ -133,7 +133,7 @@ function isAjax(status)
       <label for="f_redirect" class="uk-form-label">{$LANG_FORMS['redirect']}
       </label>
       <div class="uk-form-controls">
-        <span id="redirect" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_redirect" class="tooltip_cfg tooltipstered"></span>
         <input id="f_redirect" type="text" size="80" name="redirect" value="{redirect}" />
       </div>
     </div>
@@ -142,7 +142,7 @@ function isAjax(status)
       <label for="f_enabled" class="uk-form-label">{$LANG_FORMS['enabled']}
       </label>
       <div class="uk-form-controls">
-        <span id="enabled" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_enabled" class="tooltip_cfg tooltipstered"></span>
         <input id="f_enabled" type="checkbox" value="1" name="enabled" {ena_chk} />
       </div>
     </div>
@@ -151,7 +151,7 @@ function isAjax(status)
       <label class="uk-form-label">{$LANG_FORMS['onsubmit']}
       </label>
       <div class="uk-form-controls">
-        <span id="onsubmit" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_onsubmit" class="tooltip_cfg tooltipstered"></span>
         <input type="checkbox" value="1" name="onsubmit[store]" {store_chk} />&nbsp;{$LANG_FORMS['save_to_db']}
         &nbsp;&nbsp;<input type="checkbox" value="16" name="onsubmit[preview]" {preview_chk} />&nbsp;{$LANG_FORMS['preview_on_save']}
         <br />
@@ -167,7 +167,7 @@ function isAjax(status)
       <label for="f_moderate" class="uk-form-label">{$LANG_FORMS['moderate']}?
       </label>
       <div class="uk-form-controls">
-        <span id="moderate" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_moderate" class="tooltip_cfg tooltipstered"></span>
         <input id="f_moderate" type="checkbox" value="1" name="moderate" {mod_chk} />
       </div>
     </div>
@@ -176,7 +176,7 @@ function isAjax(status)
       <label for="f_inblock" class="uk-form-label">{$LANG_FORMS['inblock']}
       </label>
       <div class="uk-form-controls">
-        <span id="inblock" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_inblock" class="tooltip_cfg tooltipstered"></span>
         <input id="f_inblock" type="checkbox" name="inblock" value="1" {inblock_chk} />
       </div>
     </div>
@@ -185,7 +185,7 @@ function isAjax(status)
       <label for="f_max_submit" class="uk-form-label">{$LANG_FORMS['max_submit']}
       </label>
       <div class="uk-form-controls">
-        <span id="max_submit" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_max_submit" class="tooltip_cfg tooltipstered"></span>
         <input id="f_max_submit" type="text" size="5" maxlen="5" name="max_submit" value="{max_submit}" />
       </div>
     </div>
@@ -194,7 +194,7 @@ function isAjax(status)
       <label for="f_max_submit_msg" class="uk-form-label">{$LANG_FORMS['max_submit_msg']}
       </label>
       <div class="uk-form-controls">
-        <span id="max_submit_msg" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_max_submit_msg" class="tooltip_cfg tooltipstered"></span>
         <textarea id="f_max_submit_msg" rows="2" name="max_submit_msg" cols="40"
           class="pluginForms">{max_submit_msg}</textarea>
       </div>
@@ -204,7 +204,7 @@ function isAjax(status)
       <label class="uk-form-label">{$LANG_FORMS['onetime']}
       </label>
       <div class="uk-form-controls">
-        <span id="onetime" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_onetime" class="tooltip_cfg tooltipstered"></span>
         <select name="onetime">
           <option value="0" {one_chk_0} />{$LANG_FORMS['pul_mult']}</option>
           <option value="1" {one_chk_1} />{$LANG_FORMS['pul_edit']}</option>
@@ -217,7 +217,7 @@ function isAjax(status)
       <label for="f_noedit_msg" class="uk-form-label">{$LANG_FORMS['noedit_msg']}
       </label>
       <div class="uk-form-controls">
-        <span id="noedit_msg" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_noedit_msg" class="tooltip_cfg tooltipstered"></span>
         <textarea id="f_noedit_msg" rows="2" name="noedit_msg" cols="40"
           class="pluginForms">{noedit_msg}</textarea>
       </div>
@@ -231,7 +231,7 @@ function isAjax(status)
       <label for="f_owner" class="uk-form-label">{$LANG_FORMS['owner']}
       </label>
       <div class="uk-form-controls">
-        <span id="owner_id" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_owner_id" class="tooltip_cfg tooltipstered"></span>
         <select id="f_owner" name="owner_id">
           {owner_dropdown}
         </select>
@@ -242,7 +242,7 @@ function isAjax(status)
       <label for="f_group" class="uk-form-label">{$LANG_FORMS['admin_group']}
       </label>
       <div class="uk-form-controls">
-        <span id="group_id" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_group_id" class="tooltip_cfg tooltipstered"></span>
         <select id="f_group" name="group_id">
           {admin_group_dropdown}
         </select>
@@ -253,7 +253,7 @@ function isAjax(status)
       <label for="f_fill_gid" class="uk-form-label">{$LANG_FORMS['user_group']}
       </label>
       <div class="uk-form-controls">
-        <span id="fill_gid" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_fill_gid" class="tooltip_cfg tooltipstered"></span>
         <select id="f_fill_gid" name="fill_gid">
           {user_group_dropdown}
         </select>
@@ -264,7 +264,7 @@ function isAjax(status)
       <label for="f_results_gid" class="uk-form-label">{$LANG_FORMS['results_group']}
       </label>
       <div class="uk-form-controls">
-        <span id="results_gid" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_results_gid" class="tooltip_cfg tooltipstered"></span>
         <select id="f_results_gid" name="results_gid">
           {results_group_dropdown}
         </select>
@@ -275,7 +275,7 @@ function isAjax(status)
       <label for="f_captcha" class="uk-form-label">{$LANG_FORMS['req_captcha']}
       </label>
       <div class="uk-form-controls">
-        <span id="req_captcha" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_captcha" class="tooltip_cfg tooltipstered"></span>
         <input id="f_captcha" type="checkbox" name="captcha" value="1" {captcha_chk} />
       </div>
     </div>
@@ -284,7 +284,7 @@ function isAjax(status)
       <label for="f_reset_perms" class="uk-form-label">{$LANG_FORMS['reset_fld_perm']}
       </label>
       <div class="uk-form-controls">
-        <span id="reset_fld_perm" class="tooltip_cfg tooltipstered"></span>
+        <span id="hlp_reset_fld_perm" class="tooltip_cfg tooltipstered"></span>
         <input id="f_reset_perms" type="checkbox" name="reset_fld_perm" value="1" />
       </div>
     </div>

@@ -177,10 +177,6 @@ $LANG_FORMS = array(
 'save_disabled' => 'Saving disabled in form preview.',
 );
 
-$LANG_FORMS_HELP = array(
-'form_type' => 'AJAX forms are saved to session variables only, Regular forms offer more options',
-);
-
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
 $PLG_forms_MESSAGE2 = 'The form contains missing or invalid fields.';
 $PLG_forms_MESSAGE3 = 'The form has been updated.';

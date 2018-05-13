@@ -43,11 +43,11 @@ $LANG_FORMS = array(
 'max_submit_msg' => 'Message if the max submissions is reached',
 'moderate'      => 'Moderate',
 'results_group' => 'Group with access to results',
-'new_frm_saved_msg' => 'Form saved.  Now scroll down to add fields',
+'new_frm_saved_msg' => 'Form saved. Now scroll down to add fields',
 'help_msg' => 'Help Text',
-'hlp_edit_form' => 'Create or edit an existing form.  When creating a form, the form must be saved before fields can be added to it.',
+'hlp_edit_form' => 'Create or edit an existing form. When creating a form, the form must be saved before fields can be added to it.',
 'hlp_fld_order' => 'The Order indicates where the item will appear on forms relative to other items, and may be changed later.',
-'hlp_fld_value' => 'The Value has several meanings, depending upon the Field Type:<br><ul><li>For Text fields, this is the default value used in new entries</li><li>For Checkboxes, this is the value returned when the box is checked (usually 1).</li><li>For Radio Buttons and Dropdowns, this is a string of value:prompt pairs to be used.  This is in the format "value1:prompt1;value2:prompt2;..."</li></ul>',
+'hlp_fld_value' => 'The Value has several meanings, depending upon the Field Type:<br><ul><li>For Text fields, this is the default value used in new entries</li><li>For Checkboxes, this is the value returned when the box is checked (usually 1).</li><li>For Radio Buttons and Dropdowns, this is a string of value:prompt pairs to be used. This is in the format "value1:prompt1;value2:prompt2;..."</li></ul>',
 'hlp_fld_mask' => 'Enter the data mask (e.g. "99999-9999" for a US zip code).',
 'hlp_fld_enter_format' => 'Enter the format string',
 'hlp_fld_enter_default' => 'Enter the default value for this field',
@@ -58,11 +58,11 @@ $LANG_FORMS = array(
 'hlp_fld_default_time' => 'Default time ("hh:mm", 24-hour format)',
 'hlp_fld_autogen'   => 'Select whether the data for this field is automatically created.',
 
-'hdr_form_preview' => 'This is a fully functional preview of how your form will look.  If you fill out the data fields and click "Submit", the data will be saved and/or emailed to the form\'s owner.  If the post-submit action is to display the results, or a redirect url is configured for the form, you will be taken to that page.',
+'hdr_form_preview' => 'This is a fully functional preview of how your form will look. If you fill out the data fields and click "Submit", the data will be saved and/or emailed to the form\'s owner. If the post-submit action is to display the results, or a redirect url is configured for the form, you will be taken to that page.',
 'hdr_field_edit' => 'Editing the field definition.',
-'hdr_form_list'  => 'Select a form to edit, or create a new form by clicking "New Form" above.  Other available actions are shown in the selection under the "Action" column.',
+'hdr_form_list'  => 'Select a form to edit, or create a new form by clicking "New Form" above. Other available actions are shown in the selection under the "Action" column.',
 'hdr_field_list' => 'Select a field to edit, or create a new field by clicking "New Field" above.',
-'hdr_form_results' => 'Here are the results for your form.  You can delete them by clicking on the checkbox and selecting "delete"',
+'hdr_form_results' => 'Here are the results for your form. You can delete them by clicking on the checkbox and selecting "delete"',
 
 'form_results' => 'Form Results',
 'del_selected' => 'Delete Selected',
@@ -142,6 +142,7 @@ $LANG_FORMS = array(
     'time'  => 'Time',
     'static' => 'Static',
     'calc'  => 'Calculation',
+    'hidden'  => 'Hidden',
 ),
 'calc_type' => 'Calculation Type',
 'calc_types' => array(
@@ -181,15 +182,11 @@ $LANG_FORMS = array(
 'save_disabled' => 'Saving disabled in form preview.',
 );
 
-$LANG_FORMS_HELP = array(
-'form_type' => 'AJAX forms are saved to session variables only, Regular forms offer more options',
-);
-
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
 $PLG_forms_MESSAGE2 = 'The form contains missing or invalid fields.';
 $PLG_forms_MESSAGE3 = 'The form has been updated.';
 $PLG_forms_MESSAGE4 = 'Error updating the Forms plugin version.';
-$PLG_forms_MESSAGE5 = 'A database error occurred.  Check your site\'s error.log';
+$PLG_forms_MESSAGE5 = 'A database error occurred. Check your site\'s error.log';
 $PLG_forms_MESSAGE6 = 'Your form has been created. You may now create fields.';
 $PLG_forms_MESSAGE7 = 'Sorry, the maximum number of submissions has been reached.';
 
