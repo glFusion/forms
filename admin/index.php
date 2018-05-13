@@ -36,6 +36,7 @@ $action = 'listforms';      // Default view
 $expected = array('edit','updateform','editfield', 'updatefield',
     'save', 'print', 'editresult', 'updateresult', 'reorder',
     'editform', 'copyform', 'delbutton_x', 'showhtml',
+    'moderate',
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
     'results',
 );
@@ -118,13 +119,15 @@ case 'reorder':
 case 'updateresult':
     $F = new Form($_POST['frm_id']);
     $R = new Result($_POST['res_id']);
+    // Clear the moderation flag when saving a moderated submission
     $R->SaveData($_POST['frm_id'], $F->fields, $_POST, $R->uid);
+    Result::Approve($R->id);
     $view = 'results';
     break;
 
 case 'updatefield':
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
-    $F = new Field($fld_id, $frm_id);
+    $F = Field::getInstance($_POST, $frm_id);
     $msg = $F->SaveDef($_POST);
     $view = 'editform';
     break;
@@ -280,6 +283,7 @@ case 'print':
     break;
 
 case 'editresult':
+case 'moderate':
     $res_id = (int)$_GET['res_id'];
     $frm_id = DB_getItem($_TABLES['forms_results'], 'frm_id',
             "id={$res_id}");

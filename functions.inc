@@ -58,13 +58,13 @@ define('FRM_LIMIT_MULTI', 0);
 define('FRM_LIMIT_EDIT', 1);
 define('FRM_LIMIT_ONCE', 2);
 
-if (file_exists(FRM_PI_PATH . '/config.php')) {
+if (file_exists(__DIR__ . '/config.php')) {
 /** Include local config values and overrides */
-    include_once FRM_PI_PATH . '/config.php';
+    include_once __DIR__ . '/config.php';
 }
 
 /** Determine the correct language file, falling back to English as default. */
-$langpath = FRM_PI_PATH . '/language';
+$langpath = __DIR__ . '/language';
 $langfile = $_CONF['language'] . '.php';
 if (!file_exists("$langpath/$langfile")) {
     $langfile = 'english.php';
@@ -91,10 +91,10 @@ spl_autoload_register(function($class)
 
 // Import plugin-specific functions
 function USES_forms_functions()
-{   require_once FRM_PI_PATH . '/forms_functions.inc.php';  }
+{   require_once __DIR__ . '/forms_functions.inc.php';  }
 
 /** Include service functions */
-require_once FRM_PI_PATH . '/services.inc.php';
+require_once __DIR__ . '/services.inc.php';
 
 
 /**
@@ -283,12 +283,12 @@ function plugin_getheadercss_forms()
         if (@file_exists($layoutpath . $file)) {
             // check for custom layout first
             $styles[] = $layoutpath . $file;
-        } elseif (@file_exists(FRM_PI_PATH . '/css/custom/' . $file)) {
+        } elseif (@file_exists(__DIR__ . '/css/custom/' . $file)) {
             // then custom plugin style
-            $styles[] = FRM_PI_PATH . '/css/custom/' . $file;
+            $styles[] = __DIR__ . '/css/custom/' . $file;
         } else {
             // finally use the default plugin style
-            $styles[] = FRM_PI_PATH . '/css/' . $file;
+            $styles[] = __DIR__ . '/css/' . $file;
         }
     }
     return $styles;
@@ -336,26 +336,6 @@ function FRM_setOpts($A)
         if (!$str) $str = '';
     }
     return $str;
-}
-
-
-/**
-*   Get the string that corresponds to a single value option given
-*   a string of "name:value;" option pairs
-*
-*   @param  string  $val        Value key to check
-*   @param  array   $A          Values array from the field definition
-*   @return string              String associated with $value
-*/
-function FRM_stringFromValues($val, $A)
-{
-    // If the request value is set in the array, return it.
-    // Otherwise, return an empty string.
-    if (isset($A[$val])) {
-        return $A[$val];
-    } else {
-        return '';
-    }
 }
 
 
@@ -660,6 +640,150 @@ function plugin_user_move_forms($origUID, $destUID)
 
 
 /**
+*   Returns list of moderation values
+*
+*   The array returned contains (in order): the row 'id' label, main plugin
+*   table, moderation fields (comma seperated), and plugin submission table
+*
+*   @return       array        Returns array of useful moderation values
+*/
+function plugin_moderationvalues_forms()
+{
+    global $_TABLES;
+
+    return array(
+        'res_id',
+        $_TABLES['forms_results'],
+        '',
+        '',
+    );
+}
+
+
+/**
+*   Performs plugin exclusive work for items approved by moderation.
+*   Notifies users of approval/denial, and subscribers if approved.
+*
+*   @param  string  $id         ID of the ad
+*   @return string              Empty string.
+*/
+function plugin_moderationapprove_forms($id)
+{
+    Forms\Result::Approve($id);
+    return '';
+}
+
+
+/**
+*   Performs plugin exclusive work for items deleted by moderation.
+*
+*   @param  string  $res_id     ID of the deleted result submission.
+*   @return string          Any wanted HTML output
+*/
+function plugin_moderationdelete_forms($res_id)
+{
+    global $_TABLES;
+
+    $res_id = (int)$res_id;
+    $sql = "DELETE FROM {$_TABLES['forms_values']}
+            WHERE results_id = $res_id";
+    DB_query($sql);
+    DB_delete($_TABLES['forms_results'], 'id', $res_id);
+    return '';
+}
+
+
+/**
+*   Show items for moderation on submissions page
+*
+*   Uses the Plugin class to return data required by moderation.php to list
+*   plugin objects that need to be moderated.
+*
+*   @return       Plugin       return Plugin class containing submission data
+*/
+function plugin_itemlist_forms()
+{
+    global $_TABLES, $LANG_FORMS;
+
+    if (plugin_isadmin_forms()) {
+        $plugin = new Plugin();
+        $plugin->submissionlabel = $LANG_FORMS['menu_title'];
+        $plugin->getsubmissionssql = "SELECT
+                    res.id, frm.name as subject,
+                    FROM_UNIXTIME(res.dt) as date,
+                    'n/a', res.uid
+                FROM {$_TABLES['forms_results']} res
+                LEFT JOIN {$_TABLES['forms_frmdef']} frm
+                    ON res.frm_id = frm.id
+                WHERE approved = 0";
+        $plugin->addSubmissionHeading('Form Name');
+        $plugin->addSubmissionHeading('Date');
+        return $plugin;
+    }
+}
+
+
+/**
+*   Perform actions when a user is deleted
+*   - Delete result sets submitted by the user
+*
+*   @param  integer $uid    User ID
+*/
+function plugin_user_deleted_forms($uid)
+{
+    global $_TABLES;
+
+    $uid = (int)$uid;
+    $sql = "SELECT id FROM {$_TABLES['forms_results']}
+            WHERE uid = '$uid'";
+    $res = DB_query($sql);
+    $A = DB_fetchAll($res, false);
+    foreach ($A as $id=>$res) {
+        Forms\Result::Delete($res['id']);
+    }
+}
+
+
+/**
+*   Export user data when requested.
+*
+*   @param  integer $uid        User ID
+*   @param  string  $email      User Email Address (not used)
+*   @param  string  $username   User Name (not used)
+*   @param  string  $ip         IP address (not used)
+*   @return string              XML-formatted data
+*/
+function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
+{
+    global $_TABLES, $_USER, $_CONF_FRM;
+
+    $retval = "<{$_CONF_FRM['pi_name']}>\n";
+    $sql = "SELECT id FROM {$_TABLES['forms_results']} WHERE uid = '$uid'";
+    $res = DB_query($sql);
+    $A = DB_fetchAll($res, false);
+    foreach ($A as $id=>$res_id) {
+        $R = new Forms\Result($res_id['id']);
+        $F = Forms\Form::getInstance($R->frm_id);
+        $R->GetValues($F->fields);
+        $form_name = str_replace(' ', '_', $F->name);
+        $retval .= "<$form_name>\n";
+        $dt = new Date($R->dt, $_USER['tzid']);
+        $retval .= '<date>' . $dt->format($dt->getUserFormat(),true) . "</date>\n";
+        $retval .= "<ip>{$R->ip}</ip>\n";
+        foreach ($F->fields as $fld) {
+            $retval .= $fld->XML();
+        }
+        $retval .= "</$form_name>\n";
+    }
+    $retval .= "</{$_CONF_FRM['pi_name']}>\n";
+    if ( function_exists('tidy_repair_string')) {
+        $retval = tidy_repair_string($retval, array('input-xml' => 1));
+    }
+    return $retval;
+}
+
+
+/**
 *   Create an array of groups.
 *
 *   @param  boolean $nogroup    True if "No Group" is an option.
@@ -738,13 +862,13 @@ function FRM_getTemplate($name, $id='', $path='')
     // May use "switch" later, for now there are only two options
     $tpltype = $_SYSTEM['framework'] == 'uikit' ? '.uikit' : '';
     foreach ($templates as $t_id =>$t_name) {
-        if (file_exists(FRM_PI_PATH . "/$path/$t_name$tpltype.thtml")) {
+        if (file_exists(__DIR__ . "/$path/$t_name$tpltype.thtml")) {
             $templates[$t_id] = "$t_name$tpltype.thtml";
         } else {
             $templates[$t_id] = "$t_name.thtml";
         }
     }
-    $T = new Template(FRM_PI_PATH . '/' . $path);
+    $T = new Template(__DIR__ . '/' . $path);
     $T->set_file($templates);
     return $T;
 }
