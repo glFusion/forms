@@ -15,7 +15,7 @@ The &quot;onchange&quote; Javascript function is used so the field must be chang
 to record a value. Some field types (radio buttons, checkboxes, dropdowns) are
 better suited to AJAX submission than others such as text fields, but all should work.
 
-When using AJAX fields none of the usual form-action selections are available.
+When using AJAX forms none of the usual form-action selections are available.
 
 ## Autotags
 The Forms plugin supports sevaral autotags
@@ -29,7 +29,8 @@ Parameters:
 * form_id: ID of the form to display. Required.
 
 ### forms:results
-Displays the submitted form data in a table.
+Displays the submitted form data in a table. Only fields for which the current
+user has &quot;View Results&quot; access are displayed.
 
 Usage: `[forms:results form:<form_id> field1,field2,field3,...]`
 
@@ -48,8 +49,9 @@ Usage:
 * `[forms:radio name:<fld_name> value:<fld_value> check]`
 
 Parameters:
-* fld_name: A name for this field. Required. This should normally be globally unique but may
-be duplicated between pages if you wish the pages to show the same data.
+* fld_name: A name for this field or radio button group. Required.
+This should normally be globally unique but may be duplicated between
+pages if you wish the pages to show the same data.
 * fld_value: The field value. Required for radio buttons, not used for checkboxes.
 * check: Indicates that the field should be checked initially. Once the guest has
 checked or unchecked the item this has no effect.

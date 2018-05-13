@@ -103,12 +103,6 @@ function plugin_postinstall_forms()
 {
     global $FRM_sampledata, $_TABLES, $_CONF_FRM;
 
-    // Try to copy admin documentation.
-    //$filepath = "{$_CONF['path']}/plugins/{$_CONF_FRM['pi_name']}";
-    //$filepath = FRM_PI_PATH;
-    //@copy($filepath .'/docs/'. $_CONF_FRM['pi_name'].'_.html', 
-    //        $_CONF['path_html'].'/docs/'.$_CONF_FRM['pi_name'].'_def.html');
-
     // Install sample data
     if (is_array($FRM_sampledata)) {
         foreach ($FRM_sampledata as $sql) {
@@ -137,7 +131,7 @@ function plugin_load_configuration_forms()
 {
     global $_CONF, $_CONF_FRM, $_TABLES;
 
-    require_once FRM_PI_PATH . '/install_defaults.php';
+    require_once __DIR__ . '/install_defaults.php';
 
     // Get the admin group ID that was saved previously.
     $group_id = (int)DB_getItem($_TABLES['groups'], 'grp_id', 

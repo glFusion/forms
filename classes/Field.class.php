@@ -3,7 +3,7 @@
 *   Class to handle individual form fields.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
 *   @version    0.3.1
 *   @license    http://opensource.org/licenses/gpl-2.0.php
@@ -18,7 +18,7 @@ namespace Forms;
 class Field
 {
     public $isNew;
-    protected $options = array();
+    public $options = array();  // Form object needs access
     protected $properties = array();
     protected $sub_type = 'regular';
 
@@ -32,27 +32,19 @@ class Field
     {
         global $_USER, $_CONF_FRM;
 
-        $id = (int)$id;
-
         $this->isNew = true;
-        $this->fld_id = $id;
-
         if ($id == 0) {
+            $this->fld_id = 0;
             $this->name = '';
             $this->type = 'text';
             $this->enabled = 1;
             $this->access = 0;
             $this->prompt = '';
-            $this->options = array(
-                'rows' => $_CONF_FRM['def_textarea_rows'],
-                'cols' => $_CONF_FRM['def_textarea_cols'],
-                'size' => $_CONF_FRM['def_text_size'],
-                'maxlength' => $_CONF_FRM['def_text_maxlen'],
-                'spancols' => 0,
-            );
-
-            $this->fill_gid = $_CONF_FRM['def_fill_gid'];
-            $this->results_gid = $_CONF_FRM['def_results_gid'];
+            $this->frm_id = $frm_id;
+            $this->fill_gid = $_CONF_FRM['fill_gid'];
+            $this->results_gid = $_CONF_FRM['results_gid'];
+        } elseif (is_array($id)) {
+            $this->SetVars($id, true);
         } else {
             if ($this->Read($id)) {
                 $this->isNew = false;
@@ -61,132 +53,73 @@ class Field
     }
 
 
-    public static function getInstance($fld_id, $frm_id = '')
+    /**
+    *   Get an instance of a field based on the field type.
+    *   If the "fld" parameter is an array it must include at least fld_id
+    *   and type.
+    *   Only works to retrieve existing fields.
+    *
+    *   @param  mixed   $fld    Field ID or record
+    *   @return object          Field object
+    */
+    public static function getInstance($fld)
     {
+        global $_TABLES;
         static $_fields = array();
-        $fld_id = (int)$fld_id;
+
+        if (is_array($fld)) {
+            // Received a field record, make sure required parameters
+            // are present
+            if (!isset($fld['type']) ||!isset($fld['fld_id'])) {
+                return NULL;
+            }
+        } elseif (is_numeric($fld)) {
+            // Received a field ID, have to look up the record to get the type
+            $fld_id = (int)$fld;
+            $fld = self::_readFromDB($fld_id);
+            if (DB_error() || empty($fld)) return NULL;
+        }
+
+        $fld_id = (int)$fld['fld_id'];
         if (!array_key_exists($fld_id, $_fields)) {
-            $_fields[$fld_id] = new self($fld_id, $frm_id);
+            $cls = __NAMESPACE__ . '\\Field_' . $fld['type'];
+            $_fields[$fld_id] = new $cls($fld);
         }
         return $_fields[$fld_id];
     }
 
 
     /**
-    *   Read this field definition from the database.
+    *   Read this field definition from the database and load the object
     *
     *   @see Field::SetVars
+    *   @uses Field::_readFromDB()
     *   @param  string  $name   Optional field name
     *   @return boolean     Status from SetVars()
     */
     public function Read($id = 0)
     {
-        global $_TABLES;
-
         if ($id != 0) $this->fld_id = $id;
-        $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
-                WHERE fld_id='" . (int)$this->fld_id . "'";
-        $res = DB_query($sql, 1);
-        if (!$res) return false;
-        return $this->SetVars(DB_fetchArray($res, false), true);
+        $A = self::_readFromDB($id);
+        return $A ? $this->setVars($A, true) : false;
     }
 
 
     /**
-    *   Retrieve this field's value from a specific result set
+    *   Actually read a field from the database
     *
-    *   @param  integer $res_id Result set
-    *   @return mixed       Field value
+    *   @param  integer $id     Field ID
+    *   @return mixed       Array of fields or False on error
     */
-    public function GetValue($res_id)
+    private static function _readFromDB($id)
     {
-        global $_TABLES, $_CONF_FRM;
+        global $_TABLES;
 
-        $res_id = (int)$res_id;
-        if ($this->type == 'calc') {
-            $valnames = explode(',', $this->options['value']);
-            $values = array();
-            foreach ($valnames as $val) {
-                if (is_numeric($val)) {     // Handle constants
-                    $values[] = $val;
-                } elseif ($val == $this->name) {    // avoid recursion
-                    continue;
-                } else {
-                    $fld_id = DB_getItem($_TABLES['forms_flddef'], 'fld_id',
-                        "frm_id = '" . DB_escapeString($this->frm_id) .
-                        "' AND name = '" . DB_escapeString($val) . "'");
-                    if (empty($fld_id)) continue;
-                    $fld = new Field($fld_id);
-                    $values[] = $fld->GetValue($res_id);
-                }
-            }
-            if (!empty($values)) {
-                $result = $values[0];
-                $valcount = count($values);
-                switch ($this->options['calc_type']) {
-                case 'add':
-                    for ($i = 1; $i < $valcount; $i++) {
-                        if (!is_numeric($values[$i])) continue;
-                        $result += $values[$i];
-                    }
-                    break;
-                case 'sub':
-                    for ($i = 1; $i < $valcount; $i++) {
-                        if (!is_numeric($values[$i])) continue;
-                        $result -= $values[$i];
-                    }
-                    break;
-                case 'div':
-                    for ($i = 1; $i < $valcount; $i++) {
-                        if (!is_numeric($values[$i]) || $values[$i] == 0)
-                            continue;
-                        $result /= $values[$i];
-                    }
-                    break;
-                case 'mul':
-                    for ($i = 1; $i < $valcount; $i++) {
-                        if (!is_numeric($values[$i])) continue;
-                        $result *= $values[$i];
-                    }
-                    break;
-                case 'mean':
-                    if ($valcount < 1) {    // protect against div by zero
-                        $result = 0;
-                    } else {
-                        for ($i = 1; $i < $valcount; $i++) {
-                            if (!is_numeric($values[$i])) continue;
-                            $result += $values[$i];
-                        }
-                        $result /= $valcount;
-                    }
-                    break;
-                }
-            }
-            if (is_numeric($result)) {
-                $format_str = empty($this->options['format']) ?
-                            $_CONF_FRM['def_calc_format'] :
-                            $this->options['format'];
-                $result = sprintf($format_str, $result);
-            }
-            $this->value = $result;
-            $value = $result;
-        } elseif ($this->type == 'static') {
-            $value = $this->options['value'];
-            $value_text = $value;
-        } else {
-            $value = DB_getItem($_TABLES['forms_values'], 'value',
-                    "results_id='$res_id' AND fld_id='{$this->fld_id}'");
-            if ($this->type == 'numeric') {
-                $val = (float)$value;
-                $format_str = empty($this->options['format']) ?
-                            $_CONF_FRM['def_calc_format'] :
-                            $this->options['format'];
-                $this->value = sprintf($format_str, $val);
-            } else {
-                $this->value = $value;
-            }
-        }
-        return $value;
+        $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
+                WHERE fld_id='" . (int)$id . "'";
+        $res = DB_query($sql, 1);
+        if (DB_error() || !$res) return false;
+        return DB_fetchArray($res, false);
     }
 
 
@@ -210,15 +143,10 @@ class Field
         case 'fill_gid':
         case 'results_gid';
         case 'access':
-        /*case 'perm_owner':
-        case 'perm_group':
-        case 'perm_members':
-        case 'perm_anon':*/
             $this->properties[$name] = (int)$value;
             break;
 
         case 'enabled':
-        //case 'required':
             $this->properties[$name] = $value == 0 ? 0 : 1;
             break;
 
@@ -228,11 +156,6 @@ class Field
             else
                 $this->properties[$name] = array();
             break;
-        /*case 'options':
-            $this->properties['options'] = unserialize($value);
-            if (!$this->properties['options'])
-                $this->properties['options'] = array();
-            break;*/
 
         case 'prompt':
         case 'name':
@@ -242,76 +165,9 @@ class Field
             break;
 
         case 'value':
-            switch ($this->type) {
-            case 'integer':
-                $this->properties['value'] = (int)$value;
-                $this->properties['value_text'] = (int)$value;
-                break;
-            case 'radio':
-            case 'select':
-                $this->properties['value'] = trim($value);
-                $this->properties['value_text'] = $this->value;
-                break;
-            case 'checkbox':
-                if ($value == 1) {
-                    $this->properties['value'] = 1;
-                    $this->properties['value_text'] = $LANG_FORMS['yes'];
-                } else {
-                    $this->properties['value'] = 0;
-                    $this->properties['value_text'] = $LANG_FORMS['no'];
-                }
-                break;
-            case 'multicheck':
-                if (!is_array($value)) {
-                    // should be a serialized string from the DB
-                    $this->properties['value'] = unserialize($value);
-                    if (!$this->properties['value'])
-                        $this->properties['value'] = $value;
-                } else {
-                    // already an array, from a form
-                    $this->properties['value'] = $value;
-                }
-                if (is_array($this->properties['value'])) {
-                    /*$strings = array();
-                    foreach($this->value as $idx=>$val) {
-                        $strings[] = $this->stringFromValues($val);
-                    }*/
-                    $this->properties['value_text'] =
-                        implode(', ', $this->properties['value']);
-                } else {
-                    $this->properties['value_text'] = $this->properties['value'];
-                }
-                break;
-            case 'date':
-                $this->properties['value'] = trim($value);
-                $this->properties['value_text'] = $this->DateDisplay();
-                break;
-            case 'time':
-                $this->properties['value'] = trim($value);
-                list($hour, $min, $sec) =
-                            explode(':', $this->properties['value']);
-                if ($this->options['timeformat'] == '12') {
-                    list($hour, $ampm) = $this->hour24to12($hour);
-                    $this->properties['value_text'] = sprintf('%02d:%02d %s',
-                            $hour, $min, $ampm);
-                } else {
-                    $this->properties['value_text'] = sprintf('%02d:%02d',
-                            $hour, $min);
-                }
-                break;
-            case 'numeric':
-                $this->properties['value'] = (float)$value;
-                $this->properties['value_text'] = $value;
-                break;
-            case 'text':
-            case 'textarea':
-            default:
-                $value = trim($value);
-                $this->properties['value'] = $value;
-                $this->properties['value_text'] = $value;
-                break;
+            $this->properties['value'] = $this->setValue($value);
+            break;
 
-            }
         }
     }
 
@@ -346,9 +202,8 @@ class Field
 
         $this->fld_id = $A['fld_id'];
         $this->frm_id = $A['frm_id'];
-        $this->orderby = $A['orderby'];
-        $this->enabled = $A['enabled'];
-        //$this->required = $A['required'];
+        $this->orderby = empty($A['orderby']) ? 255 : $A['orderby'];
+        $this->enabled = isset($A['enabled']) ? $A['enabled'] : 0;
         $this->access = $A['access'];
         $this->prompt = $A['prompt'];
         $this->name = $A['name'];
@@ -358,325 +213,14 @@ class Field
         $this->results_gid = $A['results_gid'];
         $this->fill_gid = $A['fill_gid'];
 
-        //if ($fromdb) {
-        //    $this->Set('value', $A['value']);
-        //} else {
         if (!$fromdb) {
-
-            if ($this->type == 'date') {
-                $dt = array('0000', '00', '00');
-                if (isset($_POST[$this->name . '_month'])) {
-                    $dt[1] = (int)$_POST[$this->name . '_month'];
-                }
-                if (isset($_POST[$this->name . '_day'])) {
-                    $dt[2] = (int)$_POST[$this->name . '_day'];
-                }
-                if (isset($_POST[$this->name . '_year'])) {
-                    $dt[0] = (int)$_POST[$this->name . '_year'];
-                }
-                if ($this->options['century'] == 1 && $dt[0] < 100) {
-                    $dt[0] += 2000;
-                }
-                $tmpval = sprintf('%04d-%02d-%02d',
-                        $dt[0] . '-' . $dt[1] . '-' . $dt[2]);
-
-                if (isset($this->options['showtime']) &&
-                        $this->options['showtime'] == 1) {
-                    $hour = isset($_POST[$this->name . '_hour']) ?
-                                (int)$_POST[$this->name . '_hour'] : 0;
-                    $minute = isset($_POST[$this->name . '_minute']) ?
-                                (int)$_POST[$this->name . '_minute'] : 0;
-                    $tmpval .= sprintf(' %02d:%02d', $hour, $minute);
-                }
-                $this->value = $tmpval;
-            } else {
-                $this->value = $A['value'];
-            }
-
+            $this->options = $this->optsFromForm($_POST);
+            $this->value = $this->valueFromForm($_POST);
         } else {
             $this->options = @unserialize($A['options']);
             if (!$this->options) $this->options = array();
-            //$this->value = $this->options['default'];
-            if ($this->type == 'static') {
-                $this->value = $this->options['default'];
-            }
         }
-
         return true;
-    }
-
-
-    /**
-    *   Get the string that corresponds to a single value option given
-    *   a string of "name:value;" option pairs.
-    *
-    *   @param  string  $value  Name of value key to check
-    *   @return string          String associated with $value
-    */
-    public function stringFromValues($val)
-    {
-        // If the request value is set in the array, return it.
-        // Otherwise, return an empty string.
-        if (isset($this->options['values'][$val])) {
-            return $this->options['values'][$val];
-        } else {
-            return $val;
-        }
-    }
-
-
-    /**
-    *   Create a single form field for data entry.
-    *
-    *   @param  integer     Results ID, zero for new form
-    *   @return string      HTML for this field, including prompt
-    */
-    public function Render($res_id = 0, $mode=NULL)
-    {
-        global $_CONF, $LANG_FORMS, $_CONF_FRM;
-
-        $form = Form::getInstance($this->frm_id);
-        $sub_type = $form->sub_type;
-
-        // If POSTed form data, set the user variable to that.  Otherwise,
-        // set it to the default or leave it alone. Since an empty checkbox
-        // isn't posted, check if there's a positive result id. If so, then
-        // this is rendering an existing form so just show the values.
-        // If not, then this is a new form and should get the defaults.
-        // Can't rely totally on $res_id since it only works for forms that
-        // are saving data to the DB
-        if (isset($_POST[$this->name])) {
-            $this->value = $_POST[$this->name];
-        } elseif ($res_id == 0 || $mode == 'preview') {
-            // If no saved value, load the default if available
-            if (isset($this->options['default'])) {
-                $this->value = $this->GetDefault($this->options['default']);
-            } else {
-                $this->value = '';
-            }
-        } elseif ($sub_type == 'ajax' && SESS_isSet($this->_elemID())) {
-            // Get the value from the session variable for ajax-type forms
-            $this->value = SESS_getVar($this->_elemID());
-        }
-
-        $readonly = '';
-        $class = '';
-        $elem_id = $this->_elemID();
-        switch ($this->access) {
-        case FRM_FIELD_READONLY:
-            $readonly = 'disabled="disabled"';
-            break;
-        case FRM_FIELD_HIDDEN:
-            $fld = '<input type="hidden" name="' . $this->name .
-                    '" value="' . $this->value_text .
-                    '" id="' . $elem_id . '"/>';
-            return $fld;
-            break;
-        case FRM_FIELD_REQUIRED:
-            $class .= 'required';
-            break;
-        default:
-            break;
-        }
-
-        if ($sub_type == 'ajax') {
-            if ($mode == 'preview') {
-                $js = 'onchange="FORMS_ajaxDummySave(\'' . $LANG_FORMS['save_disabled'] . '\')"';
-            } else {
-                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
-                    "',this);\"";
-            }
-        } else {
-            $js = '';
-        }
-
-        //  Create the field HTML based on the type of field.
-        switch ($this->type) {
-        case 'text':
-        default:
-            $size = $this->options['size'];
-            $maxlength = min($this->options['maxlength'], 255);
-
-            $fld = "<input $class name=\"{$this->name}\"
-                    id=\"$elem_id\"
-                    size=\"$size\" maxlength=\"$maxlength\"
-                    type=\"text\" value=\"{$this->value_text}\" $readonly $js />\n";
-            break;
-
-        case 'textarea':
-            $cols = $this->options['cols'];
-            $rows = $this->options['rows'];
-            $fld = "<textarea name=\"{$this->name}\"
-                    id=\"$elem_id\"
-                    cols=\"$cols\" rows=\"$rows\"
-                    >{$this->value_text}</textarea>\n";
-            break;
-
-        case 'checkbox':
-            $chk = $this->value == 1 ? 'checked="checked"' : '';
-            $fld = "<input $class name=\"{$this->name}\"
-                    id=\"$elem_id\" type=\"checkbox\" value=\"1\"
-                    $chk $readonly $js />\n";
-            break;
-
-        case 'multicheck':
-            $values = FRM_getOpts($this->options['values']);
-            if (!is_array($values)) {
-                // Have to have some values for radio buttons
-                break;
-            }
-            $fld = '';
-            foreach ($values as $id=>$value) {
-                if ($sub_type == 'ajax') {
-                    $tmp = SESS_getVar($this->_elemID($value));
-                    $sel = $tmp == 1 ? 'checked="checked"' : '';
-                } else {
-                    if (is_array($this->value)) {
-                        $sel = in_array($value, $this->value) ?
-                            'checked="checked"' : '';
-                    } else {
-                        $sel = $value == $this->value ? 'checked="checked"' : '';
-                    }
-                }
-                    $fld .= "<input $class type=\"checkbox\"
-                        name=\"{$this->name}[]\"
-                        id=\"" . $elem_id . '_' . str_replace(' ', '', $value) . "\"
-                        value=\"$value\" $sel $readonly $js>&nbsp;$value&nbsp;\n";
-            }
-            break;
-
-        case 'select':
-            $values = FRM_getOpts($this->options['values']);
-            if (empty($values)) break;
-
-            $fld = "<select $class name=\"{$this->name}\"
-                    id=\"$elem_id\" $readonly $js>\n";
-            $fld .= "<option value=\"\">{$LANG_FORMS['select']}</option>\n";
-            foreach ($values as $id=>$value) {
-                $sel = $this->value == $value ? 'selected="selected"' : '';
-                $fld .= "<option value=\"$value\" $sel>{$value}</option>\n";
-            }
-            $fld .= "</select>\n";
-            break;
-
-        case 'radio':
-            $values = FRM_getOpts($this->options['values']);
-            if (empty($values)) break;
-
-            // If no current value, use the defined default
-            if (is_null($this->value)) {
-                $this->value = $this->options['default'];
-            }
-
-            $fld = '';
-            foreach ($values as $id=>$value) {
-                $sel = $this->value == $value ? 'checked="checked"' : '';
-                $fld .= "<input $class type=\"radio\" name=\"{$this->name}\"
-                        id=\"" . $elem_id . '_' . $value . "\"
-                        value=\"$value\" $sel $readonly $js>&nbsp;$value&nbsp;\n";
-            }
-            break;
-
-        case 'date':
-            $fld = '';
-            $dt = array();
-            // Check for POSTed values first, coming from a previous form
-            // If one is set, all should be set, and empty values are ok
-            if (isset($_POST[$this->name . '_month'])) {
-                $dt[1] = $_POST[$this->name . '_month'];
-            }
-            if (isset($_POST[$this->name . '_day'])) {
-                $dt[2] = $_POST[$this->name . '_day'];
-            }
-            if (isset($_POST[$this->name . '_year'])) {
-                $dt[0] = $_POST[$this->name . '_year'];
-            }
-
-            // Nothing from POST, check for an existing value.  If none,
-            // use the default.
-            $value = $this->value;
-            if (empty($dt)) {
-                if (empty($value)) {
-                    if (isset($this->options['default']) && !empty($this->options['default'])) {
-                        $this->value = $this->options['default'];
-                    } else {
-                        $dt = new \Date('now', $_CONF['timezone']);
-                        $this->value = $dt->format('Y-m-d', true);
-                    }
-                }
-                $datestr = explode(' ', $this->value);  // separate date & time
-                $dt = explode('-', $datestr[0]);        // get date components
-            }
-
-            $m_fld = $LANG_FORMS['month'] .
-                    ": <select $class id=\"{$this->name}_month\" name=\"{$this->name}_month\">\n";
-            $m_fld .= "<option value=\"0\">--{$LANG_FORMS['select']}--</option>\n";
-            $m_fld .= COM_getMonthFormOptions($dt[1]) . "</select>\n";
-
-            $d_fld = $LANG_FORMS['day'] .
-                    ": <select $class id=\"{$this->name}_day\" name=\"{$this->name}_day\">\n";
-            $d_fld .= "<option value=\"0\">--{$LANG_FORMS['select']}--</option>\n";
-            $d_fld .= COM_getDayFormOptions($dt[2]) . "</select>\n";
-
-            $y_fld = $LANG_FORMS['year'] .
-                    ': <input ' . $class . ' type="text" id="' . $this->name.'_year" name="'.$this->name.'_year"
-                    size="5" value="' . $dt[0] . "\"/>\n";
-
-            switch ($this->options['input_format']) {
-            case 1:
-                $fld .= $m_fld . ' ' . $d_fld . ' ' . $y_fld;
-                break;
-            case 2:
-                $fld .= $d_fld . ' ' . $m_fld . ' ' . $y_fld;
-                break;
-            }
-
-            if ($this->options['showtime'] == 1) {
-                $fld .= ' ' . $this->TimeField($datestr[1]);
-                $timeformat = $this->options['timeformat'];
-            } else {
-                $timeformat = 0;
-            }
-                $fld .= '<i id="' . $this->name .
-                        '_trigger" class="' . $_CONF_FRM['_iconset'] . '-calendar tooltip" ' .
-                        'title="' . $LANG_FORMS['datepicker'] . '"></i>';
-            $fld .= LB . "<script type=\"text/javascript\">
-Calendar.setup({
-    inputField  :    \"{$this->name}dummy\",
-    ifFormat    :    \"%Y-%m-%d\",
-    showsTime   :    false,
-    timeFormat  :    \"{$timeformat}\",
-    button      :   \"{$this->name}_trigger\",
-    onUpdate    :   {$this->name}_onUpdate
-});
-function {$this->name}_onUpdate(cal)
-{
-    var d = cal.date;
-
-    if (cal.dateClicked && d) {
-        FRM_updateDate(d, \"{$this->name}\", \"{$timeformat}\");
-    }
-    return true;
-}
-</script>" . LB;
-             break;
-
-        case 'time':
-            $fld .= $this->TimeField($this->value);
-            break;
-
-        case 'static':
-            // Static field, just render it as entered.
-            $fld .= $this->GetDefault($this->value_text);
-            break;
-
-        case 'calc':
-            // Render calculated field as text.
-            $fld = '';
-            break;
-
-        }
-        return $fld;
     }
 
 
@@ -791,7 +335,11 @@ function {$this->name}_onUpdate(cal)
             break;
 
         case 'multicheck':
-            $values = FRM_getOpts($this->options['values']);
+            if (isset($this->options['values'])) {
+                $values = FRM_getOpts($this->options['values']);
+            } else {
+                $values = array();
+            }
             if (is_array($values)) {
                 $listinput = '';
                 $i = 0;
@@ -814,8 +362,8 @@ function {$this->name}_onUpdate(cal)
 
         case 'calc':
             $value_str = $this->options['value'];
-            $format_str = empty($this->options['format']) ?
-                    $_CONF_FRM['def_calc_format'] : $this->options['format'];
+            //$format_str = empty($this->options['format']) ?
+            //        $_CONF_FRM['def_calc_format'] : $this->options['format'];
             break;
 
         case 'static':
@@ -824,6 +372,8 @@ function {$this->name}_onUpdate(cal)
 
         }
 
+        $format_str = empty($this->options['format']) ?
+                    $_CONF_FRM['def_calc_format'] : $this->options['format'];
         // Create the selection list for the "Position After" dropdown.
         // Include all options *except* the current one
         $sql = "SELECT orderby, name
@@ -865,17 +415,11 @@ function {$this->name}_onUpdate(cal)
             'rows'      => isset($this->options['rows']) ? $this->options['rows'] : 0,
             'maxlength' => isset($this->options['maxlength']) ? $this->options['maxlength'] : 0,
             'ena_chk'   => $this->enabled == 1 ? 'checked="checked"' : '',
-            //'readonly_chk' => $A['readonly'] == 1 ? 'checked="checked"' : '',
-            //'req_chk'   => $this->required == 1 ? 'checked="checked"' : '',
             'span_chk'  => isset($this->options['spancols']) && $this->options['spancols'] == 1 ? 'checked="checked"' : '',
-            //'orderby'   => $A['orderby'],
             'format'    => $format_str,
             'doc_url'   => FRM_getDocURL('field_def.html'),
             'mask'      => isset($this->options['mask']) ? $this->options['mask'] : '',
             'vismask'   => isset($this->options['vismask']) ? $this->options['vismask'] : '',
-            /*'autogen_chk' => (isset($this->options['autogen']) &&
-                        $this->options['autogen']  == 1) ?
-                        'checked="checked"' : '',*/
             'autogen_sel_' . $autogen_opt => ' selected="selected"',
             'stripmask_chk' => (isset($this->options['stripmask']) &&
                         $this->options['stripmask']  == 1) ?
@@ -911,130 +455,18 @@ function {$this->name}_onUpdate(cal)
     {
         global $_TABLES, $_CONF_FRM;
 
-        // Sanitize the entry ID
-        //$id = empty($this->id) ? '' : $this->id;
         $fld_id = isset($A['fld_id']) ? (int)$A['fld_id'] : 0;
         $frm_id = isset($A['frm_id']) ? COM_sanitizeID($A['frm_id']) : '';
         if ($frm_id == '') {
             return 'Invalid form ID';
         }
+
         // Sanitize the name, especially make sure there are no spaces
         $A['name'] = COM_sanitizeID($A['name'], false);
         if (empty($A['name']) || empty($A['type']))
             return;
 
-        // Put this field at the end of the line by default
-        if (empty($A['orderby']))
-            $A['orderby'] = 255;
-        else
-            $A['orderby'] = (int)$A['orderby'];
-
-        // Set the size and maxlength to reasonable values
-        $A['maxlength'] = min((int)$A['maxlength'], 255);
-        $A['size'] = min((int)$A['size'], 80);
-
-        // Reset the default value to NULL if nothing is entered
-        if (empty($A['defvalue']))
-            $A['defvalue'] = '';
-
-        // Set the options and default values according to the data type
-        $A['options'] = '';
-        $options = array();
-
-        // Options that should be in any field, used or not.  Checkboxes get
-        // their default differently, so this may be overridden.
-        $options['default'] = trim($A['defvalue']);
-
-        switch ($A['type']) {
-        case 'textarea':
-            $options['cols'] = (int)$A['cols'];
-            $options['rows'] = (int)$A['rows'];
-            if ($options['rows'] == 0)
-                $options['rows'] = $_CONF_FRM['def_textarea_rows'];
-            if ($options['cols'] == 0)
-                $options['cols'] = $_CONF_FRM['def_textarea_cols'];
-            break;
-
-        case 'numeric':
-            $options['format'] = empty($A['format']) ?
-                    $_CONF_FRM['def_calc_format'] : $A['format'];
-            // Fall through, numeric field is basically a text field
-
-        case 'text':
-            $options['size'] = (int)$A['size'];
-            $options['maxlength'] = (int)$A['maxlength'];
-            $options['autogen'] = isset($A['autogen']) ? (int)$A['autogen'] :
-                        FRM_AUTOGEN_NONE;
-            break;
-
-        case 'checkbox':
-            // For checkboxes, set the value to "1" automatically
-            $A['value'] = '1';
-            // Different default value for checkboxes
-            $options['default'] = isset($A['defvalue']) &&
-                $A['defvalue'] == 1 ? 1 : 0;
-            break;
-
-        case 'date':
-            $options['showtime'] = ($A['showtime'] == 1 ? 1 : 0);
-            $options['timeformat'] = $A['timeformat'] == '24' ? '24' : '12';
-            $options['format'] = isset($A['format']) ? $A['format'] :
-                        $_CONF_FRM['def_date_format'];
-            $options['input_format'] = (int)$A['input_format'];
-            $options['century'] = ($A['century'] == 1 ? 1 : 0);
-            break;
-
-        case 'time':
-            $options['timeformat'] = $A['timeformat'] == '24' ? '24' : '12';
-            break;
-
-        case 'select':
-        case 'radio':
-        case 'multicheck':
-            $newvals = array();
-            foreach ($A['selvalues'] as $val) {
-                if (!empty($val)) {
-                    $newvals[] = $val;
-                }
-            }
-            $options['default'] = '';
-            if (isset($A['sel_default'])) {
-                $default = (int)$A['sel_default'];
-                if (isset($A['selvalues'][$default])) {
-                    $options['default'] = $A['selvalues'][$default];
-                }
-            }
-            $options['values'] = $newvals;
-            break;
-
-        case 'calc':
-            $options['value'] = trim($A['valuestr']);
-            $options['calc_type'] = $A['calc_type'];
-            $options['format'] = empty($A['format']) ?
-                    $_CONF_FRM['def_calc_format'] : $A['format'];
-            break;
-
-        case 'static':
-            $options['default'] = trim($A['valuetext']);
-            break;
-
-        }
-
-        // Mask and Visible Mask may exist for any field type, but are set
-        // only if they are actually defined.
-        if (isset($A['mask']) && $A['mask'] != '') {
-            $options['mask'] = trim($A['mask']);
-        }
-        if (isset($A['vismask']) && $A['vismask'] != '') {
-            $options['vismask'] = trim($A['vismask']);
-        }
-        if (isset($A['spancols']) && $A['spancols'] == 1) {
-            $options['spancols'] = 1;
-        }
-
-        // This serializes any options set
-        $A['options'] = FRM_setOpts($options);
-
+        $this->SetVars($A, false);
         $this->fill_gid = $A['fill_gid'];
         $this->results_gid = $A['results_gid'];
 
@@ -1047,15 +479,15 @@ function {$this->name}_onUpdate(cal)
             $sql3 = '';
         }
 
-        $sql2 = "frm_id = '" . DB_escapeString($A['frm_id']) . "',
-                name = '" . DB_escapeString($A['name']) . "',
-                type = '" . DB_escapeString($A['type']) . "',
-                enabled = '" . (int)$A['enabled'] . "',
-                access = '" . (int)$A['access'] . "',
-                prompt = '" . DB_escapeString($A['prompt']) . "',
-                options = '" . DB_escapeString($A['options']) . "',
-                orderby = '" . (int)$A['orderby'] . "',
-                help_msg = '" . DB_escapeString($A['help_msg']) . "',
+        $sql2 = "frm_id = '" . DB_escapeString($this->frm_id) . "',
+                name = '" . DB_escapeString($this->name) . "',
+                type = '" . DB_escapeString($this->type) . "',
+                enabled = '{$this->enabled}',
+                access = '{$this->access}',
+                prompt = '" . DB_escapeString($this->prompt) . "',
+                options = '" . DB_escapeString(@serialize($this->options)) . "',
+                orderby = '{$this->orderby}',
+                help_msg = '" . DB_escapeString($this->help_msg) . "',
                 fill_gid = '{$this->fill_gid}',
                 results_gid = '{$this->results_gid}'";
         $sql = $sql1 . $sql2 . $sql3;
@@ -1109,36 +541,9 @@ function {$this->name}_onUpdate(cal)
             $newval = self::AutoGen($this->properties, 'save');
         }
 
-        switch ($this->type) {
-        // Set the $newval for special cases
-        case 'checkbox':
-            if (isset($newval) && !empty($newval)) {
-                $newval = 1;
-            } else {
-                $newval = 0;
-            }
-            break;
-
-        case 'multicheck':
-            if (is_array($newval)) {
-                $newval = serialize($newval);
-            } else {
-                $newval = serialize(array());
-            }
-            break;
-
-        case 'numeric':
-            $newval = (float)$newval;
-            break;
-
-        default:
-            $newval = COM_checkWords(strip_tags($newval));
-            break;
-        }
-
         // Put the new value back into the array after sanitizing
         $this->value = $newval;
-        $db_value = DB_escapeString($newval);
+        $db_value = $this->prepareForDB($newval);
 
         //$this->name = $name;
         $sql = "INSERT INTO {$_TABLES['forms_values']}
@@ -1154,7 +559,6 @@ function {$this->name}_onUpdate(cal)
         DB_query($sql, 1);
         $status = DB_error();
         return $status ? false : true;
-
     }
 
 
@@ -1252,98 +656,6 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-    *   Calculate the result for this field based on other fields.
-    *   This is the same as the code found in GetValue(), except that all
-    *   the fields are provided to save time.
-    *
-    *   @param  array   $fields     Array of field objects
-    *   @return float               Calculated value of this field
-    */
-    public function CalcResult($fields)
-    {
-        $result = '';
-
-        // Can't calculate if this isn't a calc field.
-        if ($this->type != 'calc')
-            return 0;
-
-        // Get the calculation definition, return if none defined.
-        $valnames = explode(',', $this->options['value']);
-        if (empty($valnames))
-            return 0;
-
-        // Get the values from the calculation definition.
-        $values = array();
-        foreach ($valnames as $val) {
-            if (is_numeric($val))           // Normal numeric value
-                $values[] = $val;
-            elseif ($val == $this->name)    // Can't reference ourself
-                continue;
-            elseif (is_object($fields[$val])) { // Another field value
-                $values[] = $fields[$val]->value;
-            }
-        }
-
-        // If we have at least one value, continue to process them.
-        // Note that the first value is accepted as-is; zero is valid there.
-        if (!empty($values)) {
-            $result = (float)$values[0];    // Convert to numeric
-            $valcount = count($values);
-            switch ($this->options['calc_type']) {
-            case 'add':
-                for ($i = 1; $i < $valcount; $i++) {
-                    if (!is_numeric($values[$i])) continue;
-                    $result += $values[$i];
-                }
-                break;
-            case 'sub':
-                for ($i = 1; $i < $valcount; $i++) {
-                    if (!is_numeric($values[$i])) continue;
-                    $result -= $values[$i];
-                }
-                break;
-            case 'div':
-                for ($i = 1; $i < $valcount; $i++) {
-                    if (!is_numeric($values[$i]) || $values[$i] == 0)
-                        continue;
-                    $result /= $values[$i];
-                }
-                break;
-            case 'mul':
-                for ($i = 1; $i < $valcount; $i++) {
-                    if (!is_numeric($values[$i])) continue;
-                    $result *= $values[$i];
-                }
-                break;
-            case 'mean':
-                if ($valcount < 1) {
-                    $result = 0;
-                } else {
-                    for ($i = 1; $i < $valcount; $i++) {
-                        if (!is_numeric($values[$i])) continue;
-                        $result += $values[$i];
-                    }
-                    $result /= $valcount;
-                }
-                break;
-            }
-            if (is_numeric($result)) {
-                // Result really can't be non-numeric here, but make sure it
-                // is anyway before numeric formatting.
-                $format_str = empty($this->options['format']) ?
-                            $_CONF_FRM['def_calc_format'] :
-                            $this->options['format'];
-                $result = sprintf($format_str, $result);
-            }
-        }
-
-        $this->value = $result;
-        $this->value_text = $result;
-        return $result;
-    }
-
-
-    /**
     *   Validate the submitted field value(s)
     *
     *   @param  array   $vals  All form values
@@ -1357,7 +669,6 @@ function {$this->name}_onUpdate(cal)
         if (!$this->enabled) return $msg;   // not enabled
         if (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED)
             return $msg;        // not required
-        //if ($this->required != 1) return $msg;    // only checking required
 
         switch ($this->type) {
         case 'date':
@@ -1524,10 +835,12 @@ function {$this->name}_onUpdate(cal)
             return self::AutoGen($this->name, 'fill');
         }
 
-        $value = $def;      // by default
-        if (isset($dev[0]) && $def[0] == '$') {
+        $value = $def;      // by default just return the given value
+        if (isset($def[0]) && $def[0] == '$') {
             // Look for something like "$_USER:fullname"
-            list($var, $valname) = explode(':', $def);
+            $A = explode(':', $def);
+            $var = $A[0];
+            $valname = isset($A[1]) ? $A[1] : false;
             switch (strtoupper($var)) {
             case '$_USER':
                 if ($valname && isset($_USER[$valname]))
@@ -1551,7 +864,7 @@ function {$this->name}_onUpdate(cal)
     /**
     *   Create the time field.
     *   This is in a separate function so it can be used by both date
-    *   and time fields
+    *   and time fields.
     *
     *   @uses   hour24to12()
     *   @param  string  $timestr    Optional HH:MM string.  Seconds ignored.
@@ -1595,8 +908,7 @@ function {$this->name}_onUpdate(cal)
 
         if ($this->options['timeformat'] == '12') {
             list($hour, $ampm_sel) = $this->hour24to12($hour);
-            $ampm_fld = '&nbsp;&nbsp;' .
-                COM_getAmPmFormSelection($this->name . '_ampm', $ampm_sel);
+            $ampm_fld = COM_getAmPmFormSelection($this->name . '_ampm', $ampm_sel);
         }
 
         $h_fld = '<select name="' . $this->name . '_hour">' . LB .
@@ -1702,7 +1014,7 @@ function {$this->name}_onUpdate(cal)
     *   @param  string  $val    Optional field value
     *   @return string          ID string for the field element
     */
-    protected function _elemID($val = '')
+    public function _elemID($val = '')
     {
         $name  = str_replace(' ', '', $this->name);
         $id = 'forms_' . $this->frm_id . '_' . $name;
@@ -1710,6 +1022,270 @@ function {$this->name}_onUpdate(cal)
             $id .= '_' . str_replace(' ', '', $val);
         }
         return $id;
+    }
+
+
+    /**
+    *   Default function to get the field value from the form
+    *   Just returns the form value
+    *   @param  array   $A      Array of form values, e.g. $_POST
+    *   @return mixed           Field value
+    */
+    public function valueFromForm($A)
+    {
+        return isset($A[$this->name]) ? $A[$this->name] : '';
+    }
+
+
+    /**
+    *   Get the value from the database.
+    *   Typically this is just copying the "value" field, but
+    *   some field types may need to unserialize values.
+    *
+    *   @param  array   $A      Array of all DB fields
+    *   @return mixed           Value field used by the object
+    */
+    public function valueFromDB($A)
+    {
+        return $A['value'];
+    }
+
+
+    /**
+    *   Default function to get the display value for a field
+    *   Just returns the raw value
+    *
+    *   @param  array   $fields     Array of all field objects (for calc-type)
+    *   @return string      Display value
+    */
+    public function displayValue($fields)
+    {
+        global $_GROUPS;
+
+        if (!$this->canViewResults()) return NULL;
+        return htmlspecialchars($this->value);
+    }
+
+
+    /**
+    *   Default function to get the field prompt.
+    *   Gets the user-defined prompt, if any, or falls back to the field name.
+    *
+    *   @return string  Field prompt
+    */
+    public function displayPrompt()
+    {
+        return $this->prompt == '' ? $this->name : $this->prompt;
+    }
+
+
+    public function setValue($value)
+    {
+        return trim($value);
+    }
+
+
+    /**
+    *   Get the submission type of the parent form
+    *
+    *   @return string  Submission type ("ajax" or "regular")
+    */
+    protected function getSubType()
+    {
+        static $sub_type = NULL;
+        if ($sub_type === NULL) {
+            $form = Form::getInstance($this->frm_id);
+            if (!$form) {
+                $sub_type = 'regular';
+            } else {
+                $sub_type = $form->sub_type;
+            }
+        }
+        return $sub_type;
+    }
+
+
+    /**
+    *   Get the value to be rendered in the form
+    *
+    *   @param  integer $res_id     Result set ID
+    *   @param  string  $mode       View mode, e.g. "preview"
+    *   @return mixed               Field value used to populate form
+    */
+    protected function renderValue($res_id, $mode, $valname = '')
+    {
+        $value = '';
+
+        if (isset($_POST[$this->name])) {
+            // First, check for a POSTed value. The form is being redisplayed.
+            $value = $_POST[$this->name];
+        } elseif ($this->getSubType() == 'ajax' && SESS_isSet($this->_elemID($valname))) {
+            // Second, if this is an AJAX form check the session variable.
+            $value = SESS_getVar($this->_elemID());
+        } elseif ($res_id == 0 || $mode == 'preview') {
+            // Finally, use the default value if defined.
+            if (isset($this->options['default'])) {
+                $value = $this->GetDefault($this->options['default']);
+            }
+        } else {
+            $value = $this->value;
+        }
+        return $value;
+    }
+
+
+    /**
+    *   Helper function to get the access string for fields.
+    *
+    *   @return string  Access-control string, e.g. "required" or "disabled"
+    */
+    protected function renderAccess()
+    {
+        switch ($this->access) {
+        case FRM_FIELD_READONLY:
+            return 'disabled = "disabled"';
+            break;
+        case FRM_FIELD_REQUIRED:
+            return 'required';
+            break;
+        default:
+            return '';
+            break;
+        }
+    }
+
+
+    /**
+    *   Get the Javascript string for AJAX fields
+    *
+    *   @param  string  $mode   View mode, e.g. "preview"
+    *   @return string          Javascript to save the data
+    */
+    protected function renderJS($mode)
+    {
+        global $LANG_FORMS;
+
+        if ($this->getSubType() == 'ajax') {
+            // Only ajax fields get this
+            if ($mode == 'preview') {
+                $js = 'onchange="FORMS_ajaxDummySave(\'' . $LANG_FORMS['save_disabled'] . '\')"';
+            } else {
+                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
+                    "',this);\"";
+            }
+        } else {
+            $js = '';
+        }
+        return $js;
+    }
+
+
+    /**
+    *   Get the data formatted for saving to the database
+    *   Field types can override this as needed.
+    *
+    *   @param  mixed   $newval     New data to save
+    *   @return mixed       Data formatted for the DB
+    */
+    protected function prepareForDB($newval)
+    {
+        return DB_escapeString(COM_checkWords(strip_tags($newval)));
+    }
+
+
+    /**
+    *   Get the default option values from a field definition form.
+    *   Should be called by child objects in their own optsFromForm function.
+    *
+    *   @param  array   $A      Array of all form fields
+    *   @return array           Field options
+    */
+    protected function optsFromForm($A)
+    {
+        $options = array(
+            'default' => trim($A['defvalue']),
+        );
+        // only if they are actually defined.
+        if (isset($A['mask']) && $A['mask'] != '') {
+            $options['mask'] = trim($A['mask']);
+        }
+        if (isset($A['vismask']) && $A['vismask'] != '') {
+            $options['vismask'] = trim($A['vismask']);
+        }
+        if (isset($A['spancols']) && $A['spancols'] == 1) {
+            $options['spancols'] = 1;
+        }
+        return $options;
+    }
+
+
+    /**
+    *   Check if the current user can render this form field.
+    *   Checks that the user is a member of fill_gid and the field is enabled.
+    *   Caches the status for each fill_gid since this gets called for
+    *   each field, and fill_gid is likely to be the same for all.
+    *
+    *   @return boolean     True if the field can be rendered, False if not.
+    */
+    protected function canViewField()
+    {
+        global $_GROUPS;
+        static $gids = array();
+
+        if (!array_key_exists($this->fill_gid, $gids)) {
+            if ($this->enabled == 0 || !in_array($this->fill_gid, $_GROUPS)) {
+                $gids[$this->fill_gid] = false;
+            } else {
+                $gids[$this->fill_gid] = true;
+            }
+        }
+        return $gids[$this->fill_gid];
+    }
+
+
+    /**
+    *   Check if the current user can view the results for this field.
+    *   Checks that the user is a member of results_gid and the field is enabled.
+    *   Caches the status for each results_gid since this gets called for
+    *   each field, and results_gid is likely to be the same for all.
+    *
+    *   @return boolean     True if the user can view, False if not.
+    */
+    protected function canViewResults()
+    {
+        global $_GROUPS, $_USERS;
+        static $gids = array();
+
+        if (!array_key_exists($this->results_gid, $gids)) {
+            if ($this->enabled == 0 || !in_array($this->results_gid, $_GROUPS)) {
+                $gids[$this->results_gid] = false;
+            } else {
+                $gids[$this->results_gid] = true;
+            }
+        }
+        return $gids[$this->results_gid];
+    }
+
+
+    /**
+    *   Return the XML element for privacy export.
+    *
+    *   @return string  XML element string: <fld_name>data</fld_name>
+    */
+    public function XML()
+    {
+        $retval = '';
+        $Form = Form::getInstance($this->frm_id);
+        $d = addSlashes(htmlentities(trim($this->displayValue($Form->fields))));
+        // Replace spaces in prompts with underscores, then remove all other
+        // non-alphanumerics
+        $p = str_replace(' ', '_', $this->prompt);
+        $p = preg_replace("/[^A-Za-z0-9_]/", '', $p);
+
+        if (!empty($d)) {
+            $retval .= "<$p>$d</$p>\n";
+        }
+        return $retval;
     }
 
 }

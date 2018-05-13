@@ -26,9 +26,6 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 {
     global $_TABLES, $_USER, $_GROUPS;
 
-    //$grp_list = implode(',', $_GROUPS);
-    //$perm_sql = " AND (f.owner_id='". (int)$_USER['uid'] . "'
-    //    OR f.results_gid IN ($grp_list) )";
     $retval = '';
     $fields = array();
 
@@ -39,16 +36,10 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     if ($Frm->id == '' || !$Frm->access)
         return '';
 
-    // Get the form results.  We've already verified this user's access to
+    // Get the form results. We've already verified this user's access to
     // the form by instantiating it.
-    /*$sql = "SELECT r.* FROM {$_TABLES['forms_results']} r
-            LEFT JOIN {$_TABLES['forms_frmdef']} f
-            ON f.id = r.frm_id
-            WHERE frm_id='$frm_id'
-            $perm_sql
-            ORDER BY dt ASC";*/
     $sql = "SELECT * FROM {$_TABLES['forms_results']} 
-            WHERE frm_id='$frm_id'";
+            WHERE frm_id='$frm_id' AND approved = 1";
     if (!empty($instance_id)) {
         $sql .= " AND instance_id = '" . DB_escapeString($instance_id) . "'";
     }
@@ -58,12 +49,11 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     if (DB_numRows($res) < 1)
         return '';          // Nothing to show
 
-    $R = new Result();
     if ($fieldlist === true) {
-        $T = new \Template(FRM_PI_PATH . '/templates/admin');
+        $T = new \Template(__DIR__ . '/templates/admin');
         $isAdmin = true;
     } else {
-        $T = new \Template(FRM_PI_PATH . '/templates');
+        $T = new \Template(__DIR__ . '/templates');
         $isAdmin = false;
         if (is_array($fieldlist)) {
             $fields = $fieldlist;
@@ -111,7 +101,9 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     // Create each data row
     $T->set_block('formresults', 'DataRows', 'dataRow');
     while ($A = DB_fetchArray($res, false)) {
-        $R->Read($A['id']);
+        $R = new Result($A);
+        $R->GetValues($Frm->fields);
+
         // Admins always see the submitter & date, others only if requested
         if ($isAdmin) {
             $T->set_var('res_id', $R->id);
@@ -125,8 +117,9 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 
         $T->set_block('formresults', 'Fields', 'fldData');
         foreach ($Frm->fields as $Fld) {
-            $Fld->GetValue($R->id);
-            $T->set_var('fld_value', htmlspecialchars($Fld->value_text));
+            //$Fld->GetValue($R->id);
+            //$T->set_var('fld_value', htmlspecialchars($Fld->value_text));
+            $T->set_var('fld_value', $Fld->displayValue($Frm->fields));
             $T->parse('fldData', 'Fields', true);
         }
 
@@ -135,9 +128,7 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
     }
     $T->parse('output', 'formresults');
     $retval .= $T->finish($T->get_var('output'));
-
     return $retval;
-
 }
 
 

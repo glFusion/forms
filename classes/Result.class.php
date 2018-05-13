@@ -61,20 +61,25 @@ class Result
 
 
     /**
-    *   Constructor.  Create a forms object for the specified user ID,
-    *   or the current user if none specified.  If a key is requested,
-    *   then just build the forms for that key (requires a $uid).
+    *   Constructor.
+    *   If a result set ID is specified, it is read. If an array is given
+    *   then the fields are simply copied from the array, e.g. when displaying
+    *   many results in a table.
     *
-    *   @param  integer $uid    Optional user ID
-    *   @param  string  $key    Optional key to retrieve
+    *   @param  mixed   $id     Result set ID or array from DB
     */
     public function __construct($id=0)
     {
-        if ($id > 0) {
+        if (is_array($id)) {
+            // Already read from the DB, just load the values
+            $this->SetVars($id);
+        } elseif ($id > 0) {
+            // Result ID supplied, read it
             $this->isNew = false;
             $this->id = (int)$id;
             $this->Read($id);
         } else {
+            // No ID supplied, create a new object
             $this->isNew = true;
             $this->id = 0;
             $this->frm_id = '';
@@ -92,7 +97,7 @@ class Result
     *   the current object instance.
     *
     *   @param  integer $id     Result set ID
-    *   @return boolea          True on success, False on failure/not found
+    *   @return boolean         True on success, False on failure/not found
     */
     public function Read($id = 0)
     {
@@ -119,6 +124,8 @@ class Result
 
     /**
     *   Set all the variables from a form or when read from the DB
+    *
+    *   @param  array   $A      Array of values
     */
     public function SetVars($A)
     {
@@ -169,14 +176,26 @@ class Result
 
 
     /**
-    *   Retrieve all the results for this set into the supplied field objects.
+    *   Retrieve all the values for this set into the supplied field objects.
     *
     *   @param  array   $fields     Array of Field objects
     */
     public function GetValues($fields)
     {
+        global $_TABLES;
+        $sql = "SELECT * from {$_TABLES['forms_values']}
+                WHERE results_id = '{$this->id}'";
+        $res = DB_query($sql);
+        $vals = array();
+        // First get the values into an array indexed by field ID
+        while($A = DB_fetchArray($res, false)) {
+            $vals[$A['fld_id']] = $A;
+        }
+        // Then they can be pushed into the field array
         foreach ($fields as $field) {
-            $field->GetValue($this->id);
+            if (isset($vals[$field->fld_id])) {
+                $field->value = $vals[$field->fld_id]['value'];
+            }
         }
     }
 
@@ -195,73 +214,21 @@ class Result
         global $_USER;
 
         $this->uid = $uid == 0 ? (int)$_USER['uid'] : (int)$uid;
-        if ($this->uid == 0) $this->uid = 1;
         $this->frm_id = COM_sanitizeID($frm_id);
 
+        // Get the result set ID, creating a new one if needed
         if ($this->isNew) {
             $res_id = $this->Create($frm_id, $this->uid);
         } else {
             $res_id = $this->id;
         }
-        if (!$res_id)
+        if (!$res_id)       // couldn't create a result set
             return false;
+
         foreach ($fields as $field) {
-            switch ($field->type) {
-            case 'date':
-                // special handling for dates since there are three
-                // form fields to concatenate
-                $hour = isset($vals[$field->name.'_hour']) ?
-                            (int)$vals[$field->name.'_hour'] : 0;
-                $minute = isset($vals[$field->name.'_minute']) ?
-                            (int)$vals[$field->name.'_minute'] : 0;
-                $second = isset($vals[$field->name.'_second']) ?
-                            (int)$vals[$field->name.'_second'] : 0;
-                $year = isset($vals[$field->name.'_year']) ?
-                            (int)$vals[$field->name.'_year'] : 0;
-                $month = isset($vals[$field->name.'_month']) ?
-                            (int)$vals[$field->name.'_month'] : 12;
-                $day = isset($vals[$field->name.'_day']) ?
-                            (int)$vals[$field->name.'_day'] : 31;
-                $timeformat = isset($field->options['timeformat']) ?
-                            $field->options['timeformat'] : '12';
-                $add_century = isset($field->options['century']) ?
-                            (int)$field->options['century'] : 0;
-                $ampm = isset($vals[$field->name.'_ampm']) ?
-                            $vals[$field->name.'_ampm'] : 'am';
-                if ($add_century == 1 && $year < 100) {
-                    $year += ((int)strftime('%C', time()) * 100);
-                }
-                if ($timeformat == '12') {
-                    $hour = FRM_12to24($hour, $ampm);
-                }
-                $newval = sprintf('%04d-%02d-%02d %02d:%02d:%02d',
-                        $year, $month, $day, $hour, $minute, $second);
-                $field->SaveData($newval, $res_id);
-                break;
-
-            case 'time':
-                $hour = isset($vals[$field->name.'_hour']) ?
-                            (int)$vals[$field->name.'_hour'] : 0;
-                $minute = isset($vals[$field->name.'_minute']) ?
-                            (int)$vals[$field->name.'_minute'] : 0;
-                $second = isset($vals[$field->name.'_second']) ?
-                            (int)$vals[$field->name.'_second'] : 0;
-                $ampm = isset($vals[$field->name.'_ampm']) ?
-                            $vals[$field->name.'_ampm'] : 'am';
-                if ($timeformat == '12') {
-                    $hour = FRM_12to24($hour, $ampm);
-                }
-                $newval = sprintf('%02d:%02d:%02d', $hour, $minute, $second);
-                $field->SaveData($newval, $res_id);
-                break;
-
-            default:
-                if (isset($vals[$field->name])) {
-                // Only save items that are referenced by $vals
-                    $field->SaveData($vals[$field->name], $res_id);
-                }
-                break;
-            }
+            // Get the value to save and have the field save it
+            $newval = $field->valueFromForm($vals);
+            $field->SaveData($newval, $res_id);
         }
         Cache::clear(array('result_fields', 'result_' . $res_id));
         return $res_id;
@@ -269,12 +236,11 @@ class Result
 
 
     /**
-    *   Save all forms items to the database.
-    *   Calls each item's Save() method iff there is a corresponding
-    *   value set in the $vals array.
+    *   Creates a result set in the database.
     *
     *   @param  string  $frm_id Form ID
-    *   @param  array   $vals   Values to save, from $_POST, normally
+    *   @param  integer $uid    Optional user ID, if not the current user
+    *   @return integer         New result set ID
     */
     function Create($frm_id, $uid = 0)
     {
@@ -320,24 +286,38 @@ class Result
 
 
     /**
+    *   Approve a submission
+    *
+    *   @param  integer $res_id     Result set ID to approve
+    *   @return boolean         True if no DB error
+    */
+    public static function Approve($res_id)
+    {
+        global $_TABLES;
+        $res_id = (int)$res_id;
+        if ($res_id < 1) return false;
+        DB_query("UPDATE {$_TABLES['forms_results']}
+                SET approved = 1
+                WHERE id = '$res_id'", 1);
+        return DB_error() ? false : true;
+    }
+
+
+    /**
     *   Delete a single result set
     *
     *   @param  integer $res_id     Database ID of result to delete
     *   @return boolean     True on success, false on failure
     */
-    function Delete($res_id=0)
+    public static function Delete($res_id=0)
     {
         global $_TABLES;
 
-        if ($res_id == 0 && is_object($this)) {
-            $res_id = $this->id;
-        }
         $res_id = (int)$res_id;
-        if ($res_id == 0)
-            return false;
-
+        if ($res_id == 0) return false;
         self::DeleteValues($res_id);
         DB_delete($_TABLES['forms_results'], 'id', $res_id);
+        return true;
     }
 
 
@@ -347,17 +327,12 @@ class Result
     *   @param  integer $res_id Required result ID
     *   @param  integer $uid    Optional user ID
     */
-    function DeleteValues($res_id, $uid=0)
+    public static function DeleteValues($res_id, $uid=0)
     {
         global $_TABLES;
 
-        if ($res_id == 0 && is_object($this)) {
-            $res_id = $this->id;
-        }
-        
         $res_id = (int)$res_id;
-        if ($res_id == 0)
-            return false;
+        if ($res_id == 0) return false;
         $uid = (int)$uid;
 
         $keys = array('results_id');
@@ -377,7 +352,7 @@ class Result
     *   @param  boolean $admin  TRUE if this is done by an administrator
     *   @return string          HTML page for printable form data.
     */
-    function Prt($admin = false)
+    public function Prt($admin = false)
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS;
 
@@ -399,6 +374,10 @@ class Result
 
         $T->set_block('form', 'QueueRow', 'qrow');
         foreach ($this->fields as $F) {
+            $data = $F->displayValue($this->fields);
+            if ($data === NULL) continue;
+            $prompt = $F->displayPrompt();
+/*
             if (!in_array($F->results_gid, $_GROUPS)) {
                 continue;
             }
@@ -416,7 +395,7 @@ class Result
                 $prompt = $F->prompt == '' ? $F->name : $F->prompt;
                 break;
             }
-
+*/
             $T->set_var(array(
                 'prompt'    => $prompt,
                 'fieldname' => $F->name,

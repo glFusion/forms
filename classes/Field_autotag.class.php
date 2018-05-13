@@ -1,6 +1,8 @@
 <?php
 /**
-*   Class to handle individual AJAX form fields from autotags
+*   Class to handle individual AJAX form fields from autotags.
+*   Only single checkboxes and radio buttons are supported since other
+*   field types have complex selection options.
 *
 *   @author     Lee Garner <lee@leegarner.com>
 *   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>

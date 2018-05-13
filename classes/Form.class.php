@@ -238,14 +238,14 @@ class Form
         $this->access = $this->hasAccess($access);
 
         // Now get field information
-        $sql = "SELECT fld_id, name, type
+        $sql = "SELECT *
                 FROM {$_TABLES['forms_flddef']}
                 WHERE frm_id = '{$this->id}'
                 ORDER BY orderby ASC";
         //echo $sql;die;
         $res2 = DB_query($sql, 1);
         while ($A = DB_fetchArray($res2, false)) {
-            $this->fields[$A['name']] = Field::getInstance($A['fld_id'], $this->id);
+            $this->fields[$A['name']] = Field::getInstance($A);
         }
         return true;
     }
@@ -495,34 +495,18 @@ class Form
         // All fields are valid, carry on with the onsubmit actions
         $onsubmit = $this->onsubmit;
         if ($onsubmit & FRM_ACTION_STORE) {
+            // Save data to the database
             $this->Result = new Result($res_id);
             $this->Result->setInstance($this->instance_id);
             $this->Result->setModerate($this->moderate);
             $this->res_id = $this->Result->SaveData($this->id, $this->fields,
                     $vals, $this->uid);
         } else {
-            foreach ($this->fields as $fld_id=>$field) {
-                if ($field->type == 'date') {
-                    $fname = $field->name;
-                    $val = sprintf('%d-%02d-%02d',
-                        $vals[$fname.'_year'], $vals[$fname.'_month'],
-                        $vals[$fname.'_day']);
-                    if ($field->options['showtime'] == 1) {
-                        $val .= ' ' . sprintf('%02d:%02d',
-                            $vals[$fname.'_hour'], $vals[$fname.'_minute']);
-                    }
-                    $this->fields[$fld_id]->value = self::_stripHtml($val);
-                } elseif (isset($vale[$field->name])) {
-                    $this->fields[$fld_id]->value = $vals[$field->name];
-                } else {
-                    $this->fields[$fld_id] = '';
-                }
-            }
             $this->res_id = false;
         }
 
         if ($onsubmit > FRM_ACTION_STORE && $newSubmission) {
-            // Send an email- figure out to whom here...
+            // Emailing or displaying results
             $emails = array();
 
             // Sending to the form owner
@@ -788,13 +772,11 @@ class Form
             // filled.
             $res_id = Result::FindResult($this->id, $this->uid);
             if ($res_id > 0) {
-                if ($this->onetime == FRM_LIMIT_ONCE) {  // no editing
+                if ($this->onetime == FRM_LIMIT_ONCE) {         // no editing
                     return $this->noedit_msg;
                 } elseif ($this->onetime == FRM_LIMIT_EDIT) {   // edit allowed
                     $this->ReadData($res_id);
                 }
-                //$R = new Result($res_id);
-                //$R->GetValues($this->fields);
             }
         }
 
@@ -837,32 +819,20 @@ class Form
         $hidden = '';
 
         foreach ($this->fields as $F) {
-            // Don't render: calculated fields, disabled fields, or fields
-            // that the submitter can't access.
-            // This is here instead of Field->Render() to keep the prompt
-            // from being shown.
-            if ($F->type == 'calc' || $F->enabled == 0 ||
-                    !in_array($F->fill_gid, $_GROUPS)) {
-                continue;
-            }
-
-            if ($isAdmin == false && $F->access == FRM_FIELD_HIDDEN) {
-                $hidden .= $F->Render() . LB;
-                continue;
-            } else {
-                $rendered = $F->Render($res_id, $mode);
-                if ($rendered !== NULL) {
-                    $T->set_var(array(
-                        'prompt'    => PLG_replaceTags($F->prompt),
-                        'safe_prompt' => self::_stripHtml($F->prompt),
-                        'fieldname' => $F->name,
-                        'field'     => $rendered,
-                        'help_msg'  => self::_stripHtml($F->help_msg),
-                        'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
-                        'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
-                    ), '', false, true);
-                    $T->parse('qrow', 'QueueRow', true);
-                }
+            // Fields that can't be rendered (no permission, calc, disabled)
+            // return null. Skip those completely.
+            $rendered = $F->displayField($res_id, $mode);
+            if ($rendered !== NULL) {
+                $T->set_var(array(
+                    'prompt'    => PLG_replaceTags($F->prompt),
+                    'safe_prompt' => self::_stripHtml($F->prompt),
+                    'fieldname' => $F->name,
+                    'field'     => $rendered,
+                    'help_msg'  => self::_stripHtml($F->help_msg),
+                    'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
+                    'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
+                ), '', false, true);
+                $T->parse('qrow', 'QueueRow', true);
             }
         }
 
@@ -927,27 +897,15 @@ class Form
 
         $T->set_block('form', 'QueueRow', 'qrow');
         foreach ($this->fields as $F) {
-            if (!$F->enabled) continue;     // ignore disabled fields
-            switch ($F->type) {
-            case 'static':
-                $data = $F->GetDefault($F->options['default']);
-                $prompt = '';
-                break;
-            case 'textarea':
-                $data = nl2br($F->value_text);
-                $prompt = $F->prompt == '' ? $F->name : $F->prompt;
-                break;
-            default;
-                $data = $F->value_text;
-                $prompt = $F->prompt == '' ? $F->name : $F->prompt;
-                break;
-            }
+            if (!$F->canViewResults()) continue;
 
+            $data = $F->displayValue($this->fields);
+            $prompt = $F->displayPrompt();
             $T->set_var(array(
                 'prompt'    => $prompt,
                 'fieldname' => $F->fieldname,
                 'data'      => $data,
-                'colspan'   => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
+                'colspan'   => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? true : false,
             ), '', false, true);
             $T->parse('qrow', 'QueueRow', true);
         }
