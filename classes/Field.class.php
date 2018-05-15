@@ -70,7 +70,7 @@ class Field
         if (is_array($fld)) {
             // Received a field record, make sure required parameters
             // are present
-            if (!isset($fld['type']) ||!isset($fld['fld_id'])) {
+            if (!isset($fld['type']) || !isset($fld['fld_id'])) {
                 return NULL;
             }
         } elseif (is_numeric($fld)) {
@@ -1251,7 +1251,7 @@ class Field
     *
     *   @return boolean     True if the user can view, False if not.
     */
-    protected function canViewResults()
+    public function canViewResults()
     {
         global $_GROUPS, $_USERS;
         static $gids = array();
