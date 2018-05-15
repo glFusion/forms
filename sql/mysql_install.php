@@ -28,11 +28,11 @@ $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
   `results_gid` mediumint(8) unsigned NOT NULL DEFAULT '1',
   `redirect` varchar(255) DEFAULT '',
   `onetime` tinyint(1) NOT NULL DEFAULT '0',
-  `introtext` text,
-  `submit_msg` text,
-  `noaccess_msg` text,
-  `noedit_msg` text,
-  `max_submit_msg` text,
+  `introtext` text DEFAULT '',
+  `submit_msg` text DEFAULT '',
+  `noaccess_msg` text DEFAULT '',
+  `noedit_msg` text DEFAULT '',
+  `max_submit_msg` text DEFAULT '',
   `captcha` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `inblock` tinyint(1) NOT NULL DEFAULT '0',
   `max_submit` int(5) unsigned NOT NULL DEFAULT '0',
@@ -78,12 +78,21 @@ $_SQL['forms_values'] = "CREATE TABLE {$_TABLES['forms_values']} (
 
 global $FRM_sampledata;
 $FRM_sampledata = array();
-$FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} VALUES (
-    'testform', 'Test Profile Form',
-    1, '{$_CONF['site_mail']}', 1, 0, 2, 1, 1, 1,
-    '', 0, '', '', '', '', '', 0, 0, 0)";
+$FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} (
+    id, name, onsubmit, email,
+    enabled, moderate, owner_id, group_id, fill_gid, results_gid,
+    introtext, submit_msg, noaccess_msg, noedit_msg, max_submit_msg,
+  ) VALUES (
+    'testform', 'Test Profile Form', 1, '{$_CONF['site_mail']}',
+    1, 0, 2, 1, 1, 1,
+    '', '', '', '', ''
+  )";
 
-$insert = "INSERT INTO {$_TABLES['forms_flddef']} VALUES (";
+$insert = "INSERT INTO {$_TABLES['forms_flddef']} (
+    fld_id, frm_id, name, type, enabled, access,
+    prompt,
+    options
+  ) VALUES (";
 $FRM_sampledata[] = "$insert 1, 'testform', 'address1', 'text', 1, 1,
     'Address Line 1',
     'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 10, '', 1, 1)";
@@ -170,7 +179,12 @@ $_FRM_UPGRADE_SQL = array(
     ),
     '0.3.1' => array(
         "ALTER TABLE {$_TABLES['forms_frmdef']}
-            ADD `sub_type` varchar(10) NOT NULL DEFAULT 'regular'",
+            ADD `sub_type` varchar(10) NOT NULL DEFAULT 'regular',
+            CHANGE introtext introtext text default '',
+            CHANGE submit_msg submit_msg text DEFAULT '',
+            CHANGE noaccess_msg noaccess_msg text DEFAULT '',
+            CHANGE noedit_msg noedit_msg text DEFAULT '',
+            CHANGE max_submit_msg max_submit_msg text DEFAULT ''";
     ),
 );
 
