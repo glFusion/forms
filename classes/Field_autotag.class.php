@@ -61,7 +61,7 @@ class Field_autotag
             $fld = "<input id=\"$elem_id\" type=\"checkbox\" value=\"1\" $chk $js />" . LB;
             break;
         case 'radio':
-            $fld = "<input id=\"$elem_id\" type=\"radio\" value=\"{$this->value}\"
+            $fld = "<input id=\"{$elem_id}[{$this->value}]\" type=\"radio\" value=\"{$this->value}\"
                     name=\"{$this->name}\" $chk $js />" . LB;
             break;
         }
