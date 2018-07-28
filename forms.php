@@ -3,9 +3,9 @@
 *   Table definitions and other static config variables.
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.3.1
+*   @version    0.4.0
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
 *               GNU Public License v2 or later
 *   @filesource
@@ -37,7 +37,7 @@ $_TABLES['forms_frmXfld']   = $_DB_table_prefix . 'forms_frmXfld';
 */
 global $_CONF_FRM;
 $_CONF_FRM['pi_name']           = 'forms';
-$_CONF_FRM['pi_version']        = '0.3.1';
+$_CONF_FRM['pi_version']        = '0.4.0';
 $_CONF_FRM['gl_version']        = '1.7.0';
 $_CONF_FRM['pi_url']            = 'http://www.leegarner.com';
 $_CONF_FRM['pi_display_name']   = 'Forms';
