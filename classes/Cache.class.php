@@ -19,7 +19,8 @@ namespace Forms;
 */
 class Cache
 {
-    private static $tag = 'forms';
+    const TAG = 'forms';
+    const MIN_GVERSION = '2.0.0';
 
     /**
     *   Update the cache
@@ -30,16 +31,14 @@ class Cache
     */
     public static function set($key, $data, $tag='')
     {
-        global $_CONF_LIB;
-
-        if (version_compare(GVERSION, '1.8.0', '<')) return NULL;
+        if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
 
         if ($tag == '')
-            $tag = array(self::$tag);
+            $tag = array(self::TAG);
         elseif (is_array($tag))
-            $tag[] = self::$tag;
+            $tag[] = self::TAG;
         else
-            $tag = array($tag, self::$tag);
+            $tag = array($tag, self::TAG);
         $key = self::_makeKey($key);
         \glFusion\Cache::getInstance()->set($key, $data, $tag);
     }
@@ -54,9 +53,9 @@ class Cache
     */
     public static function clear($tag = '')
     {
-        if (version_compare(GVERSION, '1.8.0', '<')) return NULL;
+        if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
 
-        $tags = array(self::$tag);
+        $tags = array(self::TAG);
         if (!empty($tag)) {
             if (!is_array($tag)) $tag = array($tag);
             $tags = array_merge($tags, $tag);
@@ -72,15 +71,13 @@ class Cache
     */
     private static function _makeKey($key)
     {
-        return self::$tag . '_' . md5($key);
+        return self::TAG . '_' . md5($key);
     }
 
     
     public static function get($key, $tag='')
     {
-        global $_EV_CONF;
-
-        if (version_compare(GVERSION, '1.8.0', '<')) return NULL;
+        if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
 
         $key = self::_makeKey($key);
         if (\glFusion\Cache::getInstance()->has($key)) {
@@ -90,6 +87,6 @@ class Cache
         }
     }
 
-}   // class Library\Cache
+}   // class Forms\Cache
 
 ?>
