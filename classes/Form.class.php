@@ -845,6 +845,9 @@ class Form
         }
 
         $T->set_var('hidden_vars', $hidden);
+
+        PLG_templateSetVars ('form', $T);
+
         $T->parse('output', 'form');
         $retval .= $T->finish($T->get_var('output'));
 
