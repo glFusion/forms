@@ -81,7 +81,7 @@ $FRM_sampledata = array();
 $FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} (
     id, name, onsubmit, email,
     enabled, moderate, owner_id, group_id, fill_gid, results_gid,
-    introtext, submit_msg, noaccess_msg, noedit_msg, max_submit_msg,
+    introtext, submit_msg, noaccess_msg, noedit_msg, max_submit_msg
   ) VALUES (
     'testform', 'Test Profile Form', 1, '{$_CONF['site_mail']}',
     1, 0, 2, 1, 1, 1,
@@ -91,7 +91,7 @@ $FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} (
 $insert = "INSERT INTO {$_TABLES['forms_flddef']} (
     fld_id, frm_id, name, type, enabled, access,
     prompt,
-    options
+    options, orderby, help_msg, fill_gid, results_gid
   ) VALUES (";
 $FRM_sampledata[] = "$insert 1, 'testform', 'address1', 'text', 1, 1,
     'Address Line 1',
@@ -184,7 +184,7 @@ $_FRM_UPGRADE_SQL = array(
             CHANGE submit_msg submit_msg text DEFAULT '',
             CHANGE noaccess_msg noaccess_msg text DEFAULT '',
             CHANGE noedit_msg noedit_msg text DEFAULT '',
-            CHANGE max_submit_msg max_submit_msg text DEFAULT ''";
+            CHANGE max_submit_msg max_submit_msg text DEFAULT ''"
     ),
 );
 
