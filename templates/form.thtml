@@ -53,13 +53,14 @@
     <div class="frmfield">{captcha}</div>
   {!endif}
   {hidden_vars}
+  {spamx}
   <label for="buttons">&nbsp;</label>
   <div class="frmfield">
     <input type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled} />
     <input type="reset" name="btnReset" value="{$LANG_FORMS['reset']}" />
     {!if referrer}
       <input type="hidden" name="referrer" value="{referrer}" />
-      <input type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}" 
+      <input type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}"
         onclick="javascript:document.location.href='{referrer}';" />
     {!endif}
   </div>
