@@ -40,8 +40,25 @@ class Cache
         else
             $tag = array($tag, self::TAG);
         $key = self::_makeKey($key);
-        \glFusion\Cache::getInstance()->set($key, $data, $tag);
+        \glFusion\Cache::getInstance()->set($key, $data, $tag, 86400);
     }
+
+
+    /**
+    *   Delete a single item from the cache by key
+    *
+    *   @param  string  $key    Base key, e.g. item ID
+    */
+    public static function delete($key)
+    {
+        if (version_compare(GVERSION, self::MIN_GVERSION, '<')) {
+            return;     // glFusion version doesn't support caching
+        }
+        $key = self::_makeKey($key);
+        \glFusion\Cache::getInstance()->delete($key);
+    }
+
+
 
 
     /**
@@ -71,7 +88,8 @@ class Cache
     */
     private static function _makeKey($key)
     {
-        return self::TAG . '_' . md5($key);
+        return \glFusion\Cache::getInstance()
+            ->createKey(self::TAG . '_' . $key);
     }
 
     

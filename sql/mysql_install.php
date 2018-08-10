@@ -184,7 +184,7 @@ $_FRM_UPGRADE_SQL = array(
             CHANGE submit_msg submit_msg text DEFAULT '',
             CHANGE noaccess_msg noaccess_msg text DEFAULT '',
             CHANGE noedit_msg noedit_msg text DEFAULT '',
-            CHANGE max_submit_msg max_submit_msg text DEFAULT ''"
+            CHANGE max_submit_msg max_submit_msg text DEFAULT ''",
     ),
 );
 

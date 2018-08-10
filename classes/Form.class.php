@@ -5,7 +5,7 @@
 *   @author     Lee Garner <lee@leegarner.com>
 *   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.3.1
+*   @version    0.4.0
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
@@ -99,14 +99,21 @@ class Form
     }
 
 
+    /**
+     * Get an instance of a form object.
+     *
+     * @param   string  $frm_id     Form ID
+     * @return  object      Form object
+     */
     public static function getInstance($frm_id)
     {
-        static $_forms = array();
-        //$frm_id = COM_sanitizeID($frm_id);
-        if (!array_key_exists($frm_id, $_forms)) {
-            $_forms[$frm_id] = new self($frm_id);
+        $key = 'form_' . $frm_id;
+        $Obj = Cache::get($key);
+        if ($Obj === NULL) {
+            $Obj = new self($frm_id);
+            Cache::set($frm_id, $Obj);
         }
-        return $_forms[$frm_id];
+        return $Obj;
     }
 
 
@@ -683,6 +690,7 @@ class Form
                 DB_query("UPDATE {$_TABLES['forms_flddef']}
                         SET frm_id = '{$this->id}'
                         WHERE frm_id = '{$this->old_id}'", 1);
+                Cache::clear('form_' . $this->old_id);  // Clear old form cache
             }
             CTL_clearCache();       // so autotags pick up changes
             Cache::clear('form_' . $this->id);      // Clear plugin cache
