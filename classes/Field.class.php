@@ -1815,6 +1815,283 @@ function {$this->name}_onUpdate(cal)
         return $id;
     }
 
+
+    /**
+     * Get the session ID to use for saving values via AJAX
+     *
+     * @return  string      String like "forms.formid.fieldid"
+     */
+    public function _sessID()
+    {
+        return 'forms.' . $this->frm_id . '.' . $this->fld_id;
+    }
+
+
+    /**
+    *   Default function to get the field value from the form
+    *   Just returns the form value
+    *   @param  array   $A      Array of form values, e.g. $_POST
+    *   @return mixed           Field value
+    */
+    public function valueFromForm($A)
+    {
+        return isset($A[$this->name]) ? $A[$this->name] : '';
+    }
+
+
+    /**
+    *   Get the value from the database.
+    *   Typically this is just copying the "value" field, but
+    *   some field types may need to unserialize values.
+    *
+    *   @param  array   $A      Array of all DB fields
+    *   @return mixed           Value field used by the object
+    */
+    public function valueFromDB($A)
+    {
+        return $A['value'];
+    }
+
+
+    /**
+    *   Default function to get the display value for a field
+    *   Just returns the raw value
+    *
+    *   @param  array   $fields     Array of all field objects (for calc-type)
+    *   @return string      Display value
+    */
+    public function displayValue($fields)
+    {
+        global $_GROUPS;
+
+        if (!$this->canViewResults()) return NULL;
+        return htmlspecialchars($this->value);
+    }
+
+
+    /**
+    *   Default function to get the field prompt.
+    *   Gets the user-defined prompt, if any, or falls back to the field name.
+    *
+    *   @return string  Field prompt
+    */
+    public function displayPrompt()
+    {
+        return $this->prompt == '' ? $this->name : $this->prompt;
+    }
+
+
+    public function setValue($value)
+    {
+        return trim($value);
+    }
+
+
+    /**
+    *   Get the submission type of the parent form
+    *
+    *   @return string  Submission type ("ajax" or "regular")
+    */
+    protected function getSubType()
+    {
+        static $sub_type = NULL;
+        if ($sub_type === NULL) {
+            $form = Form::getInstance($this->frm_id);
+            if (!$form) {
+                $sub_type = 'regular';
+            } else {
+                $sub_type = $form->sub_type;
+            }
+        }
+        return $sub_type;
+    }
+
+
+    /**
+    *   Get the value to be rendered in the form
+    *
+    *   @param  integer $res_id     Result set ID
+    *   @param  string  $mode       View mode, e.g. "preview"
+    *   @return mixed               Field value used to populate form
+    */
+    protected function renderValue($res_id, $mode, $valname = '')
+    {
+        $value = '';
+        if (isset($_POST[$this->name])) {
+            // First, check for a POSTed value. The form is being redisplayed.
+            $value = $_POST[$this->name];
+        } elseif ($this->getSubType() == 'ajax') {
+            $sess_id = $this->_sessID();
+            if (SESS_isSet($sess_id)) {
+                // Second, if this is an AJAX form check the session variable.
+                $value = SESS_getVar($sess_id);
+            }
+        } elseif ($res_id == 0 || $mode == 'preview') {
+            // Finally, use the default value if defined.
+            if (isset($this->options['default'])) {
+                $value = $this->GetDefault($this->options['default']);
+            }
+        } else {
+            $value = $this->value;
+        }
+        return $value;
+    }
+
+
+    /**
+    *   Helper function to get the access string for fields.
+    *
+    *   @return string  Access-control string, e.g. "required" or "disabled"
+    */
+    protected function renderAccess()
+    {
+        switch ($this->access) {
+        case FRM_FIELD_READONLY:
+            return 'disabled = "disabled"';
+            break;
+        case FRM_FIELD_REQUIRED:
+            return 'required';
+            break;
+        default:
+            return '';
+            break;
+        }
+    }
+
+
+    /**
+    *   Get the Javascript string for AJAX fields
+    *
+    *   @param  string  $mode   View mode, e.g. "preview"
+    *   @return string          Javascript to save the data
+    */
+    protected function renderJS($mode)
+    {
+        global $LANG_FORMS;
+
+        if ($this->getSubType() == 'ajax') {
+            // Only ajax fields get this
+            if ($mode == 'preview') {
+                $js = 'onchange="FORMS_ajaxDummySave(\'' . $LANG_FORMS['save_disabled'] . '\')"';
+            } else {
+                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
+                    "',this);\"";
+            }
+        } else {
+            $js = '';
+        }
+        return $js;
+    }
+
+
+    /**
+    *   Get the data formatted for saving to the database
+    *   Field types can override this as needed.
+    *
+    *   @param  mixed   $newval     New data to save
+    *   @return mixed       Data formatted for the DB
+    */
+    protected function prepareForDB($newval)
+    {
+        return DB_escapeString(COM_checkWords(strip_tags($newval)));
+    }
+
+
+    /**
+    *   Get the default option values from a field definition form.
+    *   Should be called by child objects in their own optsFromForm function.
+    *
+    *   @param  array   $A      Array of all form fields
+    *   @return array           Field options
+    */
+    protected function optsFromForm($A)
+    {
+        $options = array(
+            'default' => trim($A['defvalue']),
+        );
+        // only if they are actually defined.
+        if (isset($A['mask']) && $A['mask'] != '') {
+            $options['mask'] = trim($A['mask']);
+        }
+        if (isset($A['vismask']) && $A['vismask'] != '') {
+            $options['vismask'] = trim($A['vismask']);
+        }
+        if (isset($A['spancols']) && $A['spancols'] == 1) {
+            $options['spancols'] = 1;
+        }
+        return $options;
+    }
+
+
+    /**
+    *   Check if the current user can render this form field.
+    *   Checks that the user is a member of fill_gid and the field is enabled.
+    *   Caches the status for each fill_gid since this gets called for
+    *   each field, and fill_gid is likely to be the same for all.
+    *
+    *   @return boolean     True if the field can be rendered, False if not.
+    */
+    protected function canViewField()
+    {
+        global $_GROUPS;
+        static $gids = array();
+
+        if (!array_key_exists($this->fill_gid, $gids)) {
+            if ($this->enabled == 0 || !in_array($this->fill_gid, $_GROUPS)) {
+                $gids[$this->fill_gid] = false;
+            } else {
+                $gids[$this->fill_gid] = true;
+            }
+        }
+        return $gids[$this->fill_gid];
+    }
+
+
+    /**
+    *   Check if the current user can view the results for this field.
+    *   Checks that the user is a member of results_gid and the field is enabled.
+    *   Caches the status for each results_gid since this gets called for
+    *   each field, and results_gid is likely to be the same for all.
+    *
+    *   @return boolean     True if the user can view, False if not.
+    */
+    public function canViewResults()
+    {
+        global $_GROUPS, $_USERS;
+        static $gids = array();
+
+        if (!array_key_exists($this->results_gid, $gids)) {
+            if ($this->enabled == 0 || !in_array($this->results_gid, $_GROUPS)) {
+                $gids[$this->results_gid] = false;
+            } else {
+                $gids[$this->results_gid] = true;
+            }
+        }
+        return $gids[$this->results_gid];
+    }
+
+
+    /**
+    *   Return the XML element for privacy export.
+    *
+    *   @return string  XML element string: <fld_name>data</fld_name>
+    */
+    public function XML()
+    {
+        $retval = '';
+        $Form = Form::getInstance($this->frm_id);
+        $d = addSlashes(htmlentities(trim($this->displayValue($Form->fields))));
+        // Replace spaces in prompts with underscores, then remove all other
+        // non-alphanumerics
+        $p = str_replace(' ', '_', $this->prompt);
+        $p = preg_replace("/[^A-Za-z0-9_]/", '', $p);
+
+        if (!empty($d)) {
+            $retval .= "<$p>$d</$p>\n";
+        }
+        return $retval;
+    }
+
 }
 
 ?>
