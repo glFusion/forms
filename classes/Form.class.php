@@ -95,6 +95,7 @@ class Form
             $this->captcha = 0;
             //$this->properties[$name] = $value == 0 ? 0 : 1;
             $this->redirect = '';
+            $this->sub_type = 'regular';
         }
     }
 
