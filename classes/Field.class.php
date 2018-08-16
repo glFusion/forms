@@ -1026,6 +1026,30 @@ class Field
 
 
     /**
+     * Get the session ID to use for saving values via AJAX.
+     * Called internally using the current object values
+     *
+     * @uses    self::sessID()
+     * @return  string      String like "forms.formid.fieldid"
+     */
+    protected function _sessID()
+    {
+        return self::sessID($this->frm_id, $this->fld_id);
+    }
+
+
+    /**
+     * Get the session ID to use for saving values via AJAX.
+     *
+     * @return  string      String like "forms.formid.fieldid"
+     */
+    public static function sessID($frm_id, $fld_id)
+    {
+        return 'forms.' . $frm_id . '.' . $fld_id;
+    }
+
+
+    /**
     *   Default function to get the field value from the form
     *   Just returns the form value
     *   @param  array   $A      Array of form values, e.g. $_POST
@@ -1115,13 +1139,15 @@ class Field
     protected function renderValue($res_id, $mode, $valname = '')
     {
         $value = '';
-
         if (isset($_POST[$this->name])) {
             // First, check for a POSTed value. The form is being redisplayed.
             $value = $_POST[$this->name];
-        } elseif ($this->getSubType() == 'ajax' && SESS_isSet($this->_elemID($valname))) {
-            // Second, if this is an AJAX form check the session variable.
-            $value = SESS_getVar($this->_elemID());
+        } elseif ($this->getSubType() == 'ajax') {
+            $sess_id = $this->_sessID();
+            if (SESS_isSet($sess_id)) {
+                // Second, if this is an AJAX form check the session variable.
+                $value = SESS_getVar($sess_id);
+            }
         } elseif ($res_id == 0 || $mode == 'preview') {
             // Finally, use the default value if defined.
             if (isset($this->options['default'])) {

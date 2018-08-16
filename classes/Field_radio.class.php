@@ -33,19 +33,17 @@ class Field_radio extends Field
             // Have to have some values for multiple checkboxes
             return '';
         }
-        // If no current value, use the defined default
-        if (is_null($this->value)) {
-            $this->value = $this->options['default'];
-        }
+        $this->value = $this->renderValue($res_id, $mode);
         $elem_id = $this->_elemID();
         $js = $this->renderJS($mode);
         $access = $this->renderAccess();
         $fld = '';
         foreach ($values as $id=>$value) {
             $sel = $this->value == $value ? 'checked="checked"' : '';
-            $fld .= "<input $access type=\"radio\" name=\"{$this->name}\"
-                        id=\"" . $elem_id . '_' . $value . "\"
-                        value=\"$value\" $sel $js>&nbsp;$value&nbsp;\n";
+            $fld .= '<input ' . $access  . 'type="radio" name="' . $this->name .
+                    '"id="' . $elem_id . '_' . $value .
+                    '" value="' . $value . '" ' . $sel . $js .
+                    '>&nbsp;' . $value . '&nbsp;' . LB;
         }
         return $fld;
     }

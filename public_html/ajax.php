@@ -28,6 +28,7 @@ case 'ajax_fld_post':
         break;
     }
     switch ($fld_type) {
+    case 'radio':
     case 'select-one':
     case 'text':
         $value = isset($_POST['fld_value']) ? $_POST['fld_value'] : '';
@@ -36,14 +37,15 @@ case 'ajax_fld_post':
         $value = isset($_POST['fld_set']) && $_POST['fld_set'] == 'true' ? true : false;
         break;
     }
-    //COM_errorLog("forms.$frm_id.$fld_id - $elem_id - $value");
-    SESS_setVar($elem_id, $value);
+    $sess_id = Forms\Field::sessID($frm_id, $fld_id);
+    SESS_setVar($sess_id, $value);
     $status = 0;
     $msg = $LANG_FORMS['field_updated'];
     break;
 
 case 'ajax_autotag_post':
     // Save a single autotag checkbox or radio button submission.
+    // There is no form or field ID here so use the HTML element ID
     $fld_type = isset($_POST['fld_type']) ? $_POST['fld_type'] : 'checkbox';
     $fld_name = isset($_POST['fld_name']) ? $_POST['fld_name'] : '';
     $elem_id = isset($_POST['elem_id']) ? $_POST['elem_id'] : '';
