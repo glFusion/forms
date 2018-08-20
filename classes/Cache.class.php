@@ -5,8 +5,8 @@
 *   @author     Lee Garner <lee@leegarner.com>
 *   @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.3.1
-*   @since      0.3.1
+*   @version    0.4.0
+*   @since      0.0.4
 *   @license    http://opensource.org/licenses/gpl-2.0.php
 *               GNU Public License v2 or later
 *   @filesource
@@ -59,14 +59,11 @@ class Cache
     }
 
 
-
-
     /**
     *   Completely clear the cache.
-    *   Called after upgrade.
     *   Entries matching all tags, including default tag, are removed.
     *
-    *   @param  mixed   $tag    Single or array of tags
+    *   @param  mixed   $tag    Single or array of tags. Empty to remove all.
     */
     public static function clear($tag = '')
     {
@@ -84,6 +81,7 @@ class Cache
     /**
     *   Create a unique cache key.
     *
+    *   @param  string  $key    Base key
     *   @return string          Encoded key string to use as a cache ID
     */
     private static function _makeKey($key)
@@ -92,8 +90,15 @@ class Cache
             ->createKey(self::TAG . '_' . $key);
     }
 
-    
-    public static function get($key, $tag='')
+
+    /**
+     * Get a specific item from cache.
+     * Wraps \glFusion\Cache
+     *
+     * @param   string  $key    Key to retrieve
+     * @return  mixed           Value of key, NULL if not found
+     */
+    public static function get($key)
     {
         if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
 
