@@ -112,7 +112,7 @@ class Form
         $Obj = Cache::get($key);
         if ($Obj === NULL) {
             $Obj = new self($frm_id);
-            Cache::set($frm_id, $Obj);
+            Cache::set($key, $Obj);
         }
         return $Obj;
     }
@@ -691,10 +691,10 @@ class Form
                 DB_query("UPDATE {$_TABLES['forms_flddef']}
                         SET frm_id = '{$this->id}'
                         WHERE frm_id = '{$this->old_id}'", 1);
-                Cache::clear('form_' . $this->old_id);  // Clear old form cache
+                Cache::delete('form_' . $this->old_id);  // Clear old form cache
             }
             CTL_clearCache();       // so autotags pick up changes
-            Cache::clear('form_' . $this->id);      // Clear plugin cache
+            Cache::delete('form_' . $this->id);      // Clear plugin cache
             $msg = '';              // no error message if successful
         } else {
             $msg = 5;
