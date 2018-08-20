@@ -34,6 +34,7 @@ class Field
 
         $this->isNew = true;
         if ($id == 0) {
+            // Creating a new, empty object
             $this->fld_id = 0;
             $this->name = '';
             $this->type = 'text';
@@ -44,8 +45,11 @@ class Field
             $this->fill_gid = $_CONF_FRM['fill_gid'];
             $this->results_gid = $_CONF_FRM['results_gid'];
         } elseif (is_array($id)) {
+            // Already have the object data, just set up the variables
             $this->SetVars($id, true);
+            $this->isNew = false;
         } else {
+            // Read an item from the database
             if ($this->Read($id)) {
                 $this->isNew = false;
             }
@@ -65,7 +69,6 @@ class Field
     public static function getInstance($fld)
     {
         global $_TABLES;
-        static $_fields = array();
 
         if (is_array($fld)) {
             // Received a field record, make sure required parameters
@@ -76,16 +79,17 @@ class Field
         } elseif (is_numeric($fld)) {
             // Received a field ID, have to look up the record to get the type
             $fld_id = (int)$fld;
-            $fld = self::_readFromDB($fld_id);
-            if (DB_error() || empty($fld)) return NULL;
+            $key = 'field_' . $fld_id;
+            $fld = Cache::get($key);
+            if ($fld === NULL) {
+                $fld = self::_readFromDB($fld);
+                if (DB_error() || empty($fld)) return NULL;
+                Cache::set($key, $fld);
+            }
         }
 
-        $fld_id = (int)$fld['fld_id'];
-        if (!array_key_exists($fld_id, $_fields)) {
-            $cls = __NAMESPACE__ . '\\Field_' . $fld['type'];
-            $_fields[$fld_id] = new $cls($fld);
-        }
-        return $_fields[$fld_id];
+        $cls = __NAMESPACE__ . '\\Fields\\' . $fld['type'];
+        return new $cls($fld);
     }
 
 
@@ -953,7 +957,7 @@ class Field
     *   @param  string  $type   'fill' or 'save' to indicate which function
     *   @return mixed       Generated field value
     */
-    public function AutoGen($A, $type, $uid = 0)
+    public static function AutoGen($A, $type, $uid = 0)
     {
         global $_USER;
 

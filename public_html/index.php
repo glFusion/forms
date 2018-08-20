@@ -128,7 +128,7 @@ case 'print':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
     $frm_id = isset($_GET['frm_id']) ? $_GET['frm_id'] : '';
     if ($frm_id != '' && $res_id > 0) {
-        $F = Forms\Form::getInstance($frm_id);
+        $F = \Forms\Form::getInstance($frm_id);
         $F->ReadData($res_id);
         if ((!empty($F->Result) && $F->Result->uid == $_USER['uid']) ||
                 plugin_isadmin_forms() ) {

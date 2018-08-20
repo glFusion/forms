@@ -141,7 +141,7 @@ $LANG_FORMS = array(
     'radio'					=> 'Radio-Buttons',
     'date'					=> 'Datum',
     'time'					=> 'Uhrzeit',
-    'static'				=> 'Statisch',
+    'statictext'				=> 'Statisch',
     'calc'					=> 'Berechnung',
 ),
 'calc_type'					=> 'Berechnungs-Art',

@@ -37,7 +37,7 @@ case 'ajax_fld_post':
         $value = isset($_POST['fld_set']) && $_POST['fld_set'] == 'true' ? true : false;
         break;
     }
-    $sess_id = Forms\Field::sessID($frm_id, $fld_id);
+    $sess_id = \Forms\Field::sessID($frm_id, $fld_id);
     SESS_setVar($sess_id, $value);
     $status = 0;
     $msg = $LANG_FORMS['field_updated'];
@@ -55,7 +55,7 @@ case 'ajax_autotag_post':
         $msg = "missing form element";
         $status = 1;
     } else {
-        $F = new Forms\Field_autotag($fld_type, $fld_name, $fld_value);
+        $F = new \Forms\Fields\autotag($fld_type, $fld_name, $fld_value);
         $F->SaveData($fld_value);
         $status = 0;
         $msg = $LANG_FORMS['field_updated'];

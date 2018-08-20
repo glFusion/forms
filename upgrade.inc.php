@@ -3,9 +3,9 @@
 *   Upgrade routines for the Forms plugin
 *
 *   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2014 Lee Garner <lee@leegarner.com>
+*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
 *   @package    forms
-*   @version    0.2.2
+*   @version    0.4.0
 *   @license    http://opensource.org/licenses/gpl-2.0.php 
 *               GNU Public License v2 or later
 *   @filesource
@@ -125,9 +125,19 @@ function FRM_do_upgrade()
         if (!FRM_do_set_version($current_ver)) return false;
     }
 
+    if (!COM_checkVersion($current_ver, '0.4.0')) {
+        $current_ver = '0.4.0';
+        COM_errorLog("Updating Plugin to $current_ver");
+        if (!FRM_do_upgrade_sql($current_ver)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
+    }
+
+    // Final version setting and cleanup
     if (!COM_checkVersion($current_ver, $code_ver)) {
         if (!FRM_do_set_version($code_ver)) return false;
     }
+    FRM_remove_old_files();
+    \Forms\Cache::clear();
     COM_errorLog('Successfully updated the Forms plugin');
     return true;
 }
@@ -379,6 +389,47 @@ function FRM_upgrade_0_1_7()
         if (DB_error()) return false;
     }
     return FRM_do_set_version('0.1.7');
+}
+
+/**
+*   Remove deprecated files
+*/
+function FRM_remove_old_files()
+{
+    global $_CONF;
+
+    $paths = array(
+        // private/plugins/paypal
+        __DIR__ => array(
+            // Deprecate 0.4.0, Remove 0.4.1
+            /*'classes/Field_autotag.class.php',
+            'classes/Field_calc.class.php',
+            'classes/Field_checkbox.class.php',
+            'classes/Field_date.class.php',
+            'classes/Field_dateclass.php',
+            'classes/Field_hidden.class.php',
+            'classes/Field_multicheck.class.php',
+            'classes/Field_numeric.class.php',
+            'classes/Field_radio.class.php',
+            'classes/Field_select.class.php',
+            'classes/Field_static.class.php',
+            'classes/Field_textarea.class.php',
+            'classes/Field_text.class.php',
+            'classes/Field_time.class.php',*/
+        ),
+        // public_html/paypal
+        $_CONF['path_html'] . 'forms' => array(
+        ),
+        // admin/plugins/paypal
+        $_CONF['path_html'] . 'admin/plugins/forms' => array(
+        ),
+    );
+
+    foreach ($paths as $path=>$files) {
+        foreach ($files as $file) {
+            @unlink("$path/$file");
+        }
+    }
 }
 
 ?>

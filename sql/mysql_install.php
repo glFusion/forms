@@ -186,6 +186,10 @@ $_FRM_UPGRADE_SQL = array(
             CHANGE noedit_msg noedit_msg text DEFAULT '',
             CHANGE max_submit_msg max_submit_msg text DEFAULT ''",
     ),
+    '0.4.0' => array(
+        "UPDATE {$_TABLES['forms_flddef']}
+            SET type='statictext' WHERE type='static'",
+    ),
 );
 
 ?>

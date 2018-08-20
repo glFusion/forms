@@ -89,9 +89,8 @@ case 'action':      // Got "?action=something".
         case 'rmfld':
         case 'killfld':
             $deldata = $fldaction = 'killfld' ? true : false;
-            $F = new Field();
             foreach ($_POST['cb'] as $varname=>$val) {
-                $F->Read($varname);
+                $F = new Field($varname);
                 if (!empty($F->id)) {
                     $F->Remove($id, $deldata);
                 }

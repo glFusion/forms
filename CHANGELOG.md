@@ -1,9 +1,10 @@
 # Changelog - Forms plugin for glFusion
 ## 0.4.0
 Release TBD
+- Better namespace for field classes
 - Require PHP 7
 - Implement glFusion caching
-- Implement privacy_export function
+- Implement `privacy_export` function
 - Separate form field types into classes
 - Implement the AJAX form type, saving values to session vars only
 - Implement autotags for checkbox and radio fields, updating session vars only

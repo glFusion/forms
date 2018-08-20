@@ -77,17 +77,34 @@ if (file_exists("$langpath/custom/$langfile")) {
     include_once "$langpath/custom/$langfile";
 }
 
-spl_autoload_register(function($class)
+spl_autoload_register(function ($class)
 {
-    if (strpos($class, 'Forms\\') === 0) {
-        $class = str_replace('Forms\\', '', $class);
-        $path = __DIR__ . '/classes/' . $class . '.class.php';
-        if (file_exists($path)) {
-            include $path;
-        }
+    // project-specific namespace prefix
+    $prefix = 'Forms\\';
+
+    // base directory for the namespace prefix
+    $base_dir = __DIR__ . '/classes/';
+
+    // does the class use the namespace prefix?
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        // no, move to the next registered autoloader
+        return;
+    }
+
+    // get the relative class name
+    $relative_class = substr($class, $len);
+
+    // replace the namespace prefix with the base directory, replace namespace
+    // separators with directory separators in the relative class name, append
+    // with .php
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.class.php';
+
+    // if the file exists, require it
+    if (file_exists($file)) {
+        require $file;
     }
 });
-
 
 // Import plugin-specific functions
 function USES_forms_functions()
@@ -245,6 +262,7 @@ function plugin_autouninstall_forms()
         // give all vars with their name
         'vars'=> array()
     );
+    \Forms\Cache::clear();
     return $out;
 }
 
@@ -455,7 +473,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
             case 'results':
                 if ($frm_id != '') {
                     USES_forms_functions();
-                    $HTML = Forms\FRM_ResultsTable($frm_id, $fldnames, $instance_id);
+                    $HTML = \Forms\FRM_ResultsTable($frm_id, $fldnames, $instance_id);
                 }
                 break;
 
@@ -488,7 +506,8 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
             case 'radio':       // radio button field
                 if (!empty($fld_value)) {
                     if (empty($fld_name)) $fld_name = 'radio1';
-                    $F = new Forms\Field_autotag('radio', $fld_name, $fld_value);
+                    //$F = new \Forms\Field_autotag('radio', $fld_name, $fld_value);
+                    $F = new \Forms\Fields\autotag('radio', $fld_name, $fld_value);
                     $chk = isset($is_default) ? true : false;
                     $HTML = $F->Render($chk);
                 }
@@ -499,7 +518,8 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!isset($fld_value) || empty($fld_value)) {
                         $fld_value = 1;
                     }
-                    $F = new Forms\Field_autotag('checkbox', $fld_name, $fld_value);
+                    //$F = new \Forms\Field_autotag('checkbox', $fld_name, $fld_value);
+                    $F = new \Forms\Fields\autotag('checkbox', $fld_name, $fld_value);
                     $chk = isset($is_default) ? true : false;
                     $HTML = $F->Render($chk);
                 }
@@ -669,7 +689,7 @@ function plugin_moderationvalues_forms()
 */
 function plugin_moderationapprove_forms($id)
 {
-    Forms\Result::Approve($id);
+    \Forms\Result::Approve($id);
     return '';
 }
 
@@ -739,7 +759,7 @@ function plugin_user_deleted_forms($uid)
     $res = DB_query($sql);
     $A = DB_fetchAll($res, false);
     foreach ($A as $id=>$res) {
-        Forms\Result::Delete($res['id']);
+        \Forms\Result::Delete($res['id']);
     }
 }
 
@@ -762,8 +782,8 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
     $res = DB_query($sql);
     $A = DB_fetchAll($res, false);
     foreach ($A as $id=>$res_id) {
-        $R = new Forms\Result($res_id['id']);
-        $F = Forms\Form::getInstance($R->frm_id);
+        $R = new \Forms\Result($res_id['id']);
+        $F = \Forms\Form::getInstance($R->frm_id);
         $R->GetValues($F->fields);
         $form_name = str_replace(' ', '_', $F->name);
         $retval .= "<$form_name>\n";
