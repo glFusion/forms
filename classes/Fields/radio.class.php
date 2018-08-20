@@ -40,7 +40,7 @@ class radio extends \Forms\Field
         $fld = '';
         foreach ($values as $id=>$value) {
             $sel = $this->value == $value ? 'checked="checked"' : '';
-            $fld .= '<input ' . $access  . 'type="radio" name="' . $this->name .
+            $fld .= '<input ' . $access  . ' type="radio" name="' . $this->name .
                     '"id="' . $elem_id . '_' . $value .
                     '" value="' . $value . '" ' . $sel . $js .
                     '>&nbsp;' . $value . '&nbsp;' . LB;
