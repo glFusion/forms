@@ -1,6 +1,7 @@
 # Changelog - Forms plugin for glFusion
 ## 0.4.0
 Release TBD
+- Remove LBLib dependency, was only used for storMessage()
 - Better namespace for field classes
 - Require PHP 7
 - Implement glFusion caching

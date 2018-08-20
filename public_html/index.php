@@ -64,7 +64,7 @@ case 'savedata':
         }
         $u = parse_url($redirect);
         if ($F->submit_msg != '') {
-            LGLIB_storeMessage($F->submit_msg);
+            COM_setMsg($F->submit_msg);
             $msg = '';
         } else {
             $msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';

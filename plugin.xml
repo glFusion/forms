@@ -5,7 +5,6 @@
     <version>0.4.0</version>
     <glfusionversion>1.7.0</glfusionversion>
     <phpversion>7.0.0</phpversion>
-    <requires>lglib</requires>
     <url>http://www.leegarner.com</url>
     <maintainer>Lee Garner</maintainer>
 </plugin>
