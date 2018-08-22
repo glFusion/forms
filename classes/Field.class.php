@@ -82,7 +82,7 @@ class Field
             $key = 'field_' . $fld_id;
             $fld = Cache::get($key);
             if ($fld === NULL) {
-                $fld = self::_readFromDB($fld);
+                $fld = self::_readFromDB($fld_id);
                 if (DB_error() || empty($fld)) return NULL;
                 Cache::set($key, $fld);
             }
