@@ -1,31 +1,32 @@
 <?php
 /**
-*   Class to handle individual form fields.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Class to handle static text form fields.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms\Fields;
 
 /**
-*   Class for form fields
-*/
+ * Static Text Fields.
+ * There is no input for these fields, they are simply displayed.
+ */
 class statictext extends \Forms\Field
 {
 
     /**
-    *   Render the input field.
-    *   Static fields just display the default text.
-    *
-    *   @param  integer $res_id     Result set ID (not used)
-    *   @param  string  $mode       Mode, e.g. "preview" (not used)
-    *   @return string      Defined static field text
-    */
+     * Render the input field.
+     * Static fields just display the default text.
+     *
+     * @param   integer $res_id     Result set ID (not used)
+     * @param   string  $mode       Mode, e.g. "preview" (not used)
+     * @return  string      Defined static field text
+     */
     public function displayField($res_id = 0, $mode=NULL)
     {
         if (!$this->canViewField()) return NULL;
@@ -34,11 +35,11 @@ class statictext extends \Forms\Field
 
 
     /**
-    *   Get the formatted value for display
-    *
-    *   @param  array   $fields     Array of all field objects
-    *   @return string      Defined static field value
-    */
+     * Get the formatted value for display.
+     *
+     * @param   array   $fields     Array of all field objects
+     * @return  string      Defined static field value
+     */
     public function displayValue($fields)
     {
         if (!$this->canViewResults()) return NULL;
@@ -46,13 +47,13 @@ class statictext extends \Forms\Field
     }
 
 
-    /*
-    *   Get the value for this field when read from the DB.
-    *   Static fields always use the "default" option and have no actual value.
-    *
-    *   @param  array   $A  Array of all DB fields
-    *   @return string      Static field value
-    */
+    /**
+     * Get the value for this field when read from the DB.
+     * Static fields always use the "default" option and have no actual value.
+     *
+     * @param   array   $A  Array of all DB fields
+     * @return  string      Static field value
+     */
     public function valueFromDB($A)
     {
         if (isset($this->options['defvalue'])) {
@@ -64,11 +65,11 @@ class statictext extends \Forms\Field
 
 
     /**
-    *   Get the field options when submitted from a form.
-    *
-    *   @param  array   $A  Array of all form fields
-    *   @return array       Array of options for this field
-    */
+     * Get the field options when submitted from a form.
+     *
+     * @param   array   $A  Array of all form fields
+     * @return  array       Array of options for this field
+     */
     protected function optsFromForm($A)
     {
         // Call parent to get the default options
@@ -80,11 +81,11 @@ class statictext extends \Forms\Field
 
 
     /**
-    *   Return the XML element for privacy export.
-    *   Static fields do not need to be exported.
-    *
-    *   @return string  Empty string
-    */
+     * Return the XML element for privacy export.
+     * Static fields do not need to be exported.
+     *
+     * @return  string  Empty string
+     */
     public function XML()
     {
         return '';

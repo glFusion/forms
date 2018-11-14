@@ -1,31 +1,31 @@
 <?php
 /**
-*   Class to handle individual form fields.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @since      0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Class to handle dropdown form fields.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @since       0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms\Fields;
 
 /**
-*   Class for form fields
-*/
+ * Dropdown form field class.
+ */
 class select extends \Forms\Field
 {
 
     /**
-    *   Create a single form field for data entry.
-    *
-    *   @param  integer $res_id Results ID, zero for new form
-    *   @param  string  $mode   Mode, e.g. "preview"
-    *   @return string      HTML for this field, including prompt
-    */
+     * Create a single form field for data entry.
+     *
+     * @param   integer $res_id Results ID, zero for new form
+     * @param   string  $mode   Mode, e.g. "preview"
+     * @return  string      HTML for this field, including prompt
+     */
     public function displayField($res_id = 0, $mode = NULL)
     {
         global $LANG_FORMS;
@@ -50,11 +50,11 @@ class select extends \Forms\Field
 
 
     /**
-    *   Get the field options when the definition form is submitted.
-    *
-    *   @param  array   $A  Array of all form fields
-    *   @return array       Array of options for this field type
-    */
+     * Get the field options when the definition form is submitted.
+     *
+     * @param   array   $A  Array of all form fields
+     * @return  array       Array of options for this field type
+     */
     protected function optsFromForm($A)
     {
         // Call the parent to get default options

@@ -1,32 +1,32 @@
 <?php
 /**
-*   Class to handle individual form fields.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @since      0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Calculated field class.
+ *
+ * @author     Lee Garner <lee@leegarner.com>
+ * @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @package    forms
+ * @version    0.3.1
+ * @since      0.3.1
+ * @license    http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms\Fields;
-
 /**
-*   Class for form fields
-*/
+ * Class to handle calculated fields.
+ * Calculated fields show a value based on the submitted content in other fields.
+ */
 class calc extends \Forms\Field
 {
 
     /**
-    *   Create the input field for the form.
-    *   Calculated fields do not appear on the rendered form.
-    *
-    *   @param  integer $res_id     Result set ID (not used)
-    *   @param  string  $mode       View mode (not used)
-    *   @return null            Empty value to prevent display
-    */
+     * Create the input field for the form.
+     * Calculated fields do not appear on the rendered form.
+     *
+     * @param   integer $res_id     Result set ID (not used)
+     * @param   string  $mode       View mode (not used)
+     * @return  null            Empty value to prevent display
+     */
     public function displayField($res_id = 0, $mode = NULL)
     {
         return NULL; 
@@ -34,13 +34,13 @@ class calc extends \Forms\Field
 
 
     /**
-    *   Calculate the result for this field based on other fields.
-    *   This is the same as the code found in GetValue(), except that all
-    *   the fields are provided to save time.
-    *
-    *   @param  array   $fields     Array of field objects
-    *   @return float               Calculated value of this field
-    */
+     * Calculate the result for this field based on other fields.
+     * This is the same as the code found in GetValue(), except that all
+     * the fields are provided to save time.
+     *
+     * @param   array   $fields     Array of field objects
+     * @return  float               Calculated value of this field
+     */
     public function displayValue($fields)
     {
         if (!$this->canViewResults()) return NULL;
@@ -122,11 +122,11 @@ class calc extends \Forms\Field
 
 
     /**
-    *   Get the field options when the definition form is submitted.
-    *
-    *   @param  array   $A  Array of all form fields
-    *   @return array       Array of options for this field type
-    */
+     * Get the field options when the definition form is submitted.
+     *
+     * @param   array   $A  Array of all form fields
+     * @return  array       Array of options for this field type
+     */
     protected function optsFromForm($A)
     {
         global $_CONF_FRM;

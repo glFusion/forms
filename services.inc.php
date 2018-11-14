@@ -1,16 +1,16 @@
 <?php
 /**
-*   Services provided by the Forms plugin.
-*   This allows other plugins to request data and forms.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2012-2017 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Services provided by the Forms plugin.
+ * This allows other plugins to request data and forms.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2012-2017 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php 
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 
 if (!defined ('GVERSION')) {
     die ('This file can not be used on its own.');
@@ -18,13 +18,13 @@ if (!defined ('GVERSION')) {
 
 
 /**
-*   Create a rendered form and return the HTML along with the title.
-*
-*   @param  array   $args       Array of arguments (form id)
-*   @param  array   &$output    Array to receive output
-*   @param  string  &$svc_msg   To receive service message
-*   @return integer     Status: PLG_RET_OK or PLG_RET_ERROR
-*/
+ * Create a rendered form and return the HTML along with the title.
+ *
+ * @param   array   $args       Array of arguments (form id)
+ * @param   array   &$output    Array to receive output
+ * @param   string  &$svc_msg   To receive service message
+ * @return  integer     Status: PLG_RET_OK or PLG_RET_ERROR
+ */
 function service_renderForm_forms($args, &$output, &$svc_msg)
 {
     if (!isset($args['frm_id'])) return PLG_RET_ERROR;
@@ -45,15 +45,15 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
 
 
 /**
-*   Create a form from an array of values.
-*   This requires intimate knowledge of the layout of $_POST used to update
-*   forms and fields.
-*
-*   @param  array   $args   Array of data.  'form'=>form_data_arr, 'fld'=>field
-*   @param  mixed   &$output    Output data returned, if any
-*   @param  mixed   &$svc_msg   Service message, if any
-*   @return integer Status, PLG_RET_OK or PLG_RET_ERROR
-*/
+ * Create a form from an array of values.
+ * This requires intimate knowledge of the layout of $_POST used to update
+ * forms and fields.
+ *
+ * @param   array   $args       Array of data.  'form'=>form_data_arr, 'fld'=>field
+ * @param   mixed   $output     Output data returned, if any
+ * @param   mixed   $svc_msg    Service message, if any
+ * @return  integer             Status, PLG_RET_OK or PLG_RET_ERROR
+ */
 function service_createForm_forms($args, &$output, &$svc_msg)
 {
     $frm = $args['form'];
@@ -75,6 +75,14 @@ function service_createForm_forms($args, &$output, &$svc_msg)
 }
 
 
+/**
+ * Get a printable version of a form.
+ *
+ * @param   array   $args       Array of form information
+ * @param   string  $output     Receives the printed form HTML
+ * @param   mixed   $svc_msg    Not used
+ * @return  integer     PLG_RET_OK or PLG_RET_ERROR
+ */
 function service_printForm_forms($args, &$output, &$svc_msg)
 {
     global $_USER, $_TABLES, $LANG_FORMS, $LANG01, $_CONF;
@@ -114,16 +122,16 @@ function service_printForm_forms($args, &$output, &$svc_msg)
 
 
 /**
-*   Get the result ID for a given form submission.
-*   If a result ID is given, then just return that in $output. Otherwise, get
-*   the latest submission for the given user. Assume the current user if no 
-*   user ID is passed either.
-*
-*   @param  array   $args   Array of args. 'res_id' or 'uid' are used.
-*   @param  mixed   &$output    Pointer to results data.
-*   @param  mixed   &$svc_msg   Not used
-*   @return integer     PLG_RET_ERROR if no result found, or PLG_RET_OK
-*/
+ * Get the result ID for a given form submission.
+ * If a result ID is given, then just return that in $output. Otherwise, get
+ * the latest submission for the given user. Assume the current user if no 
+ * user ID is passed either.
+ *
+ * @param   array   $args   Array of args. 'res_id' or 'uid' are used.
+ * @param   mixed   &$output    Pointer to results data.
+ * @param   mixed   &$svc_msg   Not used
+ * @return  integer     PLG_RET_ERROR if no result found, or PLG_RET_OK
+ */
 function service_resultId_forms($args, &$output, &$svc_msg)
 {
     global $_USER, $_TABLES, $LANG_FORMS, $LANG01, $_CONF;
@@ -148,6 +156,14 @@ function service_resultId_forms($args, &$output, &$svc_msg)
 }
 
 
+/**
+ * Get information about a form.
+ *
+ * @param   array   $args       May include form ID and perms
+ * @param   array   $output     Receives results
+ * @param   mixed   $svc_msg    Service message, not used
+ * @return  integer     PLG_RET_OK on success
+ */
 function service_getFormInfo_forms($args, &$output, &$svc_msg)
 {
     global $_TABLES;
@@ -169,11 +185,15 @@ function service_getFormInfo_forms($args, &$output, &$svc_msg)
 
 
 /**
-*   Get an array of form IDs and names.
-*   This allows a plugin to retrieve a selection of forms that pertain to it by
-*   finding all forms with an ID that starts with $arg['basename']
-*   $output = array of (form ID => form Name)
-*/
+ * Get an array of form IDs and names.
+ * This allows a plugin to retrieve a selection of forms that pertain to it by
+ * finding all forms with an ID that starts with $arg['basename']
+ *
+ * @param   array   $args       Must include `basename` element
+ * @param   array   $output     Receives form IDs
+ * @param   mixed   $svc_msg    Not used
+ * @return  integer     PLG_RET_OK, or Error if basename is not set
+ */
 function service_getMyForms_forms($args, &$output, &$svc_msg)
 {
     global $_TABLES;

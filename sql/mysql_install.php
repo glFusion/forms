@@ -1,15 +1,15 @@
 <?php
 /**
-*   Table definitions for the Profile plugin
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.1.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ *   Table definitions for the Profile plugin
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.4.0
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 
 /** @global array $_TABLES */
 global $_TABLES;

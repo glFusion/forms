@@ -1,16 +1,16 @@
 <?php
 /**
-*   Home page for the Forms plugin.
-*   Used to either display a specific form, or to save the user-entered data.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Home page for the Forms plugin.
+ * Used to either display a specific form, or to save the user-entered data.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 
 require_once '../lib-common.php';
 if (!in_array('forms', $_PLUGINS)) {
@@ -154,11 +154,13 @@ default:
 
 
 /**
-*   Display a form
-*
-*   @param  integer $frm_id     Form ID
-*   @return string              HTML for the displayed form
-*/
+ * Display a form.
+ * The form can be displayed by itself on the normal web page or in a modal popup.
+ *
+ * @param   integer $frm_id     Form ID
+ * @param   boolean $modal      True to show in a popup, False for a regular page
+ * @return  string              HTML for the displayed form
+ */
 function FRM_showForm($frm_id, $modal = false)
 {
     global $_CONF_FRM, $_CONF;

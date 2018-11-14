@@ -1,34 +1,44 @@
 <?php
 /**
-*   Class to handle individual AJAX form fields from autotags.
-*   Only single checkboxes and radio buttons are supported since other
-*   field types have complex selection options.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Autotag field type.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     v0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms\Fields;
-
 /**
-*   Class for form fields
-*/
+ * Class to handle individual AJAX form fields from autotags.
+ * Only single checkboxes and radio buttons are supported since other
+ * field types have complex selection options.
+ *
+ * This class does not extend the default Field class.
+ */
 class autotag
 {
+    /** Type of field. `checkbox` and `radio` supported.
+     * @var string */
     private $type;
+
+    /** Name of field.
+     * @var string */
     private $name;
+
+    /** Value of field.
+     * @var string */
     private $value;
 
     /**
-    *   Constructor.  Sets the local properties using the array $item.
-    *
-    *   @param  integer $id     ID of the existing field, empty if new
-    *   @param  object  $Form   Form object to which this field belongs
-    */
+     * Constructor.  Sets the local properties using the array $item.
+     *
+     * @param   string  $type   Type of field, `checkbox` or `radio`
+     * @param   string  $name   Name of field
+     * @param   integer $value  Value to set, default = 1
+     */
     public function __construct($type, $name, $value=1)
     {
         $this->type = $type;
@@ -38,11 +48,11 @@ class autotag
 
 
     /**
-    *   Create a single form field for data entry.
-    *
-    *   @param  integer     Results ID, zero for new form
-    *   @return string      HTML for this field, including prompt
-    */
+     * Create a single form field for data entry.
+     *
+     * @param   integer     Results ID, zero for new form
+     * @return  string      HTML for this field, including prompt
+     */
     public function Render($chk_default=false)
     {
         $elem_id = $this->_elemID();
@@ -70,13 +80,13 @@ class autotag
 
 
     /**
-    *   Save this field value to a session variable.
-    *
-    *   @param  mixed   $newval Data value to save
-    *   @param  integer $res_id Result ID associated with this field
-    *   @return boolean     True on success, False on failure
-    */
-    public function SaveData($newval)
+     * Save this field value to a session variable.
+     *
+     * @param   mixed   $newval Data value to save
+     * @param   integer $res_id Result ID associated with this field
+     * @return  boolean     True on success, False on failure
+     */
+    public function SaveData($newval, $res_id=0)
     {
         switch ($this->type) {
         // Set the $newval for special cases
@@ -88,12 +98,23 @@ class autotag
     }
 
 
+    /**
+     * Get the document element ID for use with javascript.
+     *
+     * @return  string  Unique element ID for this field.
+     */
     private function _elemID()
     {
         return 'forms_autotag_' . $this->type . '_' . $this->name;
     }
 
 
+    /**
+     * Get the field value from teh session.
+     *
+     * @param   string  $name   Field name
+     * @return  mixed           Field value, NULL if not set
+     */
     private function _getValue($name)
     {
         return SESS_isSet($name) ? SESS_getVar($name) : NULL;

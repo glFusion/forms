@@ -1,15 +1,15 @@
 <?php
 /**
-*   Public API functions for the Forms plugin for glFusion.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Public API functions for the Forms plugin for glFusion.
+ *
+ * @author     Lee Garner <lee@leegarner.com>
+ * @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+ * @package    forms
+ * @version    0.4.0
+ * @license    http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 
 if (!defined ('GVERSION')) {
     die ('This file can not be used on its own.');
@@ -106,7 +106,7 @@ spl_autoload_register(function ($class)
     }
 });
 
-// Import plugin-specific functions
+/** Import plugin-specific functions. */
 function USES_forms_functions()
 {   require_once __DIR__ . '/forms_functions.inc.php';  }
 
@@ -115,12 +115,12 @@ require_once __DIR__ . '/services.inc.php';
 
 
 /**
-*   Called by the plugin Editor to display the current plugin code version.
-*   This may be different than the version installed and registered currently.
-*   If newer then you may want to run the update.
-*
-*   @return   string  version number
-*/
+ * Called by the plugin Editor to display the current plugin code version.
+ * This may be different than the version installed and registered currently.
+ * If newer then you may want to run the update.
+ *
+ * @return  string  version number
+ */
 function plugin_chkVersion_forms()
 {
     global $_CONF_FRM;
@@ -129,10 +129,10 @@ function plugin_chkVersion_forms()
 
 
 /**
-*   This will put an option for forms administration in the command
-*   and control area
-*   @return   mixed   array(title, url, icon), or false when not allowed
-*/
+ * This will put an option for forms administration in the command and control area.
+ *
+ * @return  mixed   array(title, url, icon), or false when not allowed
+ */
 function plugin_cclabel_forms()
 {
     global $LANG_FORMS;
@@ -148,11 +148,11 @@ function plugin_cclabel_forms()
 
 
 /**
-*   Check if the current user is a plugin admin
-*
-*   @see    SEC_hasRights()
-*   @return boolean     True if an admin, False if not
-*/
+ * Check if the current user is a plugin admin.
+ *
+ * @see     SEC_hasRights()
+ * @return  boolean     True if an admin, False if not
+ */
 function plugin_isadmin_forms()
 {
     static $retval = NULL;
@@ -164,10 +164,10 @@ function plugin_isadmin_forms()
 
 
 /**
-*   Put an option for forms management on the admin-only menu.
-*
-*   @return   mixed   array(title, url, num. banner), or void when not allowed
-*/
+ * Put an option for forms management on the admin-only menu.
+ *
+ * @return  mixed   array(title, url, num. banner), or void when not allowed
+ */
 function plugin_getadminoption_forms()
 {
     global  $LANG_FORMS;
@@ -183,11 +183,11 @@ function plugin_getadminoption_forms()
 
 
 /**
-*   Get the user menu option for this plugin.
-*   Returns an option to administer the user's forms, if they own any.
-*
-*   @return array   Array of menu items or blank if user has no forms
-*/
+ * Get the user menu option for this plugin.
+ * Returns an option to administer the user's forms, if they own any.
+ *
+ * @return  array   Array of menu items or blank if user has no forms
+ */
 function plugin_getuseroption_forms()
 {
     global $LANG_FORMS, $_CONF, $_CONF_FRM, $_USER, $_GROUPS, $_TABLES;
@@ -208,10 +208,10 @@ function plugin_getuseroption_forms()
 
 
 /**
-*   Update the Forms plugin.
-*
-*   @return integer Number of message to display (true = generic success msg)
-*/
+ * Update the Forms plugin.
+ *
+ * @return  boolean     True on success, False on failure
+ */
 function plugin_upgrade_forms()
 {
     require_once __DIR__ . '/upgrade.inc.php';
@@ -220,10 +220,10 @@ function plugin_upgrade_forms()
 
 
 /**
-*   Returns the URL of the plugin's icon
-*
-*   @return   string      URL of the icon
-*/
+ * Returns the URL of the plugin's icon.
+ *
+ * @return  string      URL of the icon
+ */
 function plugin_geticon_forms()
 {
     global $_CONF;
@@ -232,15 +232,15 @@ function plugin_geticon_forms()
 
 
 /**
-*   Automatic uninstall function for plugins
-*
-*   This code is automatically uninstalling the plugin.
-*   It passes an array to the core code function that removes
-*   tables, groups, features and php blocks from the tables.
-*   Additionally, this code can perform special actions that cannot be
-*   foreseen by the core code (interactions with other plugins for example)
-*
-*   @return array       Elements to be removed
+ * Automatic uninstall function for plugins.
+ *
+ * This code is automatically uninstalling the plugin.
+ * It passes an array to the core code function that removes
+ * tables, groups, features and php blocks from the tables.
+ * Additionally, this code can perform special actions that cannot be
+ * foreseen by the core code (interactions with other plugins for example)
+ *
+ * @return  array       Elements to be removed
 */
 function plugin_autouninstall_forms()
 {
@@ -268,10 +268,10 @@ function plugin_autouninstall_forms()
 
 
 /**
-*   Get additional Javascript into the site header
-*
-*   @return array List of paths to Javascript files
-*/
+ * Get additional Javascript into the site header.
+ *
+ * @return  array   List of paths to Javascript files
+ */
 function plugin_getheaderjs_forms()
 {
     return array(
@@ -283,12 +283,12 @@ function plugin_getheaderjs_forms()
 
 
 /**
-*   Get additional CSS into the site header.
-*   Checks first for a layout-specific version, then a custom plugin version,
-*   and finally the default if nothing else found.
-*
-*   @return array   List of paths to Javascript files
-*/
+ * Get additional CSS into the site header.
+ * Checks first for a layout-specific version, then a custom plugin version,
+ * and finally the default if nothing else found.
+ *
+ * @return  array   List of paths to Javascript files
+ */
 function plugin_getheadercss_forms()
 {
     global $_CONF, $_CONF_FRM;
@@ -314,11 +314,11 @@ function plugin_getheadercss_forms()
 
 
 /**
-*   Returns a name=>value array of options broken out from the given string.
-*
-*   @param  mixed   $str    Array, or serialized array, of options
-*   @return array           Associative array of option=>value pairs
-*/
+ * Returns a name=>value array of options broken out from the given string.
+ *
+ * @param   mixed   $str    Array, or serialized array, of options
+ * @return  array           Associative array of option=>value pairs
+ */
 function FRM_getOpts($str)
 {
     $A = array();
@@ -339,13 +339,13 @@ function FRM_getOpts($str)
 
 
 /**
-*   Serializes an array of options and returns the resulting string.
-*   An empty string is returned on error.
-*   Options must already be validated for the type of record to be saved.
-*
-*   @param  array   $A      Array of name=>value pairs
-*   @return string          Serialized string representing the array
-*/
+ * Serializes an array of options and returns the resulting string.
+ * An empty string is returned on error.
+ * Options must already be validated for the type of record to be saved.
+ *
+ * @param   array   $A      Array of name=>value pairs
+ * @return  string          Serialized string representing the array
+ */
 function FRM_setOpts($A)
 {
     $str = '';
@@ -358,13 +358,13 @@ function FRM_setOpts($A)
 
 
 /**
-*   Implements autotags for forms.
-*
-*   @param  string  $op         Name of operation
-*   @param  string  $content    Content of the autotag
-*   @param  string  $autotag    Complete autotag
-*   @return string              HTML replacement
-*/
+ * Implements autotags for forms.
+ *
+ * @param   string  $op         Name of operation
+ * @param   string  $content    Content of the autotag
+ * @param   string  $autotag    Complete autotag
+ * @return  string              HTML replacement
+ */
 function plugin_autotags_forms($op, $content = '', $autotag = '')
 {
     global $_TABLES, $LANG_FORMS;
@@ -558,10 +558,12 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
 
 
 /**
-*   Get the URL to the localized configuration help file.
-*
-*   @return array   Array of (url, window_type)
-*/
+ * Get the URL to the localized configuration help file.
+ *
+ * @param   string  $option     ID of help field
+ * @param   string  $doclang    Desired language for document
+ * @return  array   Array of (url, window_type)
+ */
 function plugin_getconfigelementhelp_forms($option, $doclang='english')
 {
     if (version_compare(GVERSION, '1.6.0', '<')) {
@@ -582,14 +584,14 @@ function plugin_getconfigelementhelp_forms($option, $doclang='english')
 
 
 /**
-*   Get the link to a documentation file.
-*   Returns the URL to the file, or to the directory if no file requested.
-*
-*   @see    plugin_getconfigelementhelp_subscription()
-*   @param  string  $file       Optional HTML filename
-*   @param  string  $doclang    Documentation language, defaults to english
-*   @return string              URL to document directory or file
-*/
+ * Get the link to a documentation file.
+ * Returns the URL to the file, or to the directory if no file requested.
+ *
+ * @see     plugin_getconfigelementhelp_subscription()
+ * @param   string  $file       Optional HTML filename
+ * @param   string  $doclang    Documentation language, defaults to english
+ * @return  string              URL to document directory or file
+ */
 function FRM_getDocURL($file = '', $doclang='')
 {
     global $_CONF, $_CONF_FRM;
@@ -616,11 +618,11 @@ function FRM_getDocURL($file = '', $doclang='')
 
 
 /**
-*   Select group for "default user group" config variable
-*
-*   @uses   FRM_GetGroups()
-*   @return array Array of groups
-*/
+ * Select group for "default user group" config variable.
+ *
+ * @uses    FRM_GetGroups()
+ * @return  array   Array of groups
+ */
 function plugin_configmanager_select_fill_gid_forms()
 {
     global $_CONF_FRM;
@@ -629,11 +631,11 @@ function plugin_configmanager_select_fill_gid_forms()
 
 
 /**
-*   Select groups for "default results group" config variable
-*
-*   @uses   FRM_GetGroups()
-*   @return array       Array of groups
-*/
+ * Select groups for "default results group" config variable.
+ *
+ * @uses    FRM_GetGroups()
+ * @return  array       Array of groups
+ */
 function plugin_configmanager_select_results_gid_forms()
 {
     global $_CONF_FRM;
@@ -642,11 +644,11 @@ function plugin_configmanager_select_results_gid_forms()
 
 
 /**
-*   Support merging local accounts into remote accounts
-*
-*   @param  integer $origUID    Original (remote) user ID
-*   @param  integer $destUID    Merged (local) user ID
-*/
+ * Support merging local accounts into remote accounts,
+ *
+ * @param  integer $origUID    Original (remote) user ID
+ * @param  integer $destUID    Merged (local) user ID
+ */
 function plugin_user_move_forms($origUID, $destUID)
 {
     global $_TABLES;
@@ -660,13 +662,13 @@ function plugin_user_move_forms($origUID, $destUID)
 
 
 /**
-*   Returns list of moderation values
-*
-*   The array returned contains (in order): the row 'id' label, main plugin
-*   table, moderation fields (comma seperated), and plugin submission table
-*
-*   @return       array        Returns array of useful moderation values
-*/
+ * Returns list of moderation values.
+ *
+ * The array returned contains (in order): the row 'id' label, main plugin
+ * table, moderation fields (comma seperated), and plugin submission table
+ *
+ * @return  array   Returns array of useful moderation values
+ */
 function plugin_moderationvalues_forms()
 {
     global $_TABLES;
@@ -681,12 +683,12 @@ function plugin_moderationvalues_forms()
 
 
 /**
-*   Performs plugin exclusive work for items approved by moderation.
-*   Notifies users of approval/denial, and subscribers if approved.
-*
-*   @param  string  $id         ID of the ad
-*   @return string              Empty string.
-*/
+ * Performs plugin exclusive work for items approved by moderation.
+ * Notifies users of approval/denial, and subscribers if approved.
+ *
+ * @param   string  $id         ID of the ad
+ * @return  string              Empty string.
+ */
 function plugin_moderationapprove_forms($id)
 {
     \Forms\Result::Approve($id);
@@ -695,11 +697,11 @@ function plugin_moderationapprove_forms($id)
 
 
 /**
-*   Performs plugin exclusive work for items deleted by moderation.
-*
-*   @param  string  $res_id     ID of the deleted result submission.
-*   @return string          Any wanted HTML output
-*/
+ * Performs plugin exclusive work for items deleted by moderation.
+ *
+ * @param   string  $res_id     ID of the deleted result submission.
+ * @return  string          Any wanted HTML output
+ */
 function plugin_moderationdelete_forms($res_id)
 {
     global $_TABLES;
@@ -714,13 +716,13 @@ function plugin_moderationdelete_forms($res_id)
 
 
 /**
-*   Show items for moderation on submissions page
-*
-*   Uses the Plugin class to return data required by moderation.php to list
-*   plugin objects that need to be moderated.
-*
-*   @return       Plugin       return Plugin class containing submission data
-*/
+ * Show items for moderation on submissions page.
+ *
+ * Uses the Plugin class to return data required by moderation.php to list
+ * plugin objects that need to be moderated.
+ *
+ * @return  object  Plugin object containing submission data
+ */
 function plugin_itemlist_forms()
 {
     global $_TABLES, $LANG_FORMS;
@@ -744,12 +746,12 @@ function plugin_itemlist_forms()
 
 
 /**
-*   Perform actions when a user is deleted
-*   - Delete result sets submitted by the user
-*
-*   @param  integer $uid    User ID
-*/
-function plugin_user_deleted_forms($uid)
+ * Perform actions when a user is deleted
+ * - Delete result sets submitted by the user
+ *
+ * @param   integer $uid    User ID
+ */
+ function plugin_user_deleted_forms($uid)
 {
     global $_TABLES;
 
@@ -765,14 +767,14 @@ function plugin_user_deleted_forms($uid)
 
 
 /**
-*   Export user data when requested.
-*
-*   @param  integer $uid        User ID
-*   @param  string  $email      User Email Address (not used)
-*   @param  string  $username   User Name (not used)
-*   @param  string  $ip         IP address (not used)
-*   @return string              XML-formatted data
-*/
+ * Export user data when requested.
+ *
+ * @param   integer $uid        User ID
+ * @param   string  $email      User Email Address (not used)
+ * @param   string  $username   User Name (not used)
+ * @param   string  $ip         IP address (not used)
+ * @return  string              XML-formatted data
+ */
 function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
 {
     global $_TABLES, $_USER, $_CONF_FRM;
@@ -804,11 +806,11 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
 
 
 /**
-*   Create an array of groups.
-*
-*   @param  boolean $nogroup    True if "No Group" is an option.
-*   @return array               Array of groups as name=>ID
-*/
+ * Create an array of groups.
+ *
+ * @param   integer $selected   ID of selected group
+ * @return  array               Array of groups as name=>ID
+ */
 function FRM_GetGroups($selected=0)
 {
     global $_TABLES;
@@ -823,22 +825,20 @@ function FRM_GetGroups($selected=0)
             $A[$row['grp_name']] = $row['grp_id'];
         }
     }
-
     return $A;
-
 }
 
 
 /**
-*   Convert the hour from 12-hour time to 24-hour.
-*   This is meant to convert incoming values from forms to 24-hour format.  If
-*   the site uses 24-hour time, the form values should already be that way
-*   (and there will be no am/pm indicator), so the hour is returned unchanged.
-*
-*   @param  integer $hour   Hour to check (0 - 23)
-*   @param  string  $ampm   Either 'am' or 'pm'
-*   @return integer         Hour after switching it to 24-hour time.
-*/
+ * Convert the hour from 12-hour time to 24-hour.
+ * This is meant to convert incoming values from forms to 24-hour format.  If
+ * the site uses 24-hour time, the form values should already be that way
+ * (and there will be no am/pm indicator), so the hour is returned unchanged.
+ *
+ * @param   integer $hour   Hour to check (0 - 23)
+ * @param   string  $ampm   Either 'am' or 'pm'
+ * @return  integer         Hour after switching it to 24-hour time.
+ */
 function FRM_12to24($hour, $ampm='')
 {
     global $_CONF;
@@ -856,13 +856,13 @@ function FRM_12to24($hour, $ampm='')
 
 
 /**
-*   Helper function to get a template object.
-*
-*   @param  string  $name   Base name of template file, e.g. "editor"
-*   @param  string  $id     ID of template, e.g. "editform"
-*   @param  string  $path   Optional path if not "templates/"
-*   @return string      Full filename, e.g. "editor.uikit.thtml"
-*/
+ * Helper function to get a template object.
+ *
+ * @param   string  $name   Base name of template file, e.g. "editor"
+ * @param   string  $id     ID of template, e.g. "editform"
+ * @param   string  $path   Optional path if not "templates/"
+ * @return  string      Full filename, e.g. "editor.uikit.thtml"
+ */
 function FRM_getTemplate($name, $id='', $path='')
 {
     global $_SYSTEM;

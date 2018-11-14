@@ -1,33 +1,44 @@
 <?php
 /**
-*   Class to handle individual form fields.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Class to handle individual form fields.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     v0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms;
 
 /**
-*   Class for form fields
-*/
+ * Base form field class.
+ */
 class Field
 {
+    /** Indicate that this is a new record vs one read from the DB.
+     * @var boolean */
     public $isNew;
+
+    /** Array of options.
+     * @var array */
     public $options = array();  // Form object needs access
+
+    /** Internal field properties accessed via `__set()` and `__get()`.
+     * @var array */
     protected $properties = array();
+
+    /** Submission type, either `ajax` or `regular`.
+     * @var string */
     protected $sub_type = 'regular';
 
     /**
-    *   Constructor.  Sets the local properties using the array $item.
-    *
-    *   @param  integer $id     ID of the existing field, empty if new
-    *   @param  object  $Form   Form object to which this field belongs
-    */
+     * Constructor. Sets the local properties using the array $item.
+     *
+     * @param   integer $id     ID of the existing field, empty if new
+     * @param   string  $frm_id ID of related form, if any
+     */
     public function __construct($id = 0, $frm_id=NULL)
     {
         global $_USER, $_CONF_FRM;
@@ -58,14 +69,13 @@ class Field
 
 
     /**
-    *   Get an instance of a field based on the field type.
-    *   If the "fld" parameter is an array it must include at least fld_id
-    *   and type.
-    *   Only works to retrieve existing fields.
-    *
-    *   @param  mixed   $fld    Field ID or record
-    *   @return object          Field object
-    */
+     * Get an instance of a field based on the field type.
+     * If the "fld" parameter is an array it must include at least fld_id and type.
+     * Only works to retrieve existing fields.
+     *
+     * @param   mixed   $fld    Field ID or record
+     * @return  object          Field object
+     */
     public static function getInstance($fld)
     {
         global $_TABLES;
@@ -94,13 +104,13 @@ class Field
 
 
     /**
-    *   Read this field definition from the database and load the object
-    *
-    *   @see Field::SetVars
-    *   @uses Field::_readFromDB()
-    *   @param  string  $name   Optional field name
-    *   @return boolean     Status from SetVars()
-    */
+     * Read this field definition from the database and load the object.
+     *
+     * @see     Field::SetVars
+     * @uses    Field::_readFromDB()
+     * @param   integer $id Field ID
+     * @return  boolean     Status from SetVars()
+     */
     public function Read($id = 0)
     {
         if ($id != 0) $this->fld_id = $id;
@@ -110,11 +120,11 @@ class Field
 
 
     /**
-    *   Actually read a field from the database
-    *
-    *   @param  integer $id     Field ID
-    *   @return mixed       Array of fields or False on error
-    */
+     * Actually read a field from the database.
+     *
+     * @param   integer $id     Field ID
+     * @return  mixed       Array of fields or False on error
+     */
     private static function _readFromDB($id)
     {
         global $_TABLES;
@@ -128,12 +138,11 @@ class Field
 
 
     /**
-    *   Set a value into a property
-    *
-    *   @uses   hour24to12()
-    *   @param  string  $name       Name of property
-    *   @param  mixed   $value      Value to set
-    */
+     * Set a value into a property.
+     *
+     * @param   string  $name       Name of property
+     * @param   mixed   $value      Value to set
+     */
     public function __set($name, $value)
     {
         global $LANG_FORMS;
@@ -177,11 +186,11 @@ class Field
 
 
     /**
-    *   Get a property's value
-    *
-    *   @param  string  $name       Name of property
-    *   @return mixed       Value of property, or empty string if undefined
-    */
+     * Get a property's value.
+     *
+     * @param   string  $name       Name of property
+     * @return  mixed       Value of property, or empty string if undefined
+     */
     public function __get($name)
     {
         if (array_key_exists($name, $this->properties)) {
@@ -193,12 +202,12 @@ class Field
 
 
     /**
-    *   Set all variables for this field.
-    *   Data is expected to be from $_POST or a database record
-    *
-    *   @param  array   $item   Array of fields for this item
-    *   @param  boolean $fromdb Indicate whether this is read from the DB
-    */
+     * Set all variables for this field.
+     * Data is expected to be from $_POST or a database record
+     *
+     * @param   array   $A      Array of fields for this item
+     * @param   boolean $fromdb Indicate whether this is read from the DB
+     */
     public function SetVars($A, $fromdb=false)
     {
         if (!is_array($A))
@@ -229,11 +238,11 @@ class Field
 
 
     /**
-    *   Edit a field definition.
-    *
-    *   @uses   DateFormatSelect()
-    *   @return string      HTML for editing form
-    */
+     * Edit a field definition.
+     *
+     * @uses    DateFormatSelect()
+     * @return  string      HTML for editing form
+     */
     public function EditDef()
     {
         global $_TABLES, $_CONF, $LANG_FORMS, $LANG_ADMIN, $_CONF_FRM;
@@ -450,11 +459,11 @@ class Field
 
 
     /**
-    *   Save the field definition to the database.
-    *
-    *   @param  mixed   $val    Value to save
-    *   @return string          Error message, or empty string for success
-    */
+     * Save the field definition to the database.
+     *
+     * @param   array   $A      Array of elements, e.g. `$_POST`
+     * @return  string          Error message, or empty string for success
+     */
     public function SaveDef($A = '')
     {
         global $_TABLES, $_CONF_FRM;
@@ -511,10 +520,10 @@ class Field
 
 
     /**
-    *   Delete the current field definition.
-    *
-    *   @param  integer $fld_id     ID number of the field
-    */
+     * Delete the current field definition.
+     *
+     * @param   integer $fld_id     ID number of the field
+     */
     public static function Delete($fld_id=0)
     {
         global $_TABLES;
@@ -525,14 +534,14 @@ class Field
 
 
     /**
-    *   Save this field to the database.
-    *
-    *   @uses   AutoGen()
-    *   @param  mixed   $newval Data value to save
-    *   @param  integer $res_id Result ID associated with this field
-    *   @return boolean     True on success, False on failure
-    */
-    public function SaveData($newval, $res_id)
+     * Save this field to the database.
+     *
+     * @uses    AutoGen()
+     * @param   mixed   $newval Data value to save
+     * @param   integer $res_id Result ID associated with this field
+     * @return  boolean     True on success, False on failure
+     */
+    public function SaveData($newval, $res_id=0)
     {
         global $_TABLES;
 
@@ -567,13 +576,13 @@ class Field
 
 
     /**
-    *   Rudimentary date display function to mimic strftime()
-    *   Timestamps don't handle dates far in the past or future.  This function
-    *   does a str_replace using a subset of PHP's date variables.  Only the
-    *   numeric variables with leading zeroes are used.
-    *
-    *   @return string  Date formatted for display
-    */
+     * Rudimentary date display function to mimic strftime().
+     * Timestamps don't handle dates far in the past or future.  This function
+     * does a str_replace using a subset of PHP's date variables.  Only the
+     * numeric variables with leading zeroes are used.
+     *
+     * @return string  Date formatted for display
+     */
     public function DateDisplay()
     {
         if ($this->type != 'date')
@@ -625,11 +634,11 @@ class Field
 
 
     /**
-    *   Get the defined date formats into an array.
-    *   Static for now, maybe allow more user-defined options in the future.
-    *
-    *   return  array   Array of date formats
-    */
+     * Get the defined date formats into an array.
+     * Static for now, maybe allow more user-defined options in the future.
+     *
+     * return   array   Array of date formats
+     */
     public function DateFormats()
     {
         global $LANG_FORMS;
@@ -642,11 +651,11 @@ class Field
 
 
     /**
-    *   Provide a dropdown selection of date formats
-    *
-    *   @param  integer $cur    Option to be selected by default
-    *   @return string          HTML for selection, without select tags
-    */
+     * Provide a dropdown selection of date formats
+     *
+     * @param   integer $cur    Option to be selected by default
+     * @return  string          HTML for selection, without select tags
+     */
     public function DateFormatSelect($cur=0)
     {
         $retval = '';
@@ -660,11 +669,11 @@ class Field
 
 
     /**
-    *   Validate the submitted field value(s)
-    *
-    *   @param  array   $vals  All form values
-    *   @return string      Empty string for success, or error message
-    */
+     * Validate the submitted field value(s).
+     *
+     * @param   array   $vals  All form values
+     * @return  string      Empty string for success, or error message
+     */
     public function Validate(&$vals)
     {
         global $LANG_FORMS;
@@ -704,10 +713,10 @@ class Field
 
 
     /**
-    *   Copy this field to another form.
-    *
-    *   @see    Form::Duplicate()
-    */
+     * Copy this field to another form.
+     *
+     * @see Form::Duplicate()
+     */
     public function Duplicate()
     {
         global $_TABLES;
@@ -737,11 +746,12 @@ class Field
 
 
     /**
-    *   Move a form field up or down in the form.
-    *
-    *   @param  integer $id     Record ID to move
-    *   @param  string  $where  Direction to move ('up' or 'down')
-    */
+     * Move a form field up or down in the form.
+     *
+     * @param   string  $frm_id     ID of form record
+     * @param   integer $fld_id     ID of field record
+     * @param   string  $where      Direction to move ('up' or 'down')
+     */
     public static function Move($frm_id, $fld_id, $where)
     {
         global $_CONF, $_TABLES, $LANG21;
@@ -782,10 +792,10 @@ class Field
 
 
     /**
-    *   Reorder the fields appearance on the form
-    *
-    *   @param  integer $frm_id     ID of form being reordered
-    */
+     * Reorder the fields appearance on the form.
+     *
+     * @param   string  $frm_id     ID of form being reordered
+     */
     public static function Reorder($frm_id)
     {
         global $_TABLES;
@@ -821,14 +831,14 @@ class Field
 
 
     /**
-    *   Get the default value for a field.
-    *   Normally this will be the configured default retuned verbatim.
-    *   It could also be a value from the $_USER array (more maybe to follow).
-    *
-    *   @uses   AutoGen()
-    *   @param  string  $def    Defined default value
-    *   @return string          Actual text to use as the field value.
-    */
+     * Get the default value for a field.
+     * Normally this will be the configured default retuned verbatim.
+     * It could also be a value from the $_USER array (more maybe to follow).
+     *
+     * @uses    AutoGen()
+     * @param   string  $def    Defined default value
+     * @return  string          Actual text to use as the field value.
+     */
     public function GetDefault($def = '')
     {
         global $_USER;
@@ -866,14 +876,14 @@ class Field
 
 
     /**
-    *   Create the time field.
-    *   This is in a separate function so it can be used by both date
-    *   and time fields.
-    *
-    *   @uses   hour24to12()
-    *   @param  string  $timestr    Optional HH:MM string.  Seconds ignored.
-    *   @return string  HTML for time selection field
-    */
+     * Create the time field.
+     * This is in a separate function so it can be used by both date
+     * and time fields.
+     *
+     * @uses    hour24to12()
+     * @param   string  $timestr    Optional HH:MM string.  Seconds ignored.
+     * @return  string  HTML for time selection field
+     */
     public function TimeField($timestr = '')
     {
         $ampm_fld = '';
@@ -926,11 +936,11 @@ class Field
 
 
     /**
-    *   Convert an hour from 24-hour to 12-hour format for display.
-    *
-    *   @param  integer $hour   Hour to convert
-    *   @return array       array(new_hour, ampm_indicator)
-    */
+     * Convert an hour from 24-hour to 12-hour format for display.
+     *
+     * @param   integer $hour   Hour to convert
+     * @return  array       array(new_hour, ampm_indicator)
+     */
     public function hour24to12($hour)
     {
         if ($hour >= 12) {
@@ -945,18 +955,18 @@ class Field
 
 
     /**
-    *   Auto-generate a field value.
-    *   Calls the first available function from the following list:
-    *   <ol><li>CUSTOM_forms_autogen_$type_$varname()</li>
-    *       <li>CUSTOM_forms_autogen_$varname()</li>
-    *       <li>CUSTOM_forms_autogen()</li>
-    *       <li>COM_makeSid()</li>
-    *   </ol>
-    *
-    *   @param  string  $A      Array of variable info
-    *   @param  string  $type   'fill' or 'save' to indicate which function
-    *   @return mixed       Generated field value
-    */
+     * Auto-generate a field value.
+     * Calls the first available function from the following list:
+     *   1. CUSTOM_forms_autogen_$type_$varname()
+     *   2. CUSTOM_forms_autogen_$varname()
+     *   3. CUSTOM_forms_autogen()
+     *   4. COM_makeSid()
+     *
+     * @param   string  $A      Array of variable info
+     * @param   string  $type   `fill` or `save` to indicate which function
+     * @param   integer $uid    User ID, passwd through to autogen function
+     * @return mixed       Generated field value
+     */
     public static function AutoGen($A, $type, $uid = 0)
     {
         global $_USER;
@@ -980,13 +990,13 @@ class Field
 
 
     /**
-    *   Toggle a boolean field in the database
-    *
-    *   @param  $id     Field def ID
-    *   @param  $fld    DB variable to change
-    *   @param  $oldval Original value
-    *   @return integer New value
-    */
+     * Toggle a boolean field in the database.
+     *
+     * @param   $id     Field def ID
+     * @param   $fld    DB variable to change
+     * @param   $oldval Original value
+     * @return  integer New value
+     */
     public static function toggle($id, $fld, $oldval)
     {
         global $_TABLES;
@@ -1009,15 +1019,15 @@ class Field
 
 
     /**
-    *   Get the HTML element ID based on the form and field ID.
-    *   This is for ajax fields that store values in session variables
-    *   instead of result sets.
-    *   Also uses the field value if available and needed, such as for
-    *   multi-checkboxes.
-    *
-    *   @param  string  $val    Optional field value
-    *   @return string          ID string for the field element
-    */
+     * Get the HTML element ID based on the form and field ID.
+     * This is for ajax fields that store values in session variables
+     * instead of result sets.
+     * Also uses the field value if available and needed, such as for
+     * multi-checkboxes.
+     *
+     * @param   string  $val    Optional field value
+     * @return  string          ID string for the field element
+     */
     public function _elemID($val = '')
     {
         $name  = str_replace(' ', '', $this->name);
@@ -1045,7 +1055,9 @@ class Field
     /**
      * Get the session ID to use for saving values via AJAX.
      *
-     * @return  string      String like "forms.formid.fieldid"
+     * @param   string  $frm_id     Form ID
+     * @param   integer $fld_id     Field ID
+     * @return  string      String like `forms.formid.fieldid`
      */
     public static function sessID($frm_id, $fld_id)
     {
@@ -1054,11 +1066,12 @@ class Field
 
 
     /**
-    *   Default function to get the field value from the form
-    *   Just returns the form value
-    *   @param  array   $A      Array of form values, e.g. $_POST
-    *   @return mixed           Field value
-    */
+     * Default function to get the field value from the form.
+     * Just returns the form value.
+     *
+     * @param   array   $A      Array of form values, e.g. $_POST
+     * @return  mixed           Field value
+     */
     public function valueFromForm($A)
     {
         return isset($A[$this->name]) ? $A[$this->name] : '';
@@ -1066,13 +1079,13 @@ class Field
 
 
     /**
-    *   Get the value from the database.
-    *   Typically this is just copying the "value" field, but
-    *   some field types may need to unserialize values.
-    *
-    *   @param  array   $A      Array of all DB fields
-    *   @return mixed           Value field used by the object
-    */
+     * Get the value from the database.
+     * Typically this is just copying the "value" field, but
+     * some field types may need to unserialize values.
+     *
+     * @param   array   $A      Array of all DB fields
+     * @return  mixed           Value field used by the object
+     */
     public function valueFromDB($A)
     {
         return $A['value'];
@@ -1080,12 +1093,12 @@ class Field
 
 
     /**
-    *   Default function to get the display value for a field
-    *   Just returns the raw value
-    *
-    *   @param  array   $fields     Array of all field objects (for calc-type)
-    *   @return string      Display value
-    */
+     * Default function to get the display value for a field.
+     * Just returns the raw value.
+     *
+     * @param   array   $fields     Array of all field objects (for calc-type)
+     * @return  string      Display value
+     */
     public function displayValue($fields)
     {
         global $_GROUPS;
@@ -1096,17 +1109,24 @@ class Field
 
 
     /**
-    *   Default function to get the field prompt.
-    *   Gets the user-defined prompt, if any, or falls back to the field name.
-    *
-    *   @return string  Field prompt
-    */
+     * Default function to get the field prompt.
+     * Gets the user-defined prompt, if any, or falls back to the field name.
+     *
+     * @return  string  Field prompt
+     */
     public function displayPrompt()
     {
         return $this->prompt == '' ? $this->name : $this->prompt;
     }
 
 
+    /**
+     * Get a sanitized value to set in the properties.
+     * Default function just trims the input.
+     *
+     * @param   string  $value  Value to set
+     * @return  string  Sanitized value
+     */
     public function setValue($value)
     {
         return trim($value);
@@ -1114,10 +1134,10 @@ class Field
 
 
     /**
-    *   Get the submission type of the parent form
-    *
-    *   @return string  Submission type ("ajax" or "regular")
-    */
+     * Get the submission type of the parent form.
+     *
+     * @return string  Submission type ("ajax" or "regular")
+     */
     protected function getSubType()
     {
         static $sub_type = NULL;
@@ -1134,13 +1154,13 @@ class Field
 
 
     /**
-    *   Get the value to be rendered in the form
-    *
-    *   @param  integer $res_id     Result set ID
-    *   @param  string  $mode       View mode, e.g. "preview"
-    *   @return mixed               Field value used to populate form
-    */
-    protected function renderValue($res_id, $mode, $valname = '')
+     * Get the value to be rendered in the form.
+     *
+     * @param   integer $res_id     Result set ID
+     * @param   string  $mode       View mode, e.g. "preview"
+     * @return  mixed               Field value used to populate form
+     */
+    protected function renderValue($res_id, $mode)
     {
         $value = '';
         if (isset($_POST[$this->name])) {
@@ -1165,10 +1185,10 @@ class Field
 
 
     /**
-    *   Helper function to get the access string for fields.
-    *
-    *   @return string  Access-control string, e.g. "required" or "disabled"
-    */
+     * Helper function to get the access string for fields.
+     *
+     * @return  string  Access-control string, e.g. "required" or "disabled"
+     */
     protected function renderAccess()
     {
         switch ($this->access) {
@@ -1186,11 +1206,11 @@ class Field
 
 
     /**
-    *   Get the Javascript string for AJAX fields
-    *
-    *   @param  string  $mode   View mode, e.g. "preview"
-    *   @return string          Javascript to save the data
-    */
+     * Get the Javascript string for AJAX fields.
+     *
+     * @param   string  $mode   View mode, e.g. "preview"
+     * @return  string          Javascript to save the data
+     */
     protected function renderJS($mode)
     {
         global $LANG_FORMS;
@@ -1211,12 +1231,12 @@ class Field
 
 
     /**
-    *   Get the data formatted for saving to the database
-    *   Field types can override this as needed.
-    *
-    *   @param  mixed   $newval     New data to save
-    *   @return mixed       Data formatted for the DB
-    */
+     * Get the data formatted for saving to the database.
+     * Field types can override this as needed.
+     *
+     * @param   mixed   $newval     New data to save
+     * @return  mixed       Data formatted for the DB
+     */
     protected function prepareForDB($newval)
     {
         return DB_escapeString(COM_checkWords(strip_tags($newval)));
@@ -1224,12 +1244,12 @@ class Field
 
 
     /**
-    *   Get the default option values from a field definition form.
-    *   Should be called by child objects in their own optsFromForm function.
-    *
-    *   @param  array   $A      Array of all form fields
-    *   @return array           Field options
-    */
+     * Get the default option values from a field definition form.
+     * Should be called by child objects in their own optsFromForm function.
+     *
+     * @param   array   $A      Array of all form fields
+     * @return  array           Field options
+     */
     protected function optsFromForm($A)
     {
         $options = array(
@@ -1250,13 +1270,13 @@ class Field
 
 
     /**
-    *   Check if the current user can render this form field.
-    *   Checks that the user is a member of fill_gid and the field is enabled.
-    *   Caches the status for each fill_gid since this gets called for
-    *   each field, and fill_gid is likely to be the same for all.
-    *
-    *   @return boolean     True if the field can be rendered, False if not.
-    */
+     * Check if the current user can render this form field.
+     * Checks that the user is a member of fill_gid and the field is enabled.
+     * Caches the status for each fill_gid since this gets called for
+     * each field, and fill_gid is likely to be the same for all.
+     *
+     * @return  boolean     True if the field can be rendered, False if not.
+     */
     protected function canViewField()
     {
         global $_GROUPS;
@@ -1274,13 +1294,13 @@ class Field
 
 
     /**
-    *   Check if the current user can view the results for this field.
-    *   Checks that the user is a member of results_gid and the field is enabled.
-    *   Caches the status for each results_gid since this gets called for
-    *   each field, and results_gid is likely to be the same for all.
-    *
-    *   @return boolean     True if the user can view, False if not.
-    */
+     * Check if the current user can view the results for this field.
+     * Checks that the user is a member of results_gid and the field is enabled.
+     * Caches the status for each results_gid since this gets called for
+     * each field, and results_gid is likely to be the same for all.
+     *
+     * @return  boolean     True if the user can view, False if not.
+     */
     public function canViewResults()
     {
         global $_GROUPS, $_USERS;
@@ -1298,10 +1318,10 @@ class Field
 
 
     /**
-    *   Return the XML element for privacy export.
-    *
-    *   @return string  XML element string: <fld_name>data</fld_name>
-    */
+     * Return the XML element for privacy export.
+     *
+     * @return  string  XML element string: <fld_name>data</fld_name>
+     */
     public function XML()
     {
         $retval = '';

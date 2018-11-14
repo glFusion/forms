@@ -1,31 +1,31 @@
 <?php
 /**
-*   Class to handle individual form fields.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @since      0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Date field class.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @since       0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms\Fields;
 
 /**
-*   Class for form fields
-*/
+ * Class to handle date-entry form fields.
+ */
 class date extends \Forms\Field
 {
 
     /**
-    *   Get the field value when submitted by a form.
-    *   Need to assemble the date from the three form fields.
-    *
-    *   @param  array   $A      Array of all form fields
-    *   @return string          Data value
-    */
+     * Get the field value when submitted by a form.
+     * Need to assemble the date from the three form fields.
+     *
+     * @param   array   $A      Array of all form fields
+     * @return  string          Data value
+     */
     public function valueFromForm($A)
     {
         $dt = array('0000', '00', '00');
@@ -55,6 +55,12 @@ class date extends \Forms\Field
     }
 
 
+    /**
+     * Set a value into the `value` and `value_text` properties.
+     *
+     * @param   string  $val    Raw value to set
+     * @return  string          Contents of `value` property
+     */
     public function setValue($val)
     {
         $this->value = trim($val);
@@ -64,12 +70,12 @@ class date extends \Forms\Field
 
 
     /**
-    *   Create a single form field for data entry.
-    *
-    *   @param  integer $res_id Results ID, zero for new form
-    *   @param  string  $mode   Mode, e.g. "preview"
-    *   @return string      HTML for this field, including prompt
-    */
+     * Create a single form field for data entry.
+     *
+     * @param   integer $res_id Results ID, zero for new form
+     * @param   string  $mode   Mode, e.g. "preview"
+     * @return  string      HTML for this field, including prompt
+     */
     public function displayField($res_id = 0, $mode = NULL)
     {
         global $_CONF, $LANG_FORMS, $_CONF_FRM;
@@ -164,28 +170,14 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-    *   Get the formatted field prompt and data to display with the results.
-    *
-    *   @param  object  $Result     Optional result to allow access to other fields
-    *   @return array   Array of data, prompt
-    */
-    public function XXrenderData($Result=NULL)
-    {
-        return array(
-            'data' => $this->value_text,
-            'prompt' => $this->prompt == '' ? $this->name : $this->prompt,
-        );
-     }
-
-
-    /**
-    *   Rudimentary date display function to mimic strftime()
-    *   Timestamps don't handle dates far in the past or future.  This function
-    *   does a str_replace using a subset of PHP's date variables.  Only the
-    *   numeric variables with leading zeroes are used.
-    *
-    *   @return string  Date formatted for display
-    */
+     * Rudimentary date display function to mimic strftime().
+     * Timestamps don't handle dates far in the past or future.  This function
+     * does a str_replace using a subset of PHP's date variables.  Only the
+     * numeric variables with leading zeroes are used.
+     *
+     * @param   array   $fields     Array of all fields (not used here)
+     * @return  string  Date formatted for display
+     */
     public function displayValue($fields)
     {
         if (!$this->canViewResults()) return NULL;
@@ -227,11 +219,11 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-    *   Get the defined date formats into an array.
-    *   Static for now, maybe allow more user-defined options in the future.
-    *
-    *   return  array   Array of date formats
-    */
+     * Get the defined date formats into an array.
+     * Static for now, maybe allow more user-defined options in the future.
+     *
+     * @return  array   Array of date formats
+     */
     public function DateFormats()
     {
         global $LANG_FORMS;
@@ -244,11 +236,11 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-    *   Provide a dropdown selection of date formats
-    *
-    *   @param  integer $cur    Option to be selected by default
-    *   @return string          HTML for selection, without select tags
-    */
+     * Provide a dropdown selection of date formats.
+     *
+     * @param   integer $cur    Option to be selected by default
+     * @return  string          HTML for selection, without select tags
+     */
     public function DateFormatSelect($cur=0)
     {
         $retval = '';
@@ -262,11 +254,11 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-    *   Validate the submitted field value(s)
-    *
-    *   @param  array   $vals  All form values
-    *   @return string      Empty string for success, or error message
-    */
+     * Validate the submitted field value(s)
+     *
+     * @param   array   $vals  All form values
+     * @return  string      Empty string for success, or error message
+     */
     public function Validate(&$vals)
     {
         global $LANG_FORMS;
@@ -286,91 +278,11 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-    *   Create the time field.
-    *   This is in a separate function so it can be used by both date
-    *   and time fields
-    *
-    *   @uses   hour24to12()
-    *   @param  string  $timestr    Optional HH:MM string.  Seconds ignored.
-    *   @return string  HTML for time selection field
-    */
-    public function XXTimeField($timestr = '')
-    {
-        $ampm_fld = '';
-        $hour = '';
-        $minute = '';
-
-        // Check for POSTed values first, coming from a previous form
-        // If one is set, all should be set, and empty values are ok
-        if (isset($_POST[$this->name . '_hour']) &&
-            isset($_POST[$this->name . '_minute'])) {
-            $hour = (int)$_POST[$this->name . '_hour'];
-            $minute = (int)$_POST[$this->name . '_minute'];
-        }
-        if (empty($hour) || empty($minute)) {
-            if (!empty($timestr)) {
-                // Default to the specified time string
-                list($hour, $minute)  = explode(':', $timestr);
-            } elseif (!empty($this->options['default'])) {
-                if (strtolower($this->options['default']) == '$now') {
-                    // Handle the special "now" default"
-                    list($hour, $minute) = explode(':', date('H:i:s'));
-                } else {
-                    // Expecting a 24-hour time as "HH:MM"
-                    list($hour, $minute) = explode(':', $this->options['default']);
-                }
-            }
-        }
-
-        // Nothing selected by default, or invalid values
-        if (empty($hour) || empty($minute) ||
-            !is_numeric($hour) || !is_numeric($minute) ||
-            $hour < 0 || $hour > 23 ||
-            $minute < 0 || $minute > 59) {
-            list($hour, $minute) = array(0, 0);
-        }
-
-        if ($this->options['timeformat'] == '12') {
-            list($hour, $ampm_sel) = $this->hour24to12($hour);
-            $ampm_fld = '&nbsp;&nbsp;' .
-                COM_getAmPmFormSelection($this->name . '_ampm', $ampm_sel);
-        }
-
-        $h_fld = '<select name="' . $this->name . '_hour">' . LB .
-                COM_getHourFormOptions($hour, $this->options['timeformat']) .
-                '</select>' . LB;
-        $m_fld = '<select name="' . $this->name . '_minute">' . LB .
-                COM_getMinuteFormOptions($minute) .
-                '</select>' . LB;
-        return $h_fld . ' ' . $m_fld . $ampm_fld;
-    }
-
-
-    /**
-    *   Convert an hour from 24-hour to 12-hour format for display.
-    *
-    *   @param  integer $hour   Hour to convert
-    *   @return array       array(new_hour, ampm_indicator)
-    */
-    public function XXhour24to12($hour)
-    {
-        if ($hour >= 12) {
-            $ampm = 'pm';
-            if ($hour > 12) $hour -= 12;
-        } else {
-            $ampm = 'am';
-            if ($hour == 0) $hour = 12;
-        }
-        return array($hour, $ampm);
-    }
-
-
-    /**
-    *   Get the field options when the definition form is submitted.
-    *
-    *   @param  array   $A  Array of all form fields
-    *   @return array       Array of options for this field type
-    */
+     * Get the field options when the definition form is submitted.
+     *
+     * @param   array   $A  Array of all form fields
+     * @return  array       Array of options for this field type
+     */
     protected function optsFromForm($A)
     {
         global $_CONF_FRM;

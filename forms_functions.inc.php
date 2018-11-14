@@ -1,27 +1,27 @@
 <?php
 /**
-*   Plugin-specific functions for the forms plugin
-*   Load by calling USES_forms_functions()
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2011 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.2.3
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Plugin-specific functions for the forms plugin.
+ * Load by calling USES_forms_functions().
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2011 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.2.3
+ * @license     http://opensource.org/licenses/gpl-2.0.php 
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms;
 
 /**
-*   Display the results for a given form in tabular format.
-*
-*   @param  string  $frm_id     ID of form to display
-*   @param  mixed   $fieldlist  Normal user- array of field names, false for all
-*                               Admin user- true, always gets all fields
-*   @param  string  $instance_id    Specific instance ID, e.g. story ID
-*   @return string              HTML for form results table
-*/
+ * Display the results for a given form in tabular format.
+ *
+ * @param   string  $frm_id     ID of form to display
+ * @param   mixed   $fieldlist  Normal user- array of field names, false for all
+ *                               Admin user- true, always gets all fields
+ * @param   string  $instance_id    Specific instance ID, e.g. story ID
+ * @return  string              HTML for form results table
+ */
 function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 {
     global $_TABLES, $_USER, $_GROUPS;
@@ -133,91 +133,14 @@ function FRM_ResultsTable($frm_id, $fieldlist=false, $instance_id = '')
 
 
 /**
-*   Create the fValidator class string for input fields.  If no options
-*   are supplied, then the fValidator is empty.
-*
-*   @deprecated
-*   @param  array   $opts   Options to include ('required', 'email', etc).
-*   @param  array   $data   All field data, to get the mask
-*   @return string          String for 'class="fValidate[] iMask...'
-*/
-function FRM_make_fValidator($opts, $data)
-{
-    $retval = 'class="fValidate[';
-
-    if (is_array($opts)) {
-        $opt = "'" . join("','", $opts) . "'";
-    }
-    $retval .= $opt . ']';
-
-    if (isset($data['options']['mask'])) {
-        $stripmask = isset($data['options']['stripmask']) &&
-                        $data['options']['stripmask'] == '1' ? 'true' : 'false';
-
-        $retval .= " iMask\" alt=\"{
-        type: 'fixed',
-        mask: '{$data['options']['mask']}',
-        stripMask: $stripmask }\"";
-    } else {
-        $retval .= '"';
-    }
-
-    return $retval;
-}
-
-
-/**
-*   Convert a field mask (9999-AA-XX) to a visible mask (____-__-__)
-*
-*   @since  version 0.0.2
-*   @param  string  $mask   Field mask
-*   @return string          Field mask converted to visible mask
-*/
-function FRM_mask2vismask($mask)
-{
-    $old = array('9', 'X', 'A', 'a', 'x');
-    $new = array('_', '_', '_', '_', '_');
-    return str_replace($old, $new, $mask);
-}
-
-
-/**
-*   Automatically generate a string value.
-*
-*   The site admin can effectively override this function by creating a
-*   CUSTOM_forms_autogen() function which takes the field name & type
-*   as arguments, or a CUSTOM_forms_autogen_{fieldname} function which
-*   takes no arguments.  The second form takes precedence over the first.
-*
-*   All fields and values are passed to the auto-generation function so
-*   it may use them in the creation of the new value.
-*
-*   @param  array   $A      Field definition and values
-*   @param  integer $uid    Optional user ID.  Zero is acceptable here.
-*   @return string          Value to give the field
-*/
-function FRM_autogen($A, $type, $uid=0)
-{
-    if (!is_array($A) || empty($A)) {
-        return COM_makeSID();
-    }
-    if ($uid == 0) $uid = (int)$_USER['uid'];
-    if ($type != 'fill') $type = 'save';
-
-    $function = 'CUSTOM_forms_autogen_' . $type;
-    if (function_exists($function . '_' . $var)) 
-        $retval = $function . '_' . $var($this->properties, $uid);
-    elseif (function_exists($function)) 
-        $retval =  $function($this->properties, $uid);
-    elseif (function_exists('CUSTOM_forms_autogen'))
-        $retval = CUSTOM_forms_autogen($A, $uid);
-    else
-        $retval = COM_makeSID();
-
-    return $retval;
-}
-
-
+ * Create a dropdown selection of users.
+ * Specific users can be included or excluded.
+ *
+ * @param   integer $sel    Selected user ID
+ * @param   string  $users  Comma-separated list of users to include or exclude
+ * @param   string  $not    `NOT` to exclude `$users`, empty to include
+ * @return  string          HTML for option list
+ */
 function FRM_UserDropdown($sel=0, $users='', $not='')
 {
     global $_TABLES;
@@ -247,6 +170,13 @@ function FRM_UserDropdown($sel=0, $users='', $not='')
 }
 
 
+/**
+ * Create a group selection, or a hidden group field.
+ *
+ * @param   integer $group_id   Selected group ID
+ * @param   integer $access     Access level. If not 3 then a hidden field is returned.
+ * @param   string      Dropdown list or hidden field
+ */
 function FRM_GroupDropdown($group_id, $access)
 {
     global $_TABLES;
@@ -276,13 +206,14 @@ function FRM_GroupDropdown($group_id, $access)
 
 
 /**
-*   Show the site header, with or without left blocks according to config.
-*
-*   @see    COM_siteHeader()
-*   @param  string  $subject    Text for page title (ad title, etc)
-*   @param  string  $meta       Other meta info
-*   @return string              HTML for site header
-*/
+ * Show the site header, with or without left blocks according to config.
+ *
+ * @see     COM_siteHeader()
+ * @param   string  $subject    Text for page title (ad title, etc)
+ * @param   string  $meta       Other meta info
+ * @param   integer $blocks     Indicator of blocks to display
+ * @return  string              HTML for site header
+ */
 function FRM_siteHeader($subject='', $meta='', $blocks = -1)
 {
     global $_CONF_FRM, $LANG_FRM;
@@ -307,15 +238,15 @@ function FRM_siteHeader($subject='', $meta='', $blocks = -1)
 
 
 /**
-*   Show the site footer, with or without right blocks according to config.
-*   If zero is given as an argument, then COM_siteFooter() is called to
-*   finish output but is not displayed. This is so a popup form will not have
-*   the complete site content but only the form.
-*
-*   @see    COM_siteFooter()
-*   @param  integer $blocks Zero to hide sitefooter
-*   @return string          HTML for site header
-*/
+ * Show the site footer, with or without right blocks according to config.
+ * If zero is given as an argument, then COM_siteFooter() is called to
+ * finish output but is not displayed. This is so a popup form will not have
+ * the complete site content but only the form.
+ *
+ * @see     COM_siteFooter()
+ * @param   integer $blocks Zero to hide sitefooter
+ * @return  string          HTML for site header
+ */
 function FRM_siteFooter($blocks = -1)
 {
     global $_CONF_FRM, $_CONF;

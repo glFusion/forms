@@ -1,21 +1,20 @@
 <?php
 /**
-*   Class to handle the form results.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Class to handle the form results.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms;
 
-
 /**
-*   Class for a single form's result
-*/
+ * Result class for the Forms plugin.
+ */
 class Result
 {
     /** Form fields, array of Field objects
@@ -61,13 +60,13 @@ class Result
 
 
     /**
-    *   Constructor.
-    *   If a result set ID is specified, it is read. If an array is given
-    *   then the fields are simply copied from the array, e.g. when displaying
-    *   many results in a table.
-    *
-    *   @param  mixed   $id     Result set ID or array from DB
-    */
+     * Constructor.
+     * If a result set ID is specified, it is read. If an array is given
+     * then the fields are simply copied from the array, e.g. when displaying
+     * many results in a table.
+     *
+     * @param  mixed   $id     Result set ID or array from DB
+     */
     public function __construct($id=0)
     {
         if (is_array($id)) {
@@ -92,13 +91,13 @@ class Result
 
 
     /**
-    *   Read all forms variables into the $items array.
-    *   Set the $uid paramater to read another user's forms into
-    *   the current object instance.
-    *
-    *   @param  integer $id     Result set ID
-    *   @return boolean         True on success, False on failure/not found
-    */
+     * Read all forms variables into the $items array.
+     * Set the $uid paramater to read another user's forms into
+     * the current object instance.
+     *
+     * @param   integer $id     Result set ID
+     * @return  boolean         True on success, False on failure/not found
+     */
     public function Read($id = 0)
     {
         global $_TABLES;
@@ -123,10 +122,10 @@ class Result
 
 
     /**
-    *   Set all the variables from a form or when read from the DB
-    *
-    *   @param  array   $A      Array of values
-    */
+     * Set all the variables from a form or when read from the DB.
+     *
+     * @param   array   $A      Array of values
+     */
     public function SetVars($A)
     {
         if (!is_array($A))
@@ -143,10 +142,10 @@ class Result
 
 
     /**
-    *   Set the instance ID, if used
-    *
-    *   @param  string  $id     Instance ID, may be empty
-    */
+     * Set the instance ID, if used.
+     *
+     * @param   string  $id     Instance ID, may be empty
+     */
     public function setInstance($id)
     {
         $this->instance_id = $id;
@@ -154,13 +153,14 @@ class Result
 
 
     /**
-    *   Find the result set ID for a single form/user combination.
-    *   Assumes only one result per user for a given form.
-    *
-    *   @param  string  $frm_id     Form ID
-    *   @param  integer $uid        Optional user id, default=$_USER['uid']
-    *   @return integer             Result set ID
-    */
+     * Find the result set ID for a single form/user combination.
+     * Assumes only one result per user for a given form.
+     *
+     * @param   string  $frm_id     Form ID
+     * @param   integer $uid        Optional user id, default=$_USER['uid']
+     * @param   string  $token      Resultset token, if provided
+     * @return  integer             Result set ID
+     */
     public static function FindResult($frm_id, $uid=0, $token='')
     {
         global $_TABLES, $_USER;
@@ -176,10 +176,10 @@ class Result
 
 
     /**
-    *   Retrieve all the values for this set into the supplied field objects.
-    *
-    *   @param  array   $fields     Array of Field objects
-    */
+     * Retrieve all the values for this set into the supplied field objects.
+     *
+     * @param   array   $fields     Array of Field objects
+     */
     public function GetValues($fields)
     {
         global $_TABLES;
@@ -201,14 +201,14 @@ class Result
 
 
     /**
-    *   Save the field results in a new result set
-    *
-    *   @param  string  $frm_id     Form ID
-    *   @param  array   $fields     Array of Field objects
-    *   @param  array   $vals       Array of values ($_POST)
-    *   @param  integer $uid        Optional user ID, default=$_USER['uid']
-    *   @return mixed       False on failure/invalid, result ID on success
-    */
+     * Save the field results in a new result set.
+     *
+     * @param  string  $frm_id     Form ID
+     * @param  array   $fields     Array of Field objects
+     * @param  array   $vals       Array of values ($_POST)
+     * @param  integer $uid        Optional user ID, default=$_USER['uid']
+     * @return mixed       False on failure/invalid, result ID on success
+     */
     function SaveData($frm_id, $fields, $vals, $uid = 0)
     {
         global $_USER;
@@ -236,12 +236,12 @@ class Result
 
 
     /**
-    *   Creates a result set in the database.
-    *
-    *   @param  string  $frm_id Form ID
-    *   @param  integer $uid    Optional user ID, if not the current user
-    *   @return integer         New result set ID
-    */
+     * Creates a result set in the database.
+     *
+     * @param   string  $frm_id Form ID
+     * @param   integer $uid    Optional user ID, if not the current user
+     * @return  integer         New result set ID
+     */
     function Create($frm_id, $uid = 0)
     {
         global $_TABLES, $_USER;
@@ -274,11 +274,11 @@ class Result
 
 
     /**
-    *   Set the moderation flag.
-    *   Called from the Form class
-    *
-    *   @param  boolean $mod    True to moderate results, False to not
-    */
+     * Set the moderation flag.
+     * Called from the Form class.
+     *
+     * @param   boolean $mod    True to moderate results, False to not
+     */
     public function setModerate($mod = false)
     {
         $this->moderate = $mod ? true : false;
@@ -286,11 +286,11 @@ class Result
 
 
     /**
-    *   Approve a submission
-    *
-    *   @param  integer $res_id     Result set ID to approve
-    *   @return boolean         True if no DB error
-    */
+     * Approve a submission.
+     *
+     * @param   integer $res_id     Result set ID to approve
+     * @return  boolean         True if no DB error
+     */
     public static function Approve($res_id)
     {
         global $_TABLES;
@@ -304,11 +304,11 @@ class Result
 
 
     /**
-    *   Delete a single result set
-    *
-    *   @param  integer $res_id     Database ID of result to delete
-    *   @return boolean     True on success, false on failure
-    */
+     * Delete a single result set.
+     *
+     * @param   integer $res_id     Database ID of result to delete
+     * @return  boolean     True on success, false on failure
+     */
     public static function Delete($res_id=0)
     {
         global $_TABLES;
@@ -322,11 +322,11 @@ class Result
 
 
     /**
-    *   Delete the form values related to a result set.
-    *
-    *   @param  integer $res_id Required result ID
-    *   @param  integer $uid    Optional user ID
-    */
+     * Delete the form values related to a result set.
+     *
+     * @param   integer $res_id Required result ID
+     * @param   integer $uid    Optional user ID
+     */
     public static function DeleteValues($res_id, $uid=0)
     {
         global $_TABLES;
@@ -347,11 +347,11 @@ class Result
 
 
     /**
-    *   Create a printable copy of the form results.
-    *
-    *   @param  boolean $admin  TRUE if this is done by an administrator
-    *   @return string          HTML page for printable form data.
-    */
+     * Create a printable copy of the form results.
+     *
+     * @param   boolean $admin  TRUE if this is done by an administrator
+     * @return  string          HTML page for printable form data.
+     */
     public function Prt($admin = false)
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS;
@@ -413,13 +413,13 @@ class Result
 
 
     /**
-    *   Returns this result set's token.
-    *   The token provides a very basic authentication mechanism when
-    *   the after-submission action is to display the results, to ensure
-    *   that only the newly-submitted result set is displayed.
-    *
-    *   @return string      Token saved with this result set
-    */
+     * Returns this result set's token.
+     * The token provides a very basic authentication mechanism when
+     * the after-submission action is to display the results, to ensure
+     * that only the newly-submitted result set is displayed.
+     *
+     * @return  string      Token saved with this result set
+     */
     public function Token()
     {
         return $this->token;

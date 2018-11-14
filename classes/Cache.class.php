@@ -1,34 +1,37 @@
 <?php
 /**
-*   Class to cache DB and web lookup results
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.4.0
-*   @since      0.0.4
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Class to cache records for the Forms plugin.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.4.0
+ * @since       0.4.0
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ */
 namespace Forms;
 
 /**
-*   Class for caching forms, fields and results
-*   @package forms
-*/
+ * Cache DB lookups for performance.
+ */
 class Cache
 {
+    /** Tag to prepend to all cache keys.
+     * @const string */
     const TAG = 'forms';
+
+    /** Minimum glFusion version that supports caching.
+     * @const string */
     const MIN_GVERSION = '2.0.0';
 
     /**
-    *   Update the cache
-    *
-    *   @param  string  $key    Item key
-    *   @param  mixed   $data   Data, typically an array
-    *   @param  mixed   $tag    Single tag, or an array
-    */
+     * Update the cache.
+     *
+     * @param   string  $key    Item key
+     * @param   mixed   $data   Data, typically an array
+     * @param   mixed   $tag    Single tag, or an array
+     */
     public static function set($key, $data, $tag='')
     {
         if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
@@ -45,10 +48,10 @@ class Cache
 
 
     /**
-    *   Delete a single item from the cache by key
-    *
-    *   @param  string  $key    Base key, e.g. item ID
-    */
+     * Delete a single item from the cache by key
+     *
+     * @param   string  $key    Base key, e.g. item ID
+     */
     public static function delete($key)
     {
         if (version_compare(GVERSION, self::MIN_GVERSION, '<')) {
@@ -60,11 +63,11 @@ class Cache
 
 
     /**
-    *   Completely clear the cache.
-    *   Entries matching all tags, including default tag, are removed.
-    *
-    *   @param  mixed   $tag    Single or array of tags. Empty to remove all.
-    */
+     * Completely clear the cache.
+     * Entries matching all tags, including default tag, are removed.
+     *
+     * @param   mixed   $tag    Single or array of tags. Empty to remove all.
+     */
     public static function clear($tag = '')
     {
         if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
@@ -79,11 +82,12 @@ class Cache
 
 
     /**
-    *   Create a unique cache key.
-    *
-    *   @param  string  $key    Base key
-    *   @return string          Encoded key string to use as a cache ID
-    */
+     * Create a unique cache key.
+     * Prepends the plugin name to any provided key.
+     *
+     * @param   string  $key    Base key
+     * @return  string          Encoded key string to use as a cache ID
+     */
     private static function _makeKey($key)
     {
         return \glFusion\Cache::getInstance()

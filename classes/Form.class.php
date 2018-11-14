@@ -1,54 +1,65 @@
 <?php
 /**
-*   Class to handle all forms items.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.4.0
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Class to handle all forms items.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.4.0
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms;
 
-
 /**
-*   Class for a user's custom forms.
-*/
+ * Handle form objects and their related fields.
+ */
 class Form
 {
     /** Local properties
-    *   @var array */
+     * @var array */
     var $properties = array();
 
     /** Form fields, an array of objects
-    *   @var array */
+     * @var array */
     var $fields = array();
 
     /** Result object for a user submission
-    *   @var object */
+     * @var object */
     var $Result;
 
     /** Database ID of a result record
-    *   @var integer */
+     * @var integer */
     var $res_id;
 
-    var $allow_submit;  // Turn off the submit button when previewing
-    var $instance_id;   // Instance of this form, for tying to a plugin entry
+    /** Indicate that the form can be submitted.
+     * @var boolean */
+    var $allow_submit;
+
+    /** Instance of this form, for tying to a plugin entry.
+     * @var integer */
+    var $instance_id;
+
+    /** Indicate that this is a new record.
+     * @var boolean */
     var $isNew;
+
+    /** User ID.
+     * @var integer */
     var $uid;
+
+    /** Current user's access level.
+     * @var integer */
     var $access;
 
 
     /**
-    *   Constructor.  Create a forms object for the specified user ID,
-    *   or the current user if none specified.  If a key is requested,
-    *   then just build the forms for that key (requires a $uid).
-    *
-    *   @param  integer $uid    Optional user ID
-    *   @param  string  $key    Optional key to retrieve
-    */
+      * Create a forms object for the specified or current user ID.
+      *
+      * @param  integer $id     Form ID, empty to create new record
+      * @param  integer $access Access level
+      */
     function __construct($id = '', $access=FRM_ACCESS_ADMIN)
     {
         global $_USER, $_CONF_FRM, $_TABLES;
@@ -119,11 +130,11 @@ class Form
 
 
     /**
-    *   Set a local property
-    *
-    *   @param  string  $name   Name of property to set
-    *   @param  mixed   $value  Value to set
-    */
+     * Set a local property.
+     *
+     * @param   string  $name   Name of property to set
+     * @param   mixed   $value  Value to set
+     */
     function __set($name, $value)
     {
         global $LANG_FORMS;
@@ -171,11 +182,11 @@ class Form
 
 
     /**
-    *   Return a property, if it exists.
-    *
-    *   @param  string  $name   Name of property to get
-    *   @return mixed   Value of property identified as $name
-    */
+     * Return a property's value, or NULL if not set.
+     *
+     * @param   string  $name   Name of property to get
+     * @return  mixed   Value of property identified as `$name`
+     */
     function __get($name)
     {
         global $_CONF;
@@ -198,12 +209,12 @@ class Form
 
 
     /**
-    *   Sets the instance ID value.
-    *   Normally $vals is an array of 'pi_name' and 'instance_id', but it can
-    *   also be a single string.
-    *
-    *   @param  mixed   $vals   ID string, or array of values
-    */
+     * Sets the instance ID value.
+     * Normally $vals is an array of 'pi_name' and 'instance_id', but it can
+     * also be a single string.
+     *
+     * @param   mixed   $vals   ID string, or array of values
+     */
     public function setInstance($vals)
     {
         if (is_array($vals)) {
@@ -216,13 +227,14 @@ class Form
 
 
     /**
-    *   Read all forms variables into the $items array.
-    *   Set the $uid paramater to read another user's forms into
-    *   the current object instance.
-    *
-    *   @param  string  $key    Optional specific key to retrieve
-    *   @param  integer $uid    Optional user ID
-    */
+     * Read all forms variables into the $items array.
+     * Set the $uid paramater to read another user's forms into
+     * the current object instance.
+     *
+     * @param   string  $id     Form ID to read
+     * @param   integer $access Access level requested
+     * @return  boolean     True on success, False if not found
+     */
     function Read($id = '', $access=FRM_ACCESS_ADMIN)
     {
         global $_TABLES;
@@ -260,13 +272,13 @@ class Form
 
 
     /**
-    *   Read a results set for this form.
-    *   If no results set ID is given, then find the first set for the
-    *   current user ID.
-    *
-    *   @param  integer $res_id     Results set to read
-    */
-    public function ReadData($res_id = 0, $token = '')
+     * Read a results set for this form.
+     * If no results set ID is given, then find the first set for the
+     * current user ID.
+     *
+     * @param   integer $res_id     Results set to read
+     */
+    public function ReadData($res_id = 0)
     {
         if ($res_id == 0) {
             $res_id = Result::FindResult($this->id, $this->uid);
@@ -282,11 +294,11 @@ class Form
 
 
     /**
-    *   Set all values for this form into local variables.
-    *
-    *   @param  array   $A          Array of values to use.
-    *   @param  boolean $fromdb     Indicate if $A is from the DB or a form.
-    */
+     * Set all values for this form into local variables.
+     *
+     * @param   array   $A          Array of values to use.
+     * @param   boolean $fromdb     Indicate if $A is from the DB or a form.
+     */
     function SetVars($A, $fromdb=false)
     {
         if (!is_array($A))
@@ -338,12 +350,12 @@ class Form
 
 
     /**
-    *   Create the edit form for all the forms variables.
-    *   Checks the type of edit being done to select the right template.
-    *
-    *   @param  string  $type   Type of editing- 'edit' or 'registration'
-    *   @return string          HTML for edit form
-    */
+     * Create the edit form for all the forms variables.
+     * Checks the type of edit being done to select the right template.
+     *
+     * @param   string  $type   Type of editing- 'edit' or 'registration'
+     * @return  string          HTML for edit form
+     */
     function EditForm($type = 'edit')
     {
         global $_CONF, $_CONF_FRM, $_USER, $_TABLES, $LANG_FORMS;
@@ -408,13 +420,13 @@ class Form
 
 
     /**
-    *   Save all forms items to the database.
-    *   Calls each field's Save() method iff there is a corresponding
-    *   value set in the $vals array.
-    *
-    *   @param  array   $vals   Values to save, from $_POST, normally
-    *   @return string      HTML error list, or empty for success
-    */
+     * Save all forms items to the database.
+     * Calls each field's Save() method iff there is a corresponding
+     * value set in the $vals array.
+     *
+     * @param   array   $vals   Values to save, from $_POST, normally
+     * @return  string      HTML error list, or empty for success
+     */
     function SaveData($vals)
     {
         global $LANG_FORMS, $_CONF, $_TABLES;
@@ -623,11 +635,11 @@ class Form
 
 
     /**
-    *   Save a form definition.
-    *
-    *   @param  array   $A      Array of values (e.g. $_POST)
-    *   @return string      Error message, empty on success
-    */
+     * Save a form definition.
+     *
+     * @param   array   $A      Array of values (e.g. $_POST)
+     * @return  string      Error message, empty on success
+     */
     function SaveDef($A = '')
     {
         global $_TABLES, $LANG_FORMS;
@@ -713,13 +725,14 @@ class Form
 
 
     /**
-    *   Render the form.
-    *   Set $mode to 'preview' to have the cancel button return to the admin
-    *   list.  Otherwise it might return and re-execute an action, like "copy".
-    *
-    *   @param  string  $mode   'preview' if this is an admin preview, or blank
-    *   @return string  HTML for the form
-    */
+     * Render the form.
+     * Set $mode to 'preview' to have the cancel button return to the admin
+     * list.  Otherwise it might return and re-execute an action, like "copy".
+     *
+     * @param   string  $mode   'preview' if this is an admin preview, or blank
+     * @param   integer $res_id     Result set ID to display data
+     * @return  string  HTML for the form
+     */
     public function Render($mode='', $res_id=0)
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS, $_CONF_FRM;
@@ -868,14 +881,14 @@ class Form
 
 
     /**
-    *   Create a printable copy of the form results.
-    *
-    *   @uses   ReadData()
-    *   @uses   hasAccess()
-    *   @param  integer $res_id     Result set to print.
-    *   @param  boolean $admin      True if being accessed as an administrator
-    *   @return string              HTML page for printable form data.
-    */
+     * Create a printable copy of the form results.
+     *
+     * @uses    ReadData()
+     * @uses    hasAccess()
+     * @param   integer $res_id     Result set to print.
+     * @param   boolean $admin      True if being accessed as an administrator
+     * @return  string              HTML page for printable form data.
+     */
     public function Prt($res_id = 0, $admin = false)
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_USER;
@@ -927,13 +940,13 @@ class Form
 
 
     /**
-    *   Delete a form definition.
-    *   Deletes a form, removes the field associations, and deletes
-    *   user data
-    *
-    *   @uses   Result::Delete()
-    *   @param  integer $frm_id     Optional form ID, current object if empty
-    */
+     * Delete a form definition.
+     * Deletes a form, removes the field associations, and deletes
+     * user data
+     *
+     * @uses    Result::Delete()
+     * @param   integer $frm_id     Optional form ID, current object if empty
+     */
     function DeleteDef($frm_id='')
     {
         global $_TABLES;
@@ -964,12 +977,12 @@ class Form
 
 
     /**
-    *   Determine if a specific user has a given access level to the form
-    *
-    *   @param  integer $level  Requested access level
-    *   @param  integer $uid    Optional user ID, current user if omitted.
-    *   @return boolean     True if the user has access, false if not
-    */
+     * Determine if a specific user has a given access level to the form.
+     *
+     * @param   integer $level  Requested access level
+     * @param   integer $uid    Optional user ID, current user if omitted.
+     * @return  boolean     True if the user has access, false if not
+     */
     function hasAccess($level, $uid = 0)
     {
         global $_USER;
@@ -995,12 +1008,12 @@ class Form
 
 
     /**
-    *   Duplicate this form.
-    *   Creates a copy of this form with all its fields.
-    *
-    *   @uses   Field::Duplicate()
-    *   @return string      Error message, empty if successful
-    */
+     * Duplicate this form.
+     * Creates a copy of this form with all its fields.
+     *
+     * @uses    Field::Duplicate()
+     * @return  string      Error message, empty if successful
+     */
     function Duplicate()
     {
         $this->name .= ' -Copy';
@@ -1030,11 +1043,12 @@ class Form
 
 
     /**
-    *   Check whether the maximum submission count has been reached.
-    *
-    *   @uses   Responses()
-    *   @return boolean     True if submissions >= max count, false otherwise
-    */
+     * Check whether the maximum submission count has been reached.
+     *
+     * @uses    Responses()
+     * @param   string  $mode   Viewing mode
+     * @return  boolean     True if submissions >= max count, false otherwise
+     */
     private function _checkMaxSubmit($mode='')
     {
         if ($mode != 'preview' &&
@@ -1047,24 +1061,25 @@ class Form
 
 
     /**
-    *   Remove HTML and convert other characters.
-    *
-    *   @param  string  $str    String to sanitize
-    *   @return string          String with no quotes or tags
-    */
+     * Remove HTML and convert other characters.
+     *
+     * @param   string  $str    String to sanitize
+     * @return  string          String with no quotes or tags
+     */
     private static function _stripHtml($str)
     {
         return htmlentities(strip_tags($str));
     }
 
+
     /**
-    *   Toggle a boolean field in the database
-    *
-    *   @param  $id     Field def ID
-    *   @param  $fld    DB variable to change
-    *   @param  $oldval Original value
-    *   @return integer New value
-    */
+     * Toggle a boolean field in the database
+     *
+     * @param   $id     Field def ID
+     * @param   $fld    DB variable to change
+     * @param   $oldval Original value
+     * @return  integer New value
+     */
     public static function toggle($id, $fld, $oldval)
     {
         global $_TABLES;

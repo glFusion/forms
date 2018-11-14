@@ -1,18 +1,18 @@
 <?php
 /**
-*   Entry point to administration functions for the Forms plugin.
-*   This module isn't exclusively for site admins.  Regular users may
-*   be given administrative privleges for certain forms, so they'll need
-*   access to this file.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.3.1
-*   @license    http://opensource.org/licenses/gpl-2.0.php
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Entry point to administration functions for the Forms plugin.
+ * This module isn't exclusively for site admins.  Regular users may
+ * be given administrative privleges for certain forms, so they'll need
+ * access to this file.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     0.3.1
+ * @license     http://opensource.org/licenses/gpl-2.0.php
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 namespace Forms;
 
 /** Import core glFusion libraries */
@@ -353,10 +353,10 @@ exit;
 
 
 /**
-*   Uses lib-admin to list the forms definitions and allow updating.
-*
-*   @return string HTML for the list
-*/
+ * Uses lib-admin to list the forms definitions and allow updating.
+ *
+ * @return  string  HTML for the list
+ */
 function listForms()
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $perm_sql;
@@ -427,10 +427,11 @@ function listForms()
 
 
 /**
-*   Uses lib-admin to list the field definitions and allow updating.
-*
-*   @return string HTML for the list
-*/
+ * Uses lib-admin to list the field definitions and allow updating.
+ *
+ * @param   string  $frm_id     Form ID
+ * @return  string              HTML for the list
+ */
 function listFields($frm_id = '')
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_CONF_FRM;
@@ -503,14 +504,14 @@ function listFields($frm_id = '')
 
 
 /**
-*   Determine what to display in the admin list for each form.
-*
-*   @param  string  $fieldname  Name of the field, from database
-*   @param  mixed   $fieldvalue Value of the current field
-*   @param  array   $A          Array of all name/field pairs
-*   @param  array   $icon_arr   Array of system icons
-*   @return string              HTML for the field cell
-*/
+ * Determine what to display in the admin list for each form.
+ *
+ * @param   string  $fieldname  Name of the field, from database
+ * @param   mixed   $fieldvalue Value of the current field
+ * @param   array   $A          Array of all name/field pairs
+ * @param   array   $icon_arr   Array of system icons
+ * @return  string              HTML for the field cell
+ */
 function getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES, $_CONF_FRM, $_LANG_ADMIN;
@@ -613,14 +614,14 @@ function getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 
 
 /**
-*   Determine what to display in the admin list for each field.
-*
-*   @param  string  $fieldname  Name of the field, from database
-*   @param  mixed   $fieldvalue Value of the current field
-*   @param  array   $A          Array of all name/field pairs
-*   @param  array   $icon_arr   Array of system icons
-*   @return string              HTML for the field cell
-*/
+ * Determine what to display in the admin list for each field.
+ *
+ * @param   string  $fieldname  Name of the field, from database
+ * @param   mixed   $fieldvalue Value of the current field
+ * @param   array   $A          Array of all name/field pairs
+ * @param   array   $icon_arr   Array of system icons
+ * @return  string              HTML for the field cell
+ */
 function getField_field($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $_CONF_FRM, $LANG_ACCESS, $LANG_FORMS;
@@ -703,12 +704,12 @@ function getField_field($fieldname, $fieldvalue, $A, $icon_arr)
 
 
 /**
-*   Uses lib-admin to list the form results.
-*
-*   @param  string  $frm_id         ID of form
-*   @param  string  $instance_id    Optional form instance ID
-*   @return string          HTML for the list
-*/
+ * Uses lib-admin to list the form results.
+ *
+ * @param   string  $frm_id         ID of form
+ * @param   string  $instance_id    Optional form instance ID
+ * @return  string          HTML for the list
+ */
 function listResults($frm_id, $instance_id='')
 {
     global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $perm_sql;
@@ -773,14 +774,14 @@ function listResults($frm_id, $instance_id='')
 
 
 /**
-*   Determine what to display in the admin list for each results field.
-*
-*   @param  string  $fieldname  Name of the field, from database
-*   @param  mixed   $fieldvalue Value of the current field
-*   @param  array   $A          Array of all name/field pairs
-*   @param  array   $icon_arr   Array of system icons
-*   @return string              HTML for the field cell
-*/
+ * Determine what to display in the admin list for each results field.
+ *
+ * @param   string  $fieldname  Name of the field, from database
+ * @param   mixed   $fieldvalue Value of the current field
+ * @param   array   $A          Array of all name/field pairs
+ * @param   array   $icon_arr   Array of system icons
+ * @return  string              HTML for the field cell
+ */
 function getField_results($fieldname, $fieldvalue, $A, $icon_arr)
 {
     global $_CONF, $_CONF_FRM, $LANG_ADMIN, $LANG_FORMS;
@@ -824,12 +825,13 @@ function getField_results($fieldname, $fieldvalue, $A, $icon_arr)
 
 
 /**
-*   Create the admin menu at the top of the list and form pages.
-*
-*   @param  string  $view   Current view, used to select menu options
-*   @param  string  $help_text  Text to display below menu
-*   @return string      HTML for admin menu section
-*/
+ * Create the admin menu at the top of the list and form pages.
+ *
+ * @param   string  $view       Current view, used to select menu options
+ * @param   string  $help_text  Text to display below menu
+ * @param   string  $other_text Other header text to shoe
+ * @return  string      HTML for admin menu section
+ */
 function adminMenu($view ='', $help_text = '', $other_text='')
 {
     global $_CONF, $LANG_FORMS, $_CONF_FRM, $LANG01, $isAdmin;
