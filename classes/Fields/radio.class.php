@@ -5,8 +5,8 @@
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
- * @since       0.3.1
+ * @version     v0.3.1
+ * @since       v0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
