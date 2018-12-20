@@ -5,7 +5,7 @@
  * @author     Lee Garner <lee@leegarner.com>
  * @copyright  Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
  * @package    forms
- * @version    0.4.0
+ * @version    v0.4.0
  * @license    http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -241,7 +241,7 @@ function plugin_geticon_forms()
  * foreseen by the core code (interactions with other plugins for example)
  *
  * @return  array       Elements to be removed
-*/
+ */
 function plugin_autouninstall_forms()
 {
     global $_CONF_FRM;
@@ -802,6 +802,17 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
         $retval = tidy_repair_string($retval, array('input-xml' => 1));
     }
     return $retval;
+}
+
+
+/**
+ * Enable service functions.
+ *
+ * @return  boolean     True to enable web service functions
+ */
+function plugin_wsEnabled_forms()
+{
+    return true;
 }
 
 
