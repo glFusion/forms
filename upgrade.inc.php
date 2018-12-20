@@ -5,7 +5,7 @@
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.4.0
+ * @version     v0.4.0
  * @license     http://opensource.org/licenses/gpl-2.0.php 
  *              GNU Public License v2 or later
  * @filesource
@@ -127,6 +127,7 @@ function FRM_do_upgrade($dvlp=false)
     }
 
     // Update the configuration items
+    global $formsConfigData;
     require_once __DIR__ . '/install_defaults.php';
     USES_lib_install();
     _update_config('forms', $formsConfigData);

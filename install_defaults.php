@@ -5,7 +5,7 @@
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2010 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.4.0
+ * @version     v0.4.0
  * @license     http://opensource.org/licenses/gpl-2.0.php 
  *              GNU Public License v2 or later
  * @filesource
@@ -16,13 +16,13 @@ if (!defined('GVERSION')) {
 }
 
 /**
- *  Default settings for the Forms plugin.
+ * Default settings for the Forms plugin.
  *
- *  Initial Installation Defaults used when loading the online configuration
- *  records. These settings are only used during the initial installation
- *  and not referenced any more once the plugin is installed
+ * Initial Installation Defaults used when loading the online configuration
+ * records. These settings are only used during the initial installation
+ * and not referenced any more once the plugin is installed
  *
- *  @global array $_FRM_DEFAULT
+ * @global array $_FRM_DEFAULT
  *
  */
 /** @var global config data */
@@ -165,14 +165,14 @@ $formsConfigData = array(
 );
 
 /**
- *  Initialize Profile plugin configuration
+ * Initialize Profile plugin configuration.
  *
- *  Creates the database entries for the configuation if they don't already
- *  exist. Initial values will be taken from $_CONF_FRM if available (e.g. from
- *  an old config.php), uses $_FRM_DEFAULT otherwise.
+ * Creates the database entries for the configuation if they don't already
+ * exist. Initial values will be taken from $_CONF_FRM if available (e.g. from
+ * an old config.php), uses $_FRM_DEFAULT otherwise.
  *
- *  @param  integer $group_id   Group ID to use as the plugin's admin group
- *  @return boolean             true: success; false: an error occurred
+ * @param  integer $group_id   Group ID to use as the plugin's admin group
+ * @return boolean             true: success; false: an error occurred
  */
 function plugin_initconfig_forms($group_id = 0)
 {

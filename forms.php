@@ -1,26 +1,26 @@
 <?php
 /**
-*   Table definitions and other static config variables.
-*
-*   @author     Lee Garner <lee@leegarner.com>
-*   @copyright  Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
-*   @package    forms
-*   @version    0.4.0
-*   @license    http://opensource.org/licenses/gpl-2.0.php 
-*               GNU Public License v2 or later
-*   @filesource
-*/
+ * Table definitions and other static config variables.
+ *
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     v0.4.0
+ * @license     http://opensource.org/licenses/gpl-2.0.php 
+ *              GNU Public License v2 or later
+ * @filesource
+ */
 
 /**
-*   Global array of table names from glFusion
-*   @global array $_TABLES
-*/
+ * Global array of table names from glFusion.
+ * @global array $_TABLES
+ */
 global $_TABLES;
 
 /**
-*   Global table name prefix
-*   @global string $_DB_table_prefix
-*/
+ * Global table name prefix.
+ * @global string $_DB_table_prefix
+ */
 global $_DB_table_prefix;
 
 $_TABLES['forms_frmdef']    = $_DB_table_prefix . 'forms_frmdef';
@@ -32,9 +32,9 @@ $_TABLES['forms_values']    = $_DB_table_prefix . 'forms_values';
 $_TABLES['forms_frmXfld']   = $_DB_table_prefix . 'forms_frmXfld';
 
 /**
-*   Global configuration array
-*   @global array $_CONF_FRM
-*/
+ * Global configuration array.
+ * @global array $_CONF_FRM
+ */
 global $_CONF_FRM;
 $_CONF_FRM['pi_name']           = 'forms';
 $_CONF_FRM['pi_version']        = '0.4.0';
