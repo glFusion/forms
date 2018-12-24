@@ -756,11 +756,15 @@ class Form
         $actionurl = FRM_PI_URL . '/index.php';
         $saveaction = 'savedata';
         $allow_submit = true;
-        if ($mode == 'preview') {
+        $not_inline = true;
+        switch ($mode) {
+        case 'preview':
             $referrer = FRM_ADMIN_URL . '/index.php';
             $this->onetime = FRM_LIMIT_MULTI; // otherwise admin might not be able to view
             $allow_submit = false;
-        } elseif ($mode == 'edit') {    // admin editing submission
+            break;
+        case 'edit':    // admin editing submission
+        case 'inline':
             //$this->ReadData();
             $this->onetime = FRM_LIMIT_EDIT; // allow editing of result
             $success_msg = 3;
@@ -768,9 +772,10 @@ class Form
             $referrer = FRM_ADMIN_URL . '/index.php?results=x&frm_id=' .
                     $this->id;
             $actionurl = FRM_ADMIN_URL . '/index.php';
-            $saveaction = 'updateresult';
+            $not_inline = $mode == 'edit' ? true : false;
             $isAdmin = true;
-        } else {
+            break;
+        default:
             if (isset($_POST['referrer'])) {
                 $referrer = $_POST['referrer'];
             } elseif (isset($_SERVER['HTTP_REFERER'])) {
@@ -778,6 +783,7 @@ class Form
             } else {
                 $referrer = '';
             }
+            break;
         }
         if ($this->inblock == 1) {
             $retval .= COM_startBlock($this->name, '',
@@ -835,6 +841,7 @@ class Form
             'iconset'       => $_CONF_FRM['_iconset'],
             'additional'    => $additional,
             'ajax'          => $this->sub_type == 'ajax' ? true : false,
+            'not_inline'    => $not_inline,
         ), '', false, true );
 
         $T->set_block('form', 'QueueRow', 'qrow');

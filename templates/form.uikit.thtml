@@ -1,8 +1,10 @@
 {# begin {templatelocation} #}
+{!if not_inline}
 {!if additional}
 <div class="uk-alert uk-alert-danger">{additional}</div>
 {!endif}
 <form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
+{!endif}
 {introtext}
 {!if error_msg}
   <div class="uk-alert uk-alert-danger">{error_msg}</div>
@@ -53,7 +55,7 @@
   {hidden_vars}
   {spamx}
 {!if ajax}
-{!else}
+{!elseif not_inline}
   <div class="uk-form-row">
     <label class="uk-form-label" for="buttons">&nbsp;</label>
     <div class="frmfield">
@@ -67,5 +69,7 @@
     </div>
   </div>
 {!endif}
+{!if not_inline}
 </form>
+{!endif}
 {# end {templatelocation} #}
