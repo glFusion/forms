@@ -264,16 +264,27 @@ function {$this->name}_onUpdate(cal)
         global $LANG_FORMS;
 
         $msg = '';
-        if (!$this->enabled) return $msg;   // not enabled
-        if (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED)
-            return $msg;        // not required
+        $valid = true;
 
-        if (empty($vals[$this->name . '_month']) ||
+        // If not enabled or not required, consider any value as OK
+        if (!$this->enabled ||
+            (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED) ) {
+            return $msg;
+        }
+
+        if (isset($vals[$this->name]) && !empty($vals[$this->name])) {
+            $parts = explode('-', $vals[$this->name]);
+            $y = $parts[0];
+            $m = isset($parts[1]) ? $parts[1] : 0;
+            $d = isset($parts[2]) ? $parts[2] : 0;
+            $valid = checkdate($d, $m, $y);
+        } elseif (empty($vals[$this->name . '_month']) ||
                 empty($vals[$this->name . '_day']) ||
                 empty($vals[$this->name . '_year'])) {
-                $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
-       }
-       return $msg;
+                $valid = false;
+        }
+        if (!valid) $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
+        return $msg;
     }
 
 
