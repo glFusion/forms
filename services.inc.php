@@ -36,8 +36,13 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
         $F->setInstance(array($args['pi_name'], $args['instance_id']));
     }
     if (isset($args['pi_name'])) $F->pi_name = $args['pi_name'];
+    if (isset($args['nobuttons'])) {
+        $mode = 'inline';
+    } else {
+        $mode = 'edit';
+    }
     $output = array(
-        'content'   =>   $F->Render('edit', $res_id),
+        'content'   =>   $F->Render($mode, $res_id),
         'title'     =>  $F->name,
     );
     return PLG_RET_OK;
@@ -211,5 +216,56 @@ function service_getMyForms_forms($args, &$output, &$svc_msg)
     }
     return PLG_RET_OK;
 }
+
+
+/**
+ * Save a form submission.
+ * This allows a plugin to render the form and have its data saved.
+ *
+ * @param   array   $args       Must include `basename` element
+ * @param   array   $output     Receives form IDs
+ * @param   mixed   $svc_msg    Not used
+ * @return  integer     PLG_RET_OK, or Error if basename is not set
+ */
+function service_saveData_forms($args, &$output, &$svc_msg)
+{
+    if (!isset($args['data']) || !isset($args['data']['frm_id'])) {
+        return PLG_RET_PRECONDITION_FAILED;
+    }
+    $F = new \Forms\Form($args['data']['frm_id']);
+    $output = $F->SaveData($args['data']);
+    if ($output === '') {
+        return PLG_RET_OK;
+    } else {
+        return PLG_RET_ERROR;
+    }
+}
+
+
+/**
+ * Verify that a user's submission is valid.
+ * Checks each field using the field's validData function and sets $output
+ * to an array of field names with invalid values.
+ *
+ * @param   array       $args       Must include `uid` element
+ * @param   mixed       $output     Output array - gets error field names
+ * @param   mixed       $svc_msg    Service messages (not used)
+ * @return  integer     Result code
+ */
+function service_validate_forms($args, &$output, &$svc_msg)
+{
+    $uid = $args['uid'];
+    $frm_id = $args['frm_id'];
+    $output = array();
+    $Fld = \Forms\Form::getInstance($frm_id);
+    foreach ($Frm->fields as $Fld) {
+        $msg = $F->Validate($vals);
+        if (!empty($msg)) {
+            $output[] = $msg;
+        }
+    }
+    return empty($output) ? PLG_RET_OK : PLG_RET_ERROR;
+}
+
 
 ?>
