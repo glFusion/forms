@@ -179,10 +179,13 @@ class Result
      * Retrieve all the values for this set into the supplied field objects.
      *
      * @param   array   $fields     Array of Field objects
+     * @return  array       Array of field name=>value pairs
      */
     public function GetValues($fields)
     {
         global $_TABLES;
+
+        $retval = array();
         $sql = "SELECT * from {$_TABLES['forms_values']}
                 WHERE results_id = '{$this->id}'";
         $res = DB_query($sql);
@@ -195,8 +198,10 @@ class Result
         foreach ($fields as $field) {
             if (isset($vals[$field->fld_id])) {
                 $field->value = $vals[$field->fld_id]['value'];
+                $retval[$field->name] = $field->value;
             }
         }
+        return $retval;
     }
 
 
@@ -242,7 +247,7 @@ class Result
      * @param   integer $uid    Optional user ID, if not the current user
      * @return  integer         New result set ID
      */
-    function Create($frm_id, $uid = 0)
+    public function Create($frm_id, $uid = 0)
     {
         global $_TABLES, $_USER;
 

@@ -256,10 +256,17 @@ function service_validate_forms($args, &$output, &$svc_msg)
 {
     $uid = $args['uid'];
     $frm_id = $args['frm_id'];
+    $res_id = $args['res_id'];
     $output = array();
-    $Fld = \Forms\Form::getInstance($frm_id);
+    $Res = new \Forms\Result($res_id);
+    if ($Res->isNew) {
+        $output[] = 'No result fount';
+        return PLG_PRECONDITION_FAILED;
+    }
+    $Frm = \Forms\Form::getInstance($Res->frm_id);
+    $vals = $Res->getValues($Frm->fields);
     foreach ($Frm->fields as $Fld) {
-        $msg = $F->Validate($vals);
+        $msg = $Fld->Validate($vals);
         if (!empty($msg)) {
             $output[] = $msg;
         }
