@@ -125,6 +125,46 @@ function service_printForm_forms($args, &$output, &$svc_msg)
     $output = $content;
 }
 
+function service_getValues_forms($args, &$output, &$svc_msg)
+{
+    global $_USER, $_TABLES, $LANG_FORMS, $LANG01, $_CONF;
+
+    if (!isset($args['frm_id']) || empty($args['frm_id'])) return PLG_RET_ERROR;
+    $viewtypes = array('display', 'raw');
+    if (!isset($args['viewtype']) || !in_array($viewtypes, $args['viewtype'])) {
+        $viewtype = 'display';
+    } else {
+        $viewtype = $args['viewtype'];
+    }
+    if (isset($args['res_id'])) {
+        $res_id = (int)$args['res_id'];
+    } elseif (isset($args['uid'])) {
+        // If no result ID given, then use the user ID.  Just have to grab
+        // the last form updated by the user.
+        $res_id = \Forms\Result::FindResult($args['frm_id'], $args['uid']);
+        /*$res_id = (int)DB_getItem($_TABLES['forms_results'], 'id',
+                "uid = '" . (int)$args['uid'] .
+                "' AND frm_id = '" . DB_escapeString($args['frm_id']) .
+                "' ORDER BY dt DESC LIMIT 1");*/
+    }
+    if ($res_id < 1) return PLG_RET_ERROR;
+
+    $output = array();
+    $F = new \Forms\Form($args['frm_id']);
+    $F->ReadData($res_id);
+    if ($F->Result->uid == $_USER['uid'] || plugin_isadmin_forms()) {
+        foreach ($F->fields as $Fld) {
+            if ($Fld->type == 'statictext') $Fld->prompt = '';
+            $output[$Fld->name] = array(
+                'prompt' => $Fld->prompt,
+                'value' => $Fld->value,
+                'displayvalue' => $Fld->DisplayValue($F->fields),
+            );
+        }
+    }
+    return PLG_RET_OK;
+}
+
 
 /**
  * Get the result ID for a given form submission.
