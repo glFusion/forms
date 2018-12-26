@@ -3,3 +3,5 @@ config.php
 collect.sh
 distrib.sh
 .gitignore
+deprecate
+test
