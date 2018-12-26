@@ -294,10 +294,10 @@ function FRM_remove_old_files()
     global $_CONF;
 
     $paths = array(
-        // private/plugins/paypal
+        // private/plugins/forms
         __DIR__ => array(
-            // Deprecate 0.4.0, Remove 0.4.1
-            /*'classes/Field_autotag.class.php',
+            // Deprecated 0.4.0.
+            'classes/Field_autotag.class.php',
             'classes/Field_calc.class.php',
             'classes/Field_checkbox.class.php',
             'classes/Field_date.class.php',
@@ -310,12 +310,12 @@ function FRM_remove_old_files()
             'classes/Field_static.class.php',
             'classes/Field_textarea.class.php',
             'classes/Field_text.class.php',
-            'classes/Field_time.class.php',*/
+            'classes/Field_time.class.php',
         ),
-        // public_html/paypal
+        // public_html/forms
         $_CONF['path_html'] . 'forms' => array(
         ),
-        // admin/plugins/paypal
+        // admin/plugins/forms
         $_CONF['path_html'] . 'admin/plugins/forms' => array(
         ),
     );
