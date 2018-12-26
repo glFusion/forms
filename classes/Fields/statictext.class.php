@@ -65,22 +65,6 @@ class statictext extends \Forms\Field
 
 
     /**
-     * Get the field options when submitted from a form.
-     *
-     * @param   array   $A  Array of all form fields
-     * @return  array       Array of options for this field
-     */
-    protected function optsFromForm($A)
-    {
-        // Call parent to get the default options
-        $options = parent::optsFromForm($A);
-        // Override the default, this uses the valuetext field
-        $options['default'] = trim($A['valuetext']);
-        return $options;
-    }
-
-
-    /**
      * Return the XML element for privacy export.
      * Static fields do not need to be exported.
      *
