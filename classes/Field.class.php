@@ -57,7 +57,7 @@ class Field
             $this->results_gid = $_CONF_FRM['results_gid'];
         } elseif (is_array($id)) {
             // Already have the object data, just set up the variables
-            $this->SetVars($id, true);
+            $this->setVars($id, true);
             $this->isNew = false;
         } else {
             // Read an item from the database
@@ -106,10 +106,10 @@ class Field
     /**
      * Read this field definition from the database and load the object.
      *
-     * @see     Field::SetVars
+     * @see     Field::setVars
      * @uses    Field::_readFromDB()
      * @param   integer $id Field ID
-     * @return  boolean     Status from SetVars()
+     * @return  boolean     Status from setVars()
      */
     public function Read($id = 0)
     {
@@ -208,7 +208,7 @@ class Field
      * @param   array   $A      Array of fields for this item
      * @param   boolean $fromdb Indicate whether this is read from the DB
      */
-    public function SetVars($A, $fromdb=false)
+    public function setVars($A, $fromdb=false)
     {
         if (!is_array($A))
             return false;
@@ -227,8 +227,8 @@ class Field
         $this->fill_gid = $A['fill_gid'];
 
         if (!$fromdb) {
-            $this->options = $this->optsFromForm($_POST);
-            $this->value = $this->valueFromForm($_POST);
+            $this->options = $this->optsFromForm($A);
+            $this->value = $this->valueFromForm($A);
         } else {
             $this->options = @unserialize($A['options']);
             if (!$this->options) $this->options = array();
@@ -479,7 +479,7 @@ class Field
         if (empty($A['name']) || empty($A['type']))
             return;
 
-        $this->SetVars($A, false);
+        $this->setVars($A, false);
         $this->fill_gid = $A['fill_gid'];
         $this->results_gid = $A['results_gid'];
 
