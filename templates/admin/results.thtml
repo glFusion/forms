@@ -22,8 +22,8 @@
     <tr>
       <td class="" style="white-space:nowrap">
         <input type="checkbox" name="delresmulti[]" value="{res_id}" />
-        <a href="{site_admin_url}/plugins/forms/index.php?action=print&frm_id={frm_id}&res_id={res_id}" target="_blank"><i class="{iconset}-print frm-icon-info tooltip"></i></a>
-        <a href="{site_admin_url}/plugins/forms/index.php?action=editresult&res_id={res_id}"><i class="{iconset}-edit frm-icon-info tooltip"></a>
+        <a href="{site_admin_url}/plugins/forms/index.php?action=print&frm_id={frm_id}&res_id={res_id}" target="_blank"><i class="uk-icon uk-icon-print frm-icon-info tooltip"></i></a>
+        <a href="{site_admin_url}/plugins/forms/index.php?action=editresult&res_id={res_id}"><i class="uk-icon uk-icon-edit frm-icon-info tooltip"></a>
       </td>
       <td>{res_user}</td>
       <td>{res_date}</td>

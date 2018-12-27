@@ -259,7 +259,8 @@ class Field
                 $this->fill_gid = $form->fill_gid;
             }
         }
-        $T = FRM_getTemplate('editfield', 'editform', '/admin');
+        $T = new \Template(FRM_PI_PATH . '/templates/admin');
+        $T->set_file('editform', 'editfield.thtml');
 
         // Create the "Field Type" dropdown
         $type_options = '';

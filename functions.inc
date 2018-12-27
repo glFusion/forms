@@ -865,48 +865,4 @@ function FRM_12to24($hour, $ampm='')
     return $hour;
 }
 
-
-/**
- * Helper function to get a template object.
- *
- * @param   string  $name   Base name of template file, e.g. "editor"
- * @param   string  $id     ID of template, e.g. "editform"
- * @param   string  $path   Optional path if not "templates/"
- * @return  string      Full filename, e.g. "editor.uikit.thtml"
- */
-function FRM_getTemplate($name, $id='', $path='')
-{
-    global $_SYSTEM;
-
-    // Put parameters into an array if not already.
-    if (!is_array($name) && !empty($id)) {
-        $templates = array($id => $name);
-    } elseif (is_array($name)) {
-        $templates = $name;
-    }
-
-    // Add additional path info if needed
-    if (substr($path, 0, 9) != 'templates') {
-        $path = 'templates/' . $path;
-    }
-
-    // May use "switch" later, for now there are only two options
-    $tpltype = $_SYSTEM['framework'] == 'uikit' ? '.uikit' : '';
-    foreach ($templates as $t_id =>$t_name) {
-        if (file_exists(__DIR__ . "/$path/$t_name$tpltype.thtml")) {
-            $templates[$t_id] = "$t_name$tpltype.thtml";
-        } else {
-            $templates[$t_id] = "$t_name.thtml";
-        }
-    }
-    $T = new Template(__DIR__ . '/' . $path);
-    $T->set_file($templates);
-    return $T;
-}
-
-// Temporary until glFusion 1.6.0
-isset($_SYSTEM['framework']) || $_SYSTEM['framework'] = 'legacy';
-$_CONF_FRM['_is_uikit'] = $_SYSTEM['framework'] == 'uikit' ? true : false;
-$_CONF_FRM['_iconset'] = $_CONF_FRM['_is_uikit'] ? 'uk-icon' : 'fa fa';
-
 ?>

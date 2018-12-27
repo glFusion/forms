@@ -1,50 +1,50 @@
 {# begin {templatelocation} #}
-<div class="forms">
+{!if not_inline}
 {!if additional}
-<span class="alert">
-{additional}
-</span>
+<div class="uk-alert uk-alert-danger">{additional}</div>
 {!endif}
-<form id="forms_form{frm_id}" action="{frm_action}" method="post">
+<form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
+{!endif}
 {introtext}
 {!if error_msg}
-<span class="alert">{error_msg}</span>
+  <div class="uk-alert uk-alert-danger">{error_msg}</div>
 {!endif}
-<input type="hidden" name="frm_id" value="{frm_id}" />
-<input type="hidden" name="res_id" value="{res_id}" />
-<input type="hidden" name="instance_id" value="{instance_id}" />
+  <input type="hidden" name="frm_id" value="{frm_id}" />
+  <input type="hidden" name="res_id" value="{res_id}" />
+  <input type="hidden" name="instance_id" value="{instance_id}" />
 {!if success_msg}
-<input type="hidden" name="success_msg" value="{success_msg}" />
+  <input type="hidden" name="success_msg" value="{success_msg}" />
+{!endif}
+  <!-- BEGIN QueueRow -->
+  <div class="uk-form-row">
+{!if spancols}
+{!else}
+{!if prompt}
+    <label class="uk-form-label" for="{fieldname}">{prompt}:</label>
+{!else}
+    &nbsp;
+{!endif}
 {!endif}
 
-  <!-- BEGIN QueueRow -->
-  <div class="frmrow">
-    {!if spancols}
-    {!else}
-      {!if prompt}
-        <label for="{fieldname}">{prompt}:</label>
-      {!else}
-        &nbsp;
-      {!endif}
-    {!endif}
-
-    {!if spancols}
-      <div class="frmfield left">
-    {!else}
-      <div class="frmfield">
-    {!endif}
-    {!if field}
+{!if spancols}
+{!else}
+    <div class="uk-form-controls">
+{!endif}
+{!if field}
       {field}
-      {!if help_msg}
-        <i class="{iconset}-question-circle tooltip" title="{help_msg}"></i>
-      {!endif}
-      {!if is_required}
-        <i class="{iconset}-exclamation-triangle form_danger tooltip" title="{safe_prompt} {$LANG_FORMS['is_required']}"></i>
-      {!endif}
-    {!else}
+{!if help_msg}
+      <i class="uk-icon uk-icon-question-circle tooltip" title="{help_msg}"></i>
+{!endif}
+{!if is_required}
+      <i class="uk-icon uk-icon-exclamation-triangle form_danger tooltip" title="{safe_prompt} {$LANG_FORMS['is_required']}"></i>
+{!endif}
+{!else}
       &nbsp;
-    {!endif}
+{!endif}
+{!if spancols}
+{!else}
     </div>
+{!endif}
   </div>
   <!-- END QueueRow -->
 
@@ -54,19 +54,22 @@
   {!endif}
   {hidden_vars}
   {spamx}
-  <label for="buttons">&nbsp;</label>
-  <div class="frmfield">
-    <input type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled} />
-    <input type="reset" name="btnReset" value="{$LANG_FORMS['reset']}" />
-    {!if referrer}
+{!if ajax}
+{!elseif not_inline}
+  <div class="uk-form-row">
+    <label class="uk-form-label" for="buttons">&nbsp;</label>
+    <div class="frmfield">
+      <button class="uk-button uk-button-success" type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled}>{$LANG_ADMIN['submit']}</button>
+      <button class="uk-button" type="reset" name="btnReset" value="{$LANG_FORMS['reset']}">{$LANG_FORMS['reset']}</button>
+{!if referrer}
       <input type="hidden" name="referrer" value="{referrer}" />
-      <input type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}"
-        onclick="javascript:document.location.href='{referrer}';" />
-    {!endif}
+      <button class="uk-button uk-button-primary" type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}"
+        onclick="javascript:document.location.href='{referrer}';"/>{$LANG_ADMIN['cancel']}</button>
+{!endif}
+    </div>
   </div>
+{!endif}
+{!if not_inline}
 </form>
-</div>
-<script type="text/javascript">
-$("#forms_form{frm_id}").validate();
-</script>
+{!endif}
 {# end {templatelocation} #}

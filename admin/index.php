@@ -490,7 +490,6 @@ function listFields($frm_id = '')
     $T->set_file('formfields', 'formfields.thtml');
     $T->set_var(array(
         'action_url'    => FRM_ADMIN_URL . '/index.php',
-        'is_uikit'      => $_CONF_FRM['_is_uikit'],
         'frm_id'        => $frm_id,
         'pi_url'        => FRM_PI_URL,
         'field_adminlist' => ADMIN_list('forms',
@@ -521,24 +520,24 @@ function getField_form($fieldname, $fieldvalue, $A, $icon_arr)
     switch($fieldname) {
     case 'edit':
         $url = FRM_ADMIN_URL . "/index.php?editform=x&amp;frm_id={$A['id']}";
-        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-edit frm-icon-info"></i>',
-                $url
+        $retval = COM_createLink(
+            '<i class="uk-icon uk-icon-edit frm-icon-info"></i>',
+            $url
         );
         break;
 
     case 'copy':
         $url = FRM_ADMIN_URL . "/index.php?copyform=x&amp;frm_id={$A['id']}";
-        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-copy frm-icon-info"></i>',
-                $url
+        $retval = COM_createLink(
+            '<i class="uk-icon uk-icon-copy frm-icon-info"></i>',
+            $url
         );
         break;
 
     case 'view_html':
         $url = FRM_ADMIN_URL . "/index.php?showhtml=x&amp;frm_id={$A['id']}";
         $retval = COM_createLink(
-            '<i class="' . $_CONF_FRM['_iconset'] . '-code frm-icon-info"></i>',
+            '<i class="uk-icon uk-icon-code frm-icon-info"></i>',
             '#',
             array(
                 'onclick' => "popupWindow('$url', '', 640, 480, 1); return false;",
@@ -548,11 +547,10 @@ function getField_form($fieldname, $fieldvalue, $A, $icon_arr)
 
     case 'delete':
         $url = FRM_ADMIN_URL . "/index.php?deleteFrmDef=x&frm_id={$A['id']}";
-        $retval = COM_createLink('<i class="'. $_CONF_FRM['_iconset'] .
-                '-trash-o frm-icon-danger" ' .
-                'onclick="return confirm(\'' .$LANG_FORMS['confirm_delete'] .
-                    '?\');"',
-                $url
+        $retval = COM_createLink(
+            '<i class="uk-icon uk-icon-trash-o frm-icon-danger" ' .
+            'onclick="return confirm(\'' .$LANG_FORMS['confirm_delete'] . '?\');"',
+            $url
         );
         break;
 
@@ -630,15 +628,15 @@ function getField_field($fieldname, $fieldvalue, $A, $icon_arr)
 
     switch($fieldname) {
     case 'edit':
-        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-edit frm-icon-info"></i>',
+        $retval = COM_createLink(
+            '<i class="uk-icon uk-icon-edit frm-icon-info"></i>',
             FRM_ADMIN_URL . "/index.php?editfield=x&amp;fld_id={$A['fld_id']}"
         );
         break;
 
     case 'delete':
         $retval = COM_createLink(
-            '<i class="' . $_CONF_FRM['_iconset'] . '-trash-o frm-icon-danger"></i>',
+            '<i class="uk-icon uk-icon-trash-o frm-icon-danger"></i>',
             FRM_ADMIN_URL . '/index.php?deleteFldDef=x&fld_id=' .
                     $A['fld_id'] . '&frm_id=' . $A['frm_id'],
             array(
@@ -685,12 +683,14 @@ function getField_field($fieldname, $fieldvalue, $A, $icon_arr)
         break;
 
     case 'move':
-        $retval = COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-arrow-up frm-icon-info"></i>',
-            FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}") . '&nbsp;';
-        $retval .= COM_createLink('<i class="' . $_CONF_FRM['_iconset'] .
-                '-arrow-down frm-icon-info"></i>',
-            FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}");
+        $retval = COM_createLink(
+            '<i class="uk-icon uk-icon-arrow-up frm-icon-info"></i>',
+            FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}"
+        ) . '&nbsp;';
+        $retval .= COM_createLink(
+            '<i class="uk-icon uk-icon-arrow-down frm-icon-info"></i>',
+            FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}"
+        );
         break;
 
     default:
@@ -793,18 +793,16 @@ function getField_results($fieldname, $fieldvalue, $A, $icon_arr)
         $url = FRM_ADMIN_URL . '/index.php?print=x&frm_id=' . $A['frm_id'] .
                 '&res_id=' . $A['id'];
         $retval = COM_createLink(
-            '<i class="' . $_CONF_FRM['_iconset'] .
-                '-print frm-icon-info tooltip" title="' . $LANG_FORMS['print'] .
-                '"></i>',
+            '<i class="uk-icon uk-icon-print frm-icon-info tooltip" title="' . $LANG_FORMS['print'] . '"></i>',
             '#',
             array(
                 'onclick' => "popupWindow('$url', '', 640, 480, 1); return false;",
             )
         );
-        $retval .= '&nbsp;<a href="' . FRM_ADMIN_URL .
-            '/index.php?editresult=x&res_id=' . $A['id'] . '"><i class="' .
-            $_CONF_FRM['_iconset'] . '-edit frm-icon-info tooltip"' .
-            'title="' . $LANG_ADMIN['edit'] . '"></i></a>';
+        $retval .= '&nbsp;' . COM_createLink(
+            '<i class="uk-icon uk-icon-edit frm-icon-info tooltip title="' . $LANG_ADMIN['edit'] . '"></i>',
+            FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' . $A['id']
+        );
         break;
 
     case 'instance_id':

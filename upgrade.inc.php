@@ -311,6 +311,9 @@ function FRM_remove_old_files()
             'classes/Field_textarea.class.php',
             'classes/Field_text.class.php',
             'classes/Field_time.class.php',
+            'templates/admin/editfield.uikit.thtml',
+            'templates/admin/editform.uikit.thtml',
+            'templates/form.uikit.thtml',
         ),
         // public_html/forms
         $_CONF['path_html'] . 'forms' => array(

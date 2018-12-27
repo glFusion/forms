@@ -144,7 +144,7 @@ class date extends \Forms\Field
             $timeformat = 0;
         }
         $fld .= '<i id="' . $this->name .
-                    '_trigger" class="' . $_CONF_FRM['_iconset'] . '-calendar tooltip" ' .
+                    '_trigger" class="uk-icon uk-icon-calendar tooltip" ' .
                     'title="' . $LANG_FORMS['datepicker'] . '"></i>';
         $fld .= LB . "<script type=\"text/javascript\">
 Calendar.setup({

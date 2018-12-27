@@ -368,7 +368,8 @@ class Form
             $referrer = '';
         }
 
-        $T = FRM_getTemplate('editform', 'editform', 'admin');
+        $T = new \Template(FRM_PI_PATH . '/templates/admin');
+        $T->set_file('editform', 'editform.thtml');
         $T->set_var(array(
             'id'    => $this->id,
             'old_id' => $this->old_id,
@@ -406,7 +407,6 @@ class Form
             'captcha_chk' => $this->captcha == 1 ? 'checked="checked"' : '',
             'inblock_chk' => $this->inblock == 1 ? 'checked="checked"' : '',
             'one_chk_' . $this->onetime => 'selected="selected"',
-            'iconset'   => $_CONF_FRM['_iconset'],
             'chk_' . $this->sub_type => 'checked="checked"',
             'sub_type' => $this->sub_type,
         ) );
@@ -582,7 +582,6 @@ class Form
 
             $T = new \Template(FRM_PI_PATH . '/templates/admin');
             $T->set_file('mailresults', 'mailresults.thtml');
-
             $T->set_var(array(
                     'site_name' => $_CONF['site_name'],
                     'sub_date'   => $dt->format($_CONF['date'], true),
@@ -822,7 +821,8 @@ class Form
             $additional = '';
         }
 
-        $T = FRM_getTemplate('form', 'form');
+        $T = new \Template(FRM_PI_PATH . '/templates');
+        $T->set_file('form', 'form.thtml');
         // Set template variables without allowing caching
         $T->set_var(array(
             'frm_action'    => $actionurl,
@@ -838,7 +838,6 @@ class Form
             'pi_url'        => FRM_PI_URL,
             'submit_disabled' => $allow_submit ? '' : 'disabled="disabled"',
             'instance_id'   => $this->instance_id,
-            'iconset'       => $_CONF_FRM['_iconset'],
             'additional'    => $additional,
             'ajax'          => $this->sub_type == 'ajax' ? true : false,
             'not_inline'    => $not_inline,
