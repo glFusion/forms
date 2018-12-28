@@ -35,13 +35,13 @@ function FRM_changeType(value)
   case 'multicheck':
     document.getElementById('defvalue').style.display = 'none';
     document.getElementById('selvalues').style.display = '';
-    document.getElementById('hlp_defvalue').innerHTML = 
+    document.getElementById('hlp_defvalue').innerHTML =
         '{$LANG_FORMS['hlp_fld_def_option_name']}';
     break;
   case 'select':
     document.getElementById('defvalue').style.display = 'none';
     document.getElementById('selvalues').style.display = '';
-    document.getElementById('hlp_defvalue').innerHTML = 
+    document.getElementById('hlp_defvalue').innerHTML =
         '{$LANG_FORMS['hlp_fld_enter_def_option']}';
     break;
   case 'checkbox':
@@ -49,7 +49,7 @@ function FRM_changeType(value)
     document.getElementById('defvalue').style.display = 'none';
     document.getElementById('defvalue_chk').style.display = '';
     //document.getElementById('required').style.display = 'none';
-    //document.getElementById('hlp_defvalue').innerHTML = 
+    //document.getElementById('hlp_defvalue').innerHTML =
     //    '{$LANG_FORMS['hlp_fld_chkbox_default']}';
     break;
   case 'date':
@@ -58,12 +58,12 @@ function FRM_changeType(value)
     document.getElementById('date_showtime').style.display = '';
     document.getElementById('date_24h').style.display = '';
     document.getElementById('date_addcent').style.display = '';
-    document.getElementById('hlp_defvalue').innerHTML = 
+    document.getElementById('hlp_defvalue').innerHTML =
         '{$LANG_FORMS['hlp_fld_default_date']}';
     break;
   case 'time':
     document.getElementById('date_24h').style.display = '';
-    document.getElementById('hlp_defvalue').innerHTML = 
+    document.getElementById('hlp_defvalue').innerHTML =
         '{$LANG_FORMS['hlp_fld_default_time']}';
     break;
   case 'textarea':
@@ -94,20 +94,20 @@ function FRM_changeType(value)
   default:
     document.getElementById('text_size').style.display = '';
     document.getElementById('text_maxlen').style.display = '';
-    document.getElementById('hlp_defvalue').innerHTML = 
+    document.getElementById('hlp_defvalue').innerHTML =
         '{$LANG_FORMS['hlp_fld_enter_default']}';
     document.getElementById('mask').style.display = '';
     document.getElementById('stripmask').style.display = '';
     document.getElementById('autogen').style.display = '';
     break;
   }
-  
+
 }
 
 function insertRow(list) {
     var count = list.getElementsByTagName('li').length;
     var new_element = document.createElement('li');
-    new_element.innerHTML = 
+    new_element.innerHTML =
             '<input id=\"vName'+count+'\" name=\"selvalues[]\" />' +
         '<input type="radio" name="sel_default" value="' + count + '" />';
     list.insertBefore(new_element, list.lastChild);
@@ -147,7 +147,7 @@ function insertRow(list) {
       <label for="type" class="uk-form-label">{$LANG_FORMS['fieldtype']}</label>
       <div class="uk-form-controls">
         <span id="hlp_type" class="tooltip_cfg tooltipstered"></span>
-        <select id="type" name="type" 
+        <select id="type" name="type"
           onchange="FRM_changeType(this.options[this.selectedIndex].value)">
           {type_options}
         </select>
@@ -223,7 +223,7 @@ function insertRow(list) {
         </ul>
       </div>
     </div>
-  
+
     <div class="uk-form-row" id="defvalue">
       <label for="f_defvalue" class="uk-form-label">{$LANG_FORMS['defvalue']}</label>
       <div class="uk-form-controls">
