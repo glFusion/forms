@@ -424,10 +424,10 @@ class Field
             'valuestr'  => $value_str,
             'defvalue'  => isset($this->options['default']) ? $this->options['default'] : '',
             'prompt'    => $this->prompt,
-            'size'      => isset($this->options['size']) ? $this->options['size'] : 0,
-            'cols'      => isset($this->options['cols']) ? $this->options['cols'] : 0,
-            'rows'      => isset($this->options['rows']) ? $this->options['rows'] : 0,
-            'maxlength' => isset($this->options['maxlength']) ? $this->options['maxlength'] : 0,
+            'size'      => isset($this->options['size']) ? $this->options['size'] : 40,
+            'cols'      => isset($this->options['cols']) ? $this->options['cols'] : 80,
+            'rows'      => isset($this->options['rows']) ? $this->options['rows'] : 3,
+            'maxlength' => isset($this->options['maxlength']) ? $this->options['maxlength'] : 255,
             'ena_chk'   => $this->enabled == 1 ? 'checked="checked"' : '',
             'span_chk'  => isset($this->options['spancols']) && $this->options['spancols'] == 1 ? 'checked="checked"' : '',
             'format'    => $format_str,
@@ -878,8 +878,7 @@ class Field
 
     /**
      * Create the time field.
-     * This is in a separate function so it can be used by both date
-     * and time fields.
+     * This is in this class so it can be used by both date and time fields.
      *
      * @uses    hour24to12()
      * @param   string  $timestr    Optional HH:MM string.  Seconds ignored.

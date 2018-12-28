@@ -219,41 +219,6 @@ function {$this->name}_onUpdate(cal)
 
 
     /**
-     * Get the defined date formats into an array.
-     * Static for now, maybe allow more user-defined options in the future.
-     *
-     * @return  array   Array of date formats
-     */
-    public function DateFormats()
-    {
-        global $LANG_FORMS;
-        $_formats = array(
-            1 => $LANG_FORMS['month'].' '.$LANG_FORMS['day'].' '.$LANG_FORMS['year'],
-            2 => $LANG_FORMS['day'].' '.$LANG_FORMS['month'].' '.$LANG_FORMS['year'],
-        );
-        return $_formats;
-    }
-
-
-    /**
-     * Provide a dropdown selection of date formats.
-     *
-     * @param   integer $cur    Option to be selected by default
-     * @return  string          HTML for selection, without select tags
-     */
-    public function DateFormatSelect($cur=0)
-    {
-        $retval = '';
-        $_formats = self::DateFormats();
-        foreach ($_formats as $key => $string) {
-            $sel = $cur == $key ? 'selected="selected"' : '';
-            $retval .= "<option value=\"$key\" $sel>$string</option>\n";
-        }
-        return $retval;
-    }
-
-
-    /**
      * Validate the submitted field value(s)
      *
      * @param   array   $vals  All form values
