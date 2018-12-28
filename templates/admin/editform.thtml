@@ -102,7 +102,7 @@ function isAjax(status)
       </label>
       <div class="uk-form-controls">
         <span id="hlp_submit_msg" class="tooltip_cfg tooltipstered"></span>
-        <textarea id="f_submit_msg" rows="2" name="submit_msg" cols="40" 
+        <textarea id="f_submit_msg" rows="2" name="submit_msg" cols="40"
           class="pluginForms">{submit_msg}</textarea>
       </div>
     </div>
@@ -112,7 +112,7 @@ function isAjax(status)
       </label>
       <div class="uk-form-controls">
         <span id="hlp_noaccess_msg" class="tooltip_cfg tooltipstered"></span>
-        <textarea id="f_noaccess_mag" rows="2" name="noaccess_msg" cols="40" 
+        <textarea id="f_noaccess_mag" rows="2" name="noaccess_msg" cols="40"
          class="pluginForms">{noaccess_msg}</textarea>
       </div>
     </div>
@@ -158,17 +158,17 @@ function isAjax(status)
         <input type="checkbox" value="2" name="onsubmit[emailowner]" {emailowner_chk} />&nbsp;{$LANG_FORMS['email_owner']}&nbsp;&nbsp;
         <input type="checkbox" value="4" name="onsubmit[emailgroup]" {emailgroup_chk} />&nbsp;{$LANG_FORMS['email_group']}&nbsp;&nbsp;
         <input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />&nbsp;{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
-        {$LANG_FORMS['other_emails']}: 
+        {$LANG_FORMS['other_emails']}:
         <input type="text" size="40" maxlength="255" name="email" value="{email}" />
       </div>
     </div>
 
     <div class="uk-form-row" id="div_moderate">
-      <label for="f_moderate" class="uk-form-label">{$LANG_FORMS['moderate']}?
+      <label class="uk-form-label">{$LANG_FORMS['moderate']}?
       </label>
       <div class="uk-form-controls">
         <span id="hlp_moderate" class="tooltip_cfg tooltipstered"></span>
-        <input id="f_moderate" type="checkbox" value="1" name="moderate" {mod_chk} />
+        <input id="f_moderate" type="checkbox" value="1" name="req_approval" {mod_chk} />
       </div>
     </div>
 
@@ -295,7 +295,7 @@ function isAjax(status)
     <div class="uk-form-controls">
       <button name="updateform" type="submit" class="uk-button uk-button-success">{$LANG_ADMIN['submit']}</button>
       <button name="btnReset" type="reset" class="uk-button uk-button-primary">{$LANG_FORMS['reset']}</button>
-      <button type="submit" name="cancel" class="uk-button" 
+      <button type="submit" name="listforms" class="uk-button"
         onclick="javascript:document.location.href='{referrer}';">{$LANG_ADMIN['cancel']}</button>
       {!if candelete}
       <div style="float:right;">

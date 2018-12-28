@@ -21,7 +21,7 @@ $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
   `email` varchar(80) DEFAULT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
   `sub_type` varchar(10) NOT NULL DEFAULT 'regular',
-  `moderate` tinyint(1) NOT NULL DEFAULT '0',
+  `req_approval` tinyint(1) NOT NULL DEFAULT '0',
   `owner_id` mediumint(8) unsigned NOT NULL DEFAULT '2',
   `group_id` mediumint(8) unsigned NOT NULL DEFAULT '1',
   `fill_gid` mediumint(8) unsigned NOT NULL DEFAULT '1',
@@ -80,7 +80,7 @@ global $FRM_sampledata;
 $FRM_sampledata = array();
 $FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} (
     id, name, onsubmit, email,
-    enabled, moderate, owner_id, group_id, fill_gid, results_gid,
+    enabled, req_approval, owner_id, group_id, fill_gid, results_gid,
     introtext, submit_msg, noaccess_msg, noedit_msg, max_submit_msg
   ) VALUES (
     'testform', 'Test Profile Form', 1, '{$_CONF['site_mail']}',
@@ -187,8 +187,9 @@ $_FRM_UPGRADE_SQL = array(
             CHANGE max_submit_msg max_submit_msg text DEFAULT ''",
     ),
     '0.4.0' => array(
-        "UPDATE {$_TABLES['forms_flddef']}
-            SET type='statictext' WHERE type='static'",
+        "UPDATE {$_TABLES['forms_flddef']} SET type='statictext' WHERE type='static'",
+        "ALTER TABLE {$_TABLES['forms_frmdef']}
+            CHANGE `moderate` `req_approval` tinyint(1) unsigned NOT NULL DEFAULT 0",
     ),
 );
 

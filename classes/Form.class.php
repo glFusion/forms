@@ -102,7 +102,7 @@ class Form
             $this->inblock = 0;
             $this->max_submit = 0;
             $this->onetime = 0;
-            $this->moderate = 0;
+            $this->req_approval = 0;
             $this->captcha = 0;
             //$this->properties[$name] = $value == 0 ? 0 : 1;
             $this->redirect = '';
@@ -158,7 +158,7 @@ class Form
             break;
 
         case 'enabled':
-        case 'moderate':
+        case 'req_approval':
         case 'captcha':
             $this->properties[$name] = $value == 0 ? 0 : 1;
             break;
@@ -328,13 +328,13 @@ class Form
             $this->captcha = $A['captcha'];
             $this->old_id = $A['id'];
             $this->inblock = $A['inblock'];
-            $this->moderate = $A['moderate'];
+            $this->req_approval = $A['req_approval'];
         } else {
             // This is coming from a form
             $this->enabled = isset($A['enabled']) ? 1 : 0;
             $this->captcha = isset($A['captcha']) ? 1 : 0;
             $this->inblock = isset($A['inblock']) ? 1 : 0;
-            $this->moderate = isset($A['moderate']) ? 1 : 0;
+            $this->req_approval = isset($A['req_approval']) ? 1 : 0;
 
             $onsubmit = 0;      // start fresh
             if (isset($A['onsubmit']) && is_array($A['onsubmit'])) {
@@ -382,7 +382,7 @@ class Form
             'max_submit_msg' => $this->max_submit_msg,
             'redirect' => $this->redirect,
             'ena_chk' => $this->enabled == 1 ? 'checked="checked"' : '',
-            'mod_chk' => $this->moderate == 1 ? 'checked="checked"' : '',
+            'mod_chk' => $this->req_approval == 1 ? 'checked="checked"' : '',
             'owner_dropdown' => FRM_UserDropdown($this->owner_id),
             'email' => $this->email,
             'admin_group_dropdown' =>
@@ -518,7 +518,7 @@ class Form
             // Save data to the database
             $this->Result = new Result($res_id);
             $this->Result->setInstance($this->instance_id);
-            $this->Result->setModerate($this->moderate);
+            $this->Result->setModerate($this->req_approval);
             $this->res_id = $this->Result->SaveData($this->id, $this->fields,
                     $vals, $this->uid);
         } else {
@@ -677,7 +677,7 @@ class Form
             noedit_msg = '" . DB_escapeString($this->noedit_msg) . "',
             max_submit_msg = '" . DB_escapeString($this->max_submit_msg) . "',
             enabled = '{$this->enabled}',
-            moderate = '{$this->moderate}',
+            req_approval = '{$this->req_approval}',
             onsubmit= '" . DB_escapeString($this->onsubmit) . "',
             owner_id = '{$this->owner_id}',
             group_id = '{$this->group_id}',
