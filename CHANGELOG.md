@@ -1,6 +1,6 @@
 # Changelog - Forms plugin for glFusion
 ## 0.4.0
-Release TBD
+Release 2018-12-28
 - Retire support for non-uikit themes
 - Handle inline form editing, validation and saving via service functions
 - Remove LGLib dependency, was only used for storeMessage()
