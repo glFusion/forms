@@ -125,6 +125,19 @@ function service_printForm_forms($args, &$output, &$svc_msg)
     $output = $content;
 }
 
+
+/**
+ * Get the values of a form submission.
+ * The output includes an array of:
+ * - the form's prompt
+ * - the raw value of the submission
+ * - the formatted value
+ *
+ * @param   array   $args       Array of form information
+ * @param   string  $output     Receives the form values
+ * @param   mixed   $svc_msg    Not used
+ * @return  integer     PLG_RET_OK or PLG_RET_ERROR
+ */
 function service_getValues_forms($args, &$output, &$svc_msg)
 {
     global $_USER, $_TABLES, $LANG_FORMS, $LANG01, $_CONF;

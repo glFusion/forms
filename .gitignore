@@ -5,3 +5,5 @@ distrib.sh
 .gitignore
 deprecate
 test
+test/
+deprecate/
