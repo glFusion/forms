@@ -3,7 +3,7 @@
 Release TBD
 - Retire support for non-uikit themes
 - Handle inline form editing, validation and saving via service functions
-- Remove LBLib dependency, was only used for storeMessage()
+- Remove LGLib dependency, was only used for storeMessage()
 - Better namespace for field classes
 - Require PHP 7
 - Implement glFusion caching
