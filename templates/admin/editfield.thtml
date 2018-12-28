@@ -391,7 +391,7 @@ function insertRow(list) {
 
   <button class="uk-button uk-button-success" name="updatefield" type="submit" value="{$LANG_ADMIN['submit']}"/>{$LANG_ADMIN['submit']}</button>
   <button class="uk-button uk-button-primary" name="reset" type="reset" value="{$LANG_FORMS['reset']}">{$LANG_FORMS['reset']}</button>
-  <button class="uk-button" name="cancel" type="submit" value="{$LANG_ADMIN['cancel']}">{$LANG_ADMIN['cancel']}</button>
+  <button class="uk-button" name="editform" type="submit" value="{$LANG_ADMIN['cancel']}">{$LANG_ADMIN['cancel']}</button>
 </form>
 
 <script type="text/javascript">
