@@ -206,8 +206,7 @@ case 'results':
     break;
 
 case 'export':
-    $Frm = new Form($frm_id);
-
+    $Frm = Form::getInstance($frm_id);
     // Get the form result sets
     $sql = "SELECT r.* FROM {$_TABLES['forms_results']} r
             LEFT JOIN {$_TABLES['forms_frmdef']} f
@@ -226,14 +225,14 @@ case 'export':
     $retval = join(',', $fields) . "\n";
     while ($A = DB_fetchArray($res, false)) {
         $R->Read($A['id']);
+        $R->GetValues($Frm->fields);
         $fields = array(
             COM_getDisplayName($R->uid),
             strftime('%Y-%m-%d %H:%M', $R->dt),
         );
         foreach ($Frm->fields as $F) {
             if (!$F->enabled) continue;     // ignore disabled fields
-            $F->GetValue($R->id);
-            $fields[] = '"' . str_replace('"', '""', $F->value_text) . '"';
+            $fields[] = '"' . str_replace('"', '""', $F->value) . '"';
         }
         $retval .= join(',', $fields) . "\n";
     }
