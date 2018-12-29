@@ -719,24 +719,29 @@ function listResults($frm_id, $instance_id='')
     if ($frm_id == '') return $retval;
 
     $header_arr = array(
-        array('text' => $LANG_FORMS['action'],
+        array(
+            'text' => $LANG_FORMS['action'],
             'field' => 'action',
             'sort' => false,
             'align' => 'center',
         ),
-        array('text' => $LANG_FORMS['instance'],
+        array(
+            'text' => $LANG_FORMS['instance'],
             'field' => 'instance_id',
             'sort' => true,
         ),
-        array('text' => $LANG_FORMS['submitter'],
+        array(
+            'text' => $LANG_FORMS['submitter'],
             'field' => 'uid',
             'sort' => true,
         ),
-        array('text' => $LANG_FORMS['submitted'],
+        array(
+            'text' => $LANG_FORMS['submitted'],
             'field' => 'submitted',
             'sort' => true,
         ),
-        array('text' => $LANG_FORMS['ip_addr'],
+        array(
+            'text' => $LANG_FORMS['ip_addr'],
             'field' => 'ip',
             'sort' => true,
         ),
@@ -766,9 +771,11 @@ function listResults($frm_id, $instance_id='')
         'chkname' => 'delresmulti',
         'chkfield' => 'id',
     );
-    $retval .= ADMIN_list('forms', __NAMESPACE__ . '\getField_results',
-                $header_arr, $text_arr, $query_arr, $defsort_arr, '', '',
-                $options_arr, $form_arr);
+    $retval .= ADMIN_list(
+        'forms', __NAMESPACE__ . '\getField_results',
+        $header_arr, $text_arr, $query_arr, $defsort_arr, '', '',
+        $options_arr, $form_arr
+    );
     return $retval;
 }
 
@@ -800,7 +807,7 @@ function getField_results($fieldname, $fieldvalue, $A, $icon_arr)
             )
         );
         $retval .= '&nbsp;' . COM_createLink(
-            '<i class="uk-icon uk-icon-edit frm-icon-info tooltip title="' . $LANG_ADMIN['edit'] . '"></i>',
+            '<i class="uk-icon uk-icon-edit frm-icon-info tooltip" title="' . $LANG_ADMIN['edit'] . '"></i>',
             FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' . $A['id']
         );
         break;
