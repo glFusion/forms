@@ -232,7 +232,7 @@ case 'export':
         );
         foreach ($Frm->fields as $F) {
             if (!$F->enabled) continue;     // ignore disabled fields
-            $fields[] = '"' . str_replace('"', '""', $F->value) . '"';
+            $fields[] = '"' . str_replace('"', '""', $F->displayValue($Frm->fields)) . '"';
         }
         $retval .= join(',', $fields) . "\n";
     }
