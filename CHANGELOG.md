@@ -1,4 +1,7 @@
 # Changelog - Forms plugin for glFusion
+## 0.4.2
+Release TBD
+
 ## 0.4.1
 Release 2008-12-29
 - Fix call to undefined function when exporting CSV
