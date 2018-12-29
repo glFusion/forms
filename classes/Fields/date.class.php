@@ -178,7 +178,7 @@ function {$this->name}_onUpdate(cal)
      * @param   array   $fields     Array of all fields (not used here)
      * @return  string  Date formatted for display
      */
-    public function displayValue($fields)
+    public function displayValue($fields = NULL)
     {
         if (!$this->canViewResults()) return NULL;
         $dt_tm = explode(' ', $this->value);

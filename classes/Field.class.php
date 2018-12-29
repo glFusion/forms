@@ -1280,16 +1280,12 @@ class Field
     protected function canViewField()
     {
         global $_GROUPS;
-        static $gids = array();
 
-        if (!array_key_exists($this->fill_gid, $gids)) {
-            if ($this->enabled == 0 || !in_array($this->fill_gid, $_GROUPS)) {
-                $gids[$this->fill_gid] = false;
-            } else {
-                $gids[$this->fill_gid] = true;
-            }
+        if (!$this->enabled || !in_array($this->fill_gid, $_GROUPS)) {
+            return false;
+        } else {
+            return true;
         }
-        return $gids[$this->fill_gid];
     }
 
 
@@ -1336,6 +1332,19 @@ class Field
             $retval .= "<$p>$d</$p>\n";
         }
         return $retval;
+    }
+
+
+    /**
+     * Helper function to check if an option is set for this field.
+     *
+     * @param   string  $opt    Name of option
+     * @param   mixed   $val    Required value, usually "1"
+     * @return  boolean     True if it is set, False if not.
+     */
+    public function hasOption($opt, $val = 1)
+    {
+        return isset($this->options[$opt]) && $this->options[$opt] == $val ? true : false;
     }
 
 }
