@@ -569,7 +569,7 @@ class Field
                 )
                 ON DUPLICATE KEY
                     UPDATE value = '$db_value'";
-        COM_errorLog($sql);
+        //COM_errorLog($sql);
         DB_query($sql, 1);
         $status = DB_error();
         return $status ? false : true;
