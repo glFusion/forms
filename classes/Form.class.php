@@ -449,9 +449,9 @@ class Form
 
         if (isset($vals['res_id']) && !empty($vals['res_id'])) {
             $res_id = (int)$vals['res_id'];
-            $newSubmission = false;
+            //$newSubmission = false;
         } else {
-            $newSubmission = true;
+            //$newSubmission = true;
             $res_id = 0;
         }
 
@@ -525,7 +525,7 @@ class Form
             $this->res_id = false;
         }
 
-        if ($onsubmit > FRM_ACTION_STORE && $newSubmission) {
+        //if ($onsubmit > FRM_ACTION_STORE && $newSubmission) {
             // Emailing or displaying results
             $emails = array();
 
@@ -596,7 +596,8 @@ class Form
             $T->set_block('mailresults', 'QueueRow', 'qrow');
             foreach ($this->fields as $field) {
                 if (!$field->enabled) continue; // no disabled fields
-                if ($field->type == 'calc') {
+                $text = $field->displayValue($this->fields);
+                /*if ($field->type == 'calc') {
                     $field->CalcResult($this->fields);
                     $text = $field->value_text;
                 } elseif ($field->type == 'static') {
@@ -605,8 +606,7 @@ class Form
                     $text = nl2br($field->value_text);
                 } else {
                     $text = $field->value_text;
-                }
-
+                }*/
                 $T->set_var(array(
                     'fld_name'      => $field->name,
                     'fld_prompt'    => $field->prompt,
@@ -627,7 +627,7 @@ class Form
                     true
                 );
             }
-        }
+        //}
         CTL_clearCache();   // So results autotag will work.
         return '';
     }
@@ -806,7 +806,6 @@ class Form
                 }
             }
         }
-
         // Get the result details for a heading when an admin is
         // editing a submission. Have to do it here, after ReadData().
         if ($mode == 'edit') {
