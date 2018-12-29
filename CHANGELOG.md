@@ -1,6 +1,9 @@
 # Changelog - Forms plugin for glFusion
 ## 0.4.1
-Release TBD
+Release 2008-12-29
+- Fix access check, disabled fields were affecting visibility of other fields
+- Admin was unable to save edits to submissions
+- Missing quote caused glFusion navigation menu to stop working
 
 ## 0.4.0
 Release 2018-12-28
