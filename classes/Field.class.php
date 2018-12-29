@@ -1280,16 +1280,12 @@ class Field
     protected function canViewField()
     {
         global $_GROUPS;
-        static $gids = array();
 
-        if (!array_key_exists($this->fill_gid, $gids)) {
-            if ($this->enabled == 0 || !in_array($this->fill_gid, $_GROUPS)) {
-                $gids[$this->fill_gid] = false;
-            } else {
-                $gids[$this->fill_gid] = true;
-            }
+        if (!$this->enabled || !in_array($this->fill_gid, $_GROUPS)) {
+            return false;
+        } else {
+            return true;
         }
-        return $gids[$this->fill_gid];
     }
 
 
