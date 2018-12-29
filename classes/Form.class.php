@@ -762,7 +762,6 @@ class Form
             $allow_submit = false;
             break;
         case 'edit':    // admin editing submission
-        case 'inline':
             //$this->ReadData();
             $this->onetime = FRM_LIMIT_EDIT; // allow editing of result
             $success_msg = 3;
@@ -770,9 +769,11 @@ class Form
             $referrer = FRM_ADMIN_URL . '/index.php?results=x&frm_id=' .
                     $this->id;
             $actionurl = FRM_ADMIN_URL . '/index.php';
-            $not_inline = $mode == 'edit' ? true : false;
             $isAdmin = true;
+            $saveaction = 'updateresult';
             break;
+        case 'inline':
+            $not_inline = false;
         default:
             if (isset($_POST['referrer'])) {
                 $referrer = $_POST['referrer'];
