@@ -504,8 +504,13 @@ class Form
             $msg = $F->Validate($vals);
             if (!empty($msg)) {
                 $invalid_flds .= "<li>$msg</li>\n";
+            } else {
+                if (isset($vals[$F->name])) {
+                    $F->value = $vals[$F->name];
+                }
             }
         }
+
         if (!empty($invalid_flds)) {
             // If fields are invalid, return to the caller with a message
             return $LANG_FORMS['frm_invalid'] .
@@ -525,92 +530,85 @@ class Form
             $this->res_id = false;
         }
 
-        //if ($onsubmit > FRM_ACTION_STORE && $newSubmission) {
-            // Emailing or displaying results
-            $emails = array();
+        // Emailing or displaying results
+        $emails = array();
 
-            // Sending to the form owner
-            if ($onsubmit & FRM_ACTION_MAILOWNER) {
-                $email = DB_getItem($_TABLES['users'], 'email',
+        // Sending to the form owner
+        if ($onsubmit & FRM_ACTION_MAILOWNER) {
+            $email = DB_getItem($_TABLES['users'], 'email',
                         "uid='".$this->owner_id."'");
-                if (COM_isEmail($email))
-                    $emails[$email] = COM_getDisplayName($this->owner_id);
+            if (COM_isEmail($email)) {
+                $emails[$email] = COM_getDisplayName($this->owner_id);
             }
+        }
 
-            // Sending to the site admin
-            if ($onsubmit & FRM_ACTION_MAILADMIN) {
-                $email = DB_getItem($_TABLES['users'], 'email', "uid='2'");
-                if (COM_isEmail($email))
-                    $emails[$email] = COM_getDisplayName(2);
+        // Sending to the site admin
+        if ($onsubmit & FRM_ACTION_MAILADMIN) {
+            $email = DB_getItem($_TABLES['users'], 'email', "uid='2'");
+            if (COM_isEmail($email)) {
+                $emails[$email] = COM_getDisplayName(2);
             }
+        }
 
-            // Sending to the admin group.  Need to get all users in group
-            if ($onsubmit & FRM_ACTION_MAILGROUP) {
-                USES_lib_user();
-                $groups = implode(',', USER_getChildGroups($this->group_id));
-                $sql = "SELECT DISTINCT uid, username, fullname, email
+        // Sending to the admin group. Need to get all users in the group,
+        // excluding Root since it is in every group.
+        if ($onsubmit & FRM_ACTION_MAILGROUP) {
+            USES_lib_user();
+            $groups = implode(',', USER_getChildGroups($this->group_id));
+            $sql = "SELECT DISTINCT uid, username, fullname, email
                     FROM {$_TABLES['users']}, {$_TABLES['group_assignments']}
                     WHERE uid > 1
                     AND {$_TABLES['users']}.status = 3
                     AND email is not null
                     AND email != ''
                     AND {$_TABLES['users']}.uid = ug_uid
-                    AND ug_main_grp_id IN ({$groups})";
-                $result = DB_query($sql, 1);
-                while ($A = DB_fetchArray($result, false)) {
-                    if (COM_isEmail($A['email'])) {
-                        $emails[$A['email']] = COM_getDisplayName($A['uid']);
+                    AND ug_main_grp_id IN ({$groups})
+                    AND ug_main_grp_id <> 1";
+            $result = DB_query($sql, 1);
+            while ($A = DB_fetchArray($result, false)) {
+                if (COM_isEmail($A['email'])) {
+                    $emails[$A['email']] = COM_getDisplayName($A['uid']);
+                }
+            }
+        }
+
+        // Sending to specific addresses. Don't have names here, just
+        // addresses
+        if ($this->email != '') {
+            $addrs = explode(';', $this->email);
+            if (is_array($addrs) && !empty($addrs)) {
+                foreach ($addrs as $addr) {
+                    if (COM_isEmail($addr) && !isset($emails[$addr])) {
+                        $emails[$addr] = $addr;
                     }
                 }
             }
+        }
 
-            // Sending to specific addresses. Don't have names here, just
-            // addresses
-            if ($this->email != '') {
-                $addrs = explode(';', $this->email);
-                if (is_array($addrs) && !empty($addrs)) {
-                    foreach ($addrs as $addr) {
-                        if (COM_isEmail($addr)) {
-                            $emails[$addr] = $addr;
-                        }
-                    }
-                }
-            }
-
+        if (!empty($emails)) {
             $dt = new \Date('now', $_CONF['timezone']);
             $subject = sprintf($LANG_FORMS['formsubmission'], $this->name);
 
             $T = new \Template(FRM_PI_PATH . '/templates/admin');
             $T->set_file('mailresults', 'mailresults.thtml');
             $T->set_var(array(
-                    'site_name' => $_CONF['site_name'],
-                    'sub_date'   => $dt->format($_CONF['date'], true),
-                    'username'  => COM_getDisplayName($this->uid),
-                    //'recipient' => COM_getDisplayName($this->owner_id),
-                    //'recipient' => $recip_name,
-                    'uid'       => $this->uid,
-                    'frm_name'  => $this->name,
-                    'subject'   => $subject,
+                'site_name' => $_CONF['site_name'],
+                'sub_date'   => $dt->format($_CONF['date'], true),
+                'username'  => COM_getDisplayName($this->uid),
+                //'recipient' => COM_getDisplayName($this->owner_id),
+                //'recipient' => $recip_name,
+                'uid'       => $this->uid,
+                'frm_name'  => $this->name,
+                'subject'   => $subject,
             ) );
 
             $T->set_block('mailresults', 'QueueRow', 'qrow');
-            foreach ($this->fields as $field) {
-                if (!$field->enabled) continue; // no disabled fields
-                $text = $field->displayValue($this->fields);
-                /*if ($field->type == 'calc') {
-                    $field->CalcResult($this->fields);
-                    $text = $field->value_text;
-                } elseif ($field->type == 'static') {
-                    continue;
-                } elseif ($field->type == 'textarea') {
-                    $text = nl2br($field->value_text);
-                } else {
-                    $text = $field->value_text;
-                }*/
+            foreach ($this->fields as $Fld) {
+                if (!$Fld->enabled) continue; // no disabled fields
                 $T->set_var(array(
-                    'fld_name'      => $field->name,
-                    'fld_prompt'    => $field->prompt,
-                    'fld_value'     => $text,
+                    'fld_name'      => $Fld->name,
+                    'fld_prompt'    => $Fld->prompt,
+                    'fld_value'     => $Fld->displayValue($this->fields),
                 ) );
                 $T->parse('qrow', 'QueueRow', true);
             }
@@ -627,7 +625,8 @@ class Form
                     true
                 );
             }
-        //}
+        }
+
         CTL_clearCache();   // So results autotag will work.
         return '';
     }
@@ -856,7 +855,7 @@ class Form
                     'fieldname' => $F->name,
                     'field'     => $rendered,
                     'help_msg'  => self::_stripHtml($F->help_msg),
-                    'spancols'  => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? 'true' : '',
+                    'spancols'  => $F->hasOption('spancols'),
                     'is_required' => $F->access == FRM_FIELD_REQUIRED ? 'true' : '',
                 ), '', false, true);
                 $T->parse('qrow', 'QueueRow', true);
@@ -935,7 +934,7 @@ class Form
                 'prompt'    => $prompt,
                 'fieldname' => $F->fieldname,
                 'data'      => $data,
-                'colspan'   => isset($F->options['spancols']) && $F->options['spancols'] == 1 ? true : false,
+                'colspan'   => $F->hasOption('spancols'),
             ), '', false, true);
             $T->parse('qrow', 'QueueRow', true);
         }
