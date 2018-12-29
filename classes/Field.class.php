@@ -1338,6 +1338,19 @@ class Field
         return $retval;
     }
 
+
+    /**
+     * Helper function to check if an option is set for this field.
+     *
+     * @param   string  $opt    Name of option
+     * @param   mixed   $val    Required value, usually "1"
+     * @return  boolean     True if it is set, False if not.
+     */
+    public function hasOption($opt, $val = 1)
+    {
+        return isset($this->options[$opt]) && $this->options[$opt] == $val ? true : false;
+    }
+
 }
 
 ?>
