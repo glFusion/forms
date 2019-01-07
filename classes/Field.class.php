@@ -1079,20 +1079,6 @@ class Field
 
 
     /**
-     * Get the value from the database.
-     * Typically this is just copying the "value" field, but
-     * some field types may need to unserialize values.
-     *
-     * @param   array   $A      Array of all DB fields
-     * @return  mixed           Value field used by the object
-     */
-    public function valueFromDB($A)
-    {
-        return $A['value'];
-    }
-
-
-    /**
      * Default function to get the display value for a field.
      * Just returns the raw value.
      *

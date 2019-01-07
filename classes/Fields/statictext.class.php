@@ -48,23 +48,6 @@ class statictext extends \Forms\Field
 
 
     /**
-     * Get the value for this field when read from the DB.
-     * Static fields always use the "default" option and have no actual value.
-     *
-     * @param   array   $A  Array of all DB fields
-     * @return  string      Static field value
-     */
-    public function valueFromDB($A)
-    {
-        if (isset($this->options['defvalue'])) {
-            return $this->options['defvalue'];
-        } else {
-            return '';
-        }
-    }
-
-
-    /**
      * Return the XML element for privacy export.
      * Static fields do not need to be exported.
      *
