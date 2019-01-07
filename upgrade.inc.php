@@ -89,36 +89,36 @@ function FRM_do_upgrade($dvlp=false)
     if (!COM_checkVersion($current_ver, '0.1.8')) {
         $current_ver = '0.1.8';
         COM_errorLog("Updating Plugin to $current_ver");
-        if (!FRM_do_upgrade_sql($current_ver)) return false;
-        if (!FRM_do_set_version($current_ver)) return false;
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.2.0')) {
         $current_ver = '0.2.0';
         COM_errorLog("Updating Plugin to $current_ver");
-        if (!FRM_do_upgrade_sql($current_ver)) return false;
-        if (!FRM_do_set_version($current_ver)) return false;
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.2.2')) {
         $current_ver = '0.2.2';
         COM_errorLog("Updating Plugin to $current_ver");
-        if (!FRM_do_upgrade_sql($current_ver)) return false;
-        if (!FRM_do_set_version($current_ver)) return false;
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.3.1')) {
         $current_ver = '0.3.1';
         COM_errorLog("Updating Plugin to $current_ver");
-        if (!FRM_do_upgrade_sql($current_ver)) return false;
-        if (!FRM_do_set_version($current_ver)) return false;
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.4.0')) {
         $current_ver = '0.4.0';
         COM_errorLog("Updating Plugin to $current_ver");
-        if (!FRM_do_upgrade_sql($current_ver)) return false;
-        if (!FRM_do_set_version($current_ver)) return false;
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
     }
 
     // Final version setting and cleanup
@@ -134,7 +134,7 @@ function FRM_do_upgrade($dvlp=false)
 
     FRM_remove_old_files();
     \Forms\Cache::clear();
-    COM_errorLog('Successfully updated the Forms plugin');
+    COM_errorLog('Successfully updated the Forms plugin to ' . $code_ver);
     return true;
 }
 
@@ -153,16 +153,19 @@ function FRM_do_upgrade_sql($version, $dvlp=false)
 
     // If no sql statements passed in, return success
     if (!isset($_FRM_UPGRADE_SQL[$version]) || 
-            !is_array($_FRM_UPGRADE_SQL[$version]))
-        return true;
+            !is_array($_FRM_UPGRADE_SQL[$version])) {
+            return true;
+    }
 
     // Execute SQL now to perform the upgrade
     COM_errorLOG("--Updating Forms to version $version");
+    $errmsg = 'SQL Error during Forms plugin update';
+    if ($dvlp) $errmsg .= ' - ignored';
     foreach ($_FRM_UPGRADE_SQL[$version] as $sql) {
         COM_errorLOG("Forms Plugin $version update: Executing SQL => $sql");
         DB_query($sql, '1');
         if (DB_error()) {
-            COM_errorLog("SQL Error during Forms plugin update",1);
+            COM_errorLog($errmsg, 1);
             if (!$dvlp) return false;
         }
     }
