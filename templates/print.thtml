@@ -12,7 +12,7 @@ IP Address: {ip_addr}<br />
 <!-- BEGIN QueueRow -->
 <tr>
   <td 
-{!if colspan}
+{!if spancols}
 colspan="2">
 {!else}
 class="alignright" valign="top">

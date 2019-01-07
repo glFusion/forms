@@ -609,6 +609,7 @@ class Form
                     'fld_name'      => $Fld->name,
                     'fld_prompt'    => $Fld->prompt,
                     'fld_value'     => $Fld->displayValue($this->fields),
+                    'spancols'      => $Fld->hasOption('spancols'),
                 ) );
                 $T->parse('qrow', 'QueueRow', true);
             }
@@ -928,14 +929,13 @@ class Form
         $T->set_block('form', 'QueueRow', 'qrow');
         foreach ($this->fields as $F) {
             if (!$F->canViewResults()) continue;
-
             $data = $F->displayValue($this->fields);
             $prompt = $F->displayPrompt();
             $T->set_var(array(
                 'prompt'    => $prompt,
                 'fieldname' => $F->fieldname,
                 'data'      => $data,
-                'colspan'   => $F->hasOption('spancols'),
+                'spancols'  => $F->hasOption('spancols'),
             ), '', false, true);
             $T->parse('qrow', 'QueueRow', true);
         }
