@@ -53,6 +53,10 @@ class Form
      * @var integer */
     var $access;
 
+    /** Token string, set to allow anonymous users to view their own submissions.
+     * @var string */
+    private $token = '';
+
 
     /**
       * Create a forms object for the specified or current user ID.
@@ -605,6 +609,7 @@ class Form
             $T->set_block('mailresults', 'QueueRow', 'qrow');
             foreach ($this->fields as $Fld) {
                 if (!$Fld->enabled) continue; // no disabled fields
+                $Fld->setCanviewResults(true);
                 $T->set_var(array(
                     'fld_name'      => $Fld->name,
                     'fld_prompt'    => $Fld->prompt,
@@ -906,14 +911,14 @@ class Form
         }
 
         // Check that the current user has access and the result id is valid
-        if ((empty($this->Result) && $res_id == 0) ||
-                ($this->Result->uid != $_USER['uid'] &&
-                !$this->hasAccess(FRM_ACCESS_VIEW)) ) {
+        if (
+            (empty($this->Result) && $res_id == 0) ||
+            ($this->Result->uid != $_USER['uid'] && !$this->hasAccess(FRM_ACCESS_VIEW))
+        ) {
             return $this->noaccess_msg;
         }
 
         $dt = new \Date($this->Result->dt, $_CONF['timezone']);
-
         $T = new \Template(FRM_PI_PATH . '/templates');
         $T->set_file('form', 'print.thtml');
         // Set template variables, without allowing caching
@@ -928,7 +933,9 @@ class Form
 
         $T->set_block('form', 'QueueRow', 'qrow');
         foreach ($this->fields as $F) {
-            if (!$F->canViewResults()) continue;
+            if ($this->uid == $_USER['uid'] && $this->token == $this->Result->token) {
+                $F->setCanviewResults(true);
+            }
             $data = $F->displayValue($this->fields);
             $prompt = $F->displayPrompt();
             $T->set_var(array(
@@ -1103,6 +1110,12 @@ class Form
         } else {
             return $newval;
         }
+    }
+
+
+    public function setToken($token)
+    {
+        $this->token = $token;
     }
 
 }

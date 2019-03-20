@@ -49,6 +49,9 @@ if ($action == 'mode') $action = $actionval;
 switch ($action) {
 case 'savedata':
     $F = new \Forms\Form($_POST['frm_id']);
+    if ($F->isNew) {
+        COM_refresh($_CONF['site_url']);
+    }
     $redirect = str_replace('{site_url}', $_CONF['site_url'], $F->redirect);
     $errmsg = $F->SaveData($_POST);
     if (empty($errmsg)) {
@@ -76,13 +79,12 @@ case 'savedata':
         $q['msg'] = $msg;
         $q['plugin'] = $_CONF_FRM['pi_name'];
         $q['frm_id'] = $F->id;
-        //$redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
+        $redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
         $q_arr = array();
         foreach($q as $key=>$value) {
             $q_arr[] = "$key=" . urlencode($value);
         }
-        $sep = strpos($redirect, '?') ? '&' : '?';
-        $redirect .= $sep . join('&', $q_arr);
+        $redirect .= http_build_query($q);
         echo COM_refresh($redirect);
     } else {
         $msg = '2';
@@ -104,7 +106,8 @@ case 'results':
         $F = new \Forms\Form($frm_id);
         $F->ReadData($res_id);
         if (($F->Result->uid == $_USER['uid'] && $F->Result->Token() == $token)
-                || plugin_isadmin_forms()) {
+            || plugin_isadmin_forms()) {
+            $F->setToken($token);
             $content .= '<h1>';
             $content .= $F->submit_msg == '' ? $LANG_FORMS['def_submit_msg'] :
                     $F->submit_msg;

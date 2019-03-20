@@ -1,6 +1,7 @@
 # Changelog - Forms plugin for glFusion
 ## 0.4.2
 Release TBD
+- Fix permissions when mailing or viewing user's own results.
 
 ## 0.4.1
 Release 2008-12-29

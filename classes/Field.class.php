@@ -33,6 +33,11 @@ class Field
      * @var string */
     protected $sub_type = 'regular';
 
+    /** Flag if the current user can view results, regardless of group membership.
+     * @var boolean */
+    protected $canviewResults = false;
+
+
     /**
      * Constructor. Sets the local properties using the array $item.
      *
@@ -1089,8 +1094,11 @@ class Field
     {
         global $_GROUPS;
 
-        if (!$this->canViewResults()) return NULL;
-        return htmlspecialchars($this->value);
+        if ($this->canViewResults()) {
+            return htmlspecialchars($this->value);
+        } else {
+            return NULL;
+        }
     }
 
 
@@ -1288,6 +1296,8 @@ class Field
         global $_GROUPS, $_USERS;
         static $gids = array();
 
+        if ($this->canviewResults) return true;
+
         if (!array_key_exists($this->results_gid, $gids)) {
             if ($this->enabled == 0 || !in_array($this->results_gid, $_GROUPS)) {
                 $gids[$this->results_gid] = false;
@@ -1331,6 +1341,19 @@ class Field
     public function hasOption($opt, $val = 1)
     {
         return isset($this->options[$opt]) && $this->options[$opt] == $val ? true : false;
+    }
+
+
+    /**
+     * Set the canviewResults flag to force allow viewing.
+     * Used for a user to be able to view their own submissions regardless
+     * of group membership.
+     *
+     * @param   boolean $canview    True to allow viewing, False to use default perms.
+     */
+    public function setCanviewResults($canview=false)
+    {
+        $this->canviewResults = $canview ? true : false;
     }
 
 }
