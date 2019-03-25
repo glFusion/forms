@@ -3,9 +3,9 @@
  * Class to handle all forms items.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2019 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.4.0
+ * @version     0.4.2
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -1113,6 +1113,13 @@ class Form
     }
 
 
+    /**
+     * Set the token value.
+     * This is used to set the token supplied in the URL when a user
+     * is viewing their own submission.
+     *
+     * @param   string  $token  Unique token value
+     */
     public function setToken($token)
     {
         $this->token = $token;

@@ -105,8 +105,10 @@ case 'results':
     if ($res_id > 0 && $frm_id != '') {
         $F = new \Forms\Form($frm_id);
         $F->ReadData($res_id);
-        if (($F->Result->uid == $_USER['uid'] && $F->Result->Token() == $token)
-            || plugin_isadmin_forms()) {
+        if (
+            ($F->Result->uid == $_USER['uid'] && $F->Result->Token() == $token)
+            || plugin_isadmin_forms()
+        ) {
             $F->setToken($token);
             $content .= '<h1>';
             $content .= $F->submit_msg == '' ? $LANG_FORMS['def_submit_msg'] :
