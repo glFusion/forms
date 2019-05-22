@@ -1,4 +1,8 @@
 # Changelog - Forms plugin for glFusion
+## 0.4.3
+Release 2019-05-22
+- Fix form definition SQL, remove default value from text data types
+
 ## 0.4.2
 Release 2019-03-25
 - Fix permissions when mailing or viewing user's own results.
