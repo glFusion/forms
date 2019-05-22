@@ -194,7 +194,9 @@ function service_resultId_forms($args, &$output, &$svc_msg)
 {
     global $_USER, $_TABLES, $LANG_FORMS, $LANG01, $_CONF;
 
-    if ($args['frm_id'] == '') return PLG_RET_ERROR;
+    if (!isset($args['frm_id']) || empty($args['frm_id'])) {
+        return PLG_RET_ERROR;
+    }
     if (isset($args['res_id'])) {
         $res_id = (int)$args['res_id'];
     } else {
@@ -227,8 +229,8 @@ function service_getFormInfo_forms($args, &$output, &$svc_msg)
     global $_TABLES;
 
     $sql = "SELECT * FROM {$_TABLES['forms_frmdef']} WHERE 1=1";
-    if (isset($args['frm_id'])) {
-        $sql .= " AND frm_id = '" . DB_escapeString($args['frm_id']) . "'";
+    if (array_key_exists('frm_id', $args)) {
+        $sql .= " AND id = '" . DB_escapeString($args['frm_id']) . "'";
     }
     if (isset($args['perm']) && (int)$args['perm'] > 0) {
         $sql .= COM_getPermSQL('AND', 0, (int)$args['perm']);
@@ -299,6 +301,7 @@ function service_saveData_forms($args, &$output, &$svc_msg)
  * Verify that a user's submission is valid.
  * Checks each field using the field's validData function and sets $output
  * to an array of field names with invalid values.
+ * Returns OK if the form is valid, ERROR if there are any errors.
  *
  * @param   array       $args       Must include `uid` element
  * @param   mixed       $output     Output array - gets error field names
@@ -326,6 +329,5 @@ function service_validate_forms($args, &$output, &$svc_msg)
     }
     return empty($output) ? PLG_RET_OK : PLG_RET_ERROR;
 }
-
 
 ?>
