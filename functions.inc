@@ -779,7 +779,7 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
 {
     global $_TABLES, $_USER, $_CONF_FRM;
 
-    $retval = "<{$_CONF_FRM['pi_name']}>\n";
+    $retval = '';
     $sql = "SELECT id FROM {$_TABLES['forms_results']} WHERE uid = '$uid'";
     $res = DB_query($sql);
     $A = DB_fetchAll($res, false);
@@ -797,9 +797,11 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
         }
         $retval .= "</$form_name>\n";
     }
-    $retval .= "</{$_CONF_FRM['pi_name']}>\n";
-    if ( function_exists('tidy_repair_string')) {
-        $retval = tidy_repair_string($retval, array('input-xml' => 1));
+    if (!empty($retval)) {
+        $retval = "<{$_CONF_FRM['pi_name']}>\n$retval</{$_CONF_FRM['pi_name']}>\n";
+        if (function_exists('tidy_repair_string')) {
+            $retval = tidy_repair_string($retval, array('input-xml' => 1));
+        }
     }
     return $retval;
 }
