@@ -4,9 +4,9 @@
  * Used to either display a specific form, or to save the user-entered data.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2019 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     v0.4.4
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -130,13 +130,13 @@ case 'results':
     break;
 
 case 'print':
-    $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
+    $res_id = isset($_GET['res_id']) ? (int)$_GET['res_id'] : 0;
     $frm_id = isset($_GET['frm_id']) ? $_GET['frm_id'] : '';
     if ($frm_id != '' && $res_id > 0) {
         $F = \Forms\Form::getInstance($frm_id);
         $F->ReadData($res_id);
-        if ((!empty($F->Result) && $F->Result->uid == $_USER['uid']) ||
-                plugin_isadmin_forms() ) {
+        if (plugin_isadmin_forms() || $F->Result->uid == $_USER['uid']) {
+            // Make sure user is an admin or is viewing their own result
             $content .= $F->Prt($res_id, true);
         }
         echo $content;
