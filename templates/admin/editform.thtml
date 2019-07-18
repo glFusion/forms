@@ -158,6 +158,7 @@ function isAjax(status)
         <input type="checkbox" value="2" name="onsubmit[emailowner]" {emailowner_chk} />&nbsp;{$LANG_FORMS['email_owner']}&nbsp;&nbsp;
         <input type="checkbox" value="4" name="onsubmit[emailgroup]" {emailgroup_chk} />&nbsp;{$LANG_FORMS['email_group']}&nbsp;&nbsp;
         <input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />&nbsp;{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
+        <input type="checkbox" value="32" name="onsubmit[emailuser]" {emailuser_chk} />&nbsp;{$LANG_FORMS['email_user']}&nbsp;&nbsp;<br />
         {$LANG_FORMS['other_emails']}:
         <input type="text" size="40" maxlength="255" name="email" value="{email}" />
       </div>

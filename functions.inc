@@ -37,6 +37,7 @@ define('FRM_ACTION_MAILOWNER', 2);
 define('FRM_ACTION_MAILGROUP', 4);
 define('FRM_ACTION_MAILADMIN', 8);
 define('FRM_ACTION_DISPLAY', 16);
+define('FRM_ACTION_MAILUSER', 32);
 
 define('FRM_ACCESS_FILL', 1);   // access to fill out form
 define('FRM_ACCESS_VIEW', 2);   // access to view results

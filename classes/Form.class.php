@@ -401,6 +401,8 @@ class Form
                         'checked="checked"' : '',
             'emailadmin_chk' => $this->onsubmit & FRM_ACTION_MAILADMIN ?
                         'checked="checked"' : '',
+            'emailuser_chk' => $this->onsubmit & FRM_ACTION_MAILUSER ?
+                        'checked="checked"' : '',
             'store_chk' => $this->onsubmit & FRM_ACTION_STORE ?
                         'checked="checked"' : '',
             'preview_chk' => $this->onsubmit & FRM_ACTION_DISPLAY ?
@@ -572,6 +574,22 @@ class Form
             while ($A = DB_fetchArray($result, false)) {
                 if (COM_isEmail($A['email'])) {
                     $emails[$A['email']] = COM_getDisplayName($A['uid']);
+                }
+            }
+        }
+
+        // Email the submitting user their own results.
+        // Only works for logged-in users.
+        if ($onsubmit & FRM_ACTION_MAILUSER) {
+            $uid = (int)$this->Result->uid;
+            if ($uid > 1) {
+                $email = DB_getItem(
+                    $_TABLES['users'],
+                    'email',
+                    "uid='$uid'"
+                );
+                if (COM_isEmail($email)) {
+                    $emails[$email] = COM_getDisplayName($uid);
                 }
             }
         }

@@ -32,6 +32,7 @@ $LANG_FORMS = array(
 'email_owner'   => 'Email Owner',
 'email_group'   => 'Email Group',
 'email_admin'   => 'Email Site Admin',
+'email_user'    => 'Email Submitter',
 'onsubmit'      => 'Action upon Submission',
 'preview'       => 'Preview Form',
 'formsubmission'    => 'New Form Submission: %s',
@@ -180,6 +181,7 @@ $LANG_FORMS = array(
 'regular' => 'Regular Form',
 'field_updated' => 'Field updated',
 'save_disabled' => 'Saving disabled in form preview.',
+'filled_out_by' => 'Filled out by %1$s on %2$s',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
