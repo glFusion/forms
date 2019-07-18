@@ -1,4 +1,8 @@
 # Changelog - Forms plugin for glFusion
+## 0.4.4
+- Add html tags to print.thtml template
+- Add option to email form results to the submitter
+
 ## 0.4.3
 Release 2019-05-22
 - Fix form definition SQL, remove default value from text data types
