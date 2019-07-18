@@ -940,11 +940,14 @@ class Form
         $T = new \Template(FRM_PI_PATH . '/templates');
         $T->set_file('form', 'print.thtml');
         // Set template variables, without allowing caching
+        $filled_by = sprintf($LANG_FORMS['filled_out_by'],
+            COM_getDisplayName($this->Result->uid),
+            $dt->format($_CONF['date'], true)
+        );
         $T->set_var(array(
             'introtext'     => $this->introtext,
             'title'         => $this->name,
-            'filled_by'     => COM_getDisplayName($this->Result->uid),
-            'filled_date'   => $dt->format($_CONF['date'], true),
+            'filled_out_str' => $filled_by,
         ), '', false, true);
 
         if ($admin) $T->set_var('ip_addr', $this->Result->ip);

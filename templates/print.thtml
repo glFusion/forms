@@ -6,11 +6,12 @@
 <body>
 <div style="margin-left:20px;">
 <h1>{title}</h1>
-<i>Filled out by {filled_by} on {filled_date}<br />
+<span style="font-style:italic;">
+{filled_out_str}<br />
 {!if ip_addr}
-IP Address: {ip_addr}<br />
+{$LANG_FORMS['ip_addr']}: {ip_addr}<br />
 {!endif}
-</i>
+</span>
 <p>{additional}</p>
 <p>{introtext}</p>
 <table border="0" cellpadding="3">
@@ -22,7 +23,7 @@ colspan="2">
 {!else}
 class="alignright" valign="top">
   {!if prompt}
-    <label for="{fieldname}">{prompt}:</label>
+    <label>{prompt}:</label>
   {!endif}
   </td>
   <td>
