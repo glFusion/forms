@@ -140,7 +140,7 @@ $LANG_FORMS = array(
     'radio' => 'Radio Buttons',
     'date' => 'Date',
     'time'  => 'Time',
-    'statictext' => 'Static',
+    'static' => 'Static',
     'calc'  => 'Calculation',
     'hidden'  => 'Hidden',
 ),
@@ -180,6 +180,10 @@ $LANG_FORMS = array(
 'regular' => 'Regular Form',
 'field_updated' => 'Field updated',
 'save_disabled' => 'Saving disabled in form preview.',
+'use_spamx' => 'Use SPAMX Plugin?',
+'no_results' => 'No results found',
+'reset_results' => 'Remove all results for this form.',
+'confirm_form_reset' => 'Are you sure you want to delete all submissions for this form?',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
@@ -211,6 +215,8 @@ $LANG_confignames['forms'] = array(
     'defgroup' => 'Default Group',
     'fill_gid'  => 'Default group to fill forms',
     'results_gid' => 'Default group to view results',
+    'def_spamx' => 'Use SPAMX?',
+    'use_real_ip' => 'Record actual IP addresses?',
 
     'def_text_size' => 'Default Text Field Size',
     'def_text_maxlen' => 'Default "maxlen" for Text Fields',

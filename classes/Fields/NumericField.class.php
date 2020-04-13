@@ -17,7 +17,7 @@ namespace Forms\Fields;
  * Numeric field class.
  * Leverages the text field type but ensures that all saved values are numeric.
  */
-class numeric extends text
+class NumericField extends TextField
 {
 
     /**
@@ -42,7 +42,7 @@ class numeric extends text
     public function displayValue($fields)
     {
         if (!$this->canViewResults()) return NULL;
-        $fmt = isset($this->options['format']) ? $this->options['format'] : '%f';
+        $fmt = $this->getOption('format', '%f');
         return sprintf($fmt, $this->value);
     }
 

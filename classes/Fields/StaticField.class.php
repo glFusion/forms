@@ -12,11 +12,12 @@
  */
 namespace Forms\Fields;
 
+
 /**
  * Static Text Fields.
  * There is no input for these fields, they are simply displayed.
  */
-class statictext extends \Forms\Field
+class StaticField extends \Forms\Field
 {
 
     /**

@@ -1,23 +1,25 @@
 <?php
 /**
- * Class to handle radio button form fields.
+ * Class to handle multi-line textarea form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.3.1
- * @since       v0.3.1
+ * @version     0.3.1
+ * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms\Fields;
 
+
 /**
- * Radio button class.
+ * Textarea field type.
  */
-class radio extends \Forms\Field
+class TextareaField extends \Forms\Field
 {
+
     /**
      * Create a single form field for data entry.
      *
@@ -27,25 +29,33 @@ class radio extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
+        global $_CONF, $LANG_FORMS, $_CONF_FRM;
+
         if (!$this->canViewField()) return NULL;
-        $values = FRM_getOpts($this->options['values']);
-        if (!is_array($values)) {
-            // Have to have some values for multiple checkboxes
-            return '';
-        }
         $this->value = $this->renderValue($res_id, $mode);
         $elem_id = $this->_elemID();
         $js = $this->renderJS($mode);
         $access = $this->renderAccess();
-        $fld = '';
-        foreach ($values as $id=>$value) {
-            $sel = $this->value == $value ? 'checked="checked"' : '';
-            $fld .= '<input ' . $access  . ' type="radio" name="' . $this->name .
-                    '"id="' . $elem_id . '_' . $value .
-                    '" value="' . $value . '" ' . $sel . $js .
-                    '>&nbsp;' . $value . '&nbsp;' . LB;
-        }
+        $cols = $this->getOption('cols', 80);
+        $rows = $this->getOpton['rows', 5);
+        $fld = "<textarea $access name=\"{$this->getName()}\"
+                    id=\"$elem_id\"
+                    cols=\"$cols\" rows=\"$rows\" $js
+                    >{$this->value}</textarea>" . LB;
         return $fld;
+    }
+
+
+    /**
+     * Get the formatted field to display in the results.
+     *
+     * @param   array   $fields     Array of all field objects (not used)
+     * @return  string              Formatted field for display
+     */
+    public function displayValue($fields)
+    {
+        if (!$this->canViewResults()) return NULL;
+        return nl2br($this->value);
     }
 
 
@@ -57,26 +67,16 @@ class radio extends \Forms\Field
      */
     protected function optsFromForm($A)
     {
-        // Call the parent to get default options
+        global $_CONF_FRM;
+
+        // Call the parent function to get default options
         $options = parent::optsFromForm($A);
         // Add in options specific to this field type
-        $newvals = array();
-        foreach ($A['selvalues'] as $val) {
-            if (!empty($val)) {
-                $newvals[] = $val;
-            }
-        }
-        $options['default'] = '';
-        if (isset($A['sel_default'])) {
-            $default = (int)$A['sel_default'];
-            if (isset($A['selvalues'][$default])) {
-                $options['default'] = $A['selvalues'][$default];
-            }
-        }
-        $options['values'] = $newvals;
+        $options['cols'] = $A['cols'] > 0 ? (int)$A['cols'] : $_CONF_FRM['def_textarea_cols'];
+        $options['rows'] = $A['rows'] > 0 ? (int)$A['rows'] : $_CONF_FRM['def_textarea_rows'];
         return $options;
     }
-
+ 
 }
 
 ?>

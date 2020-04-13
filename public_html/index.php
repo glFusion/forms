@@ -4,9 +4,9 @@
  * Used to either display a specific form, or to save the user-entered data.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -17,12 +17,11 @@ if (!in_array('forms', $_PLUGINS)) {
     COM_404();
 }
 
-USES_forms_functions();
-
 $action = '';
 $actionval = '';
 $expected = array(
-    'savedata', 'results', 'mode', 'print', 'showform',
+    'savedata', 'reset', 'myresult', 'mode', 'print', 'showform',
+    'listforms', 'results', 'export', 'preview',
 );
 foreach($expected as $provided) {
     if (isset($_POST[$provided])) {
@@ -48,26 +47,24 @@ if ($action == 'mode') $action = $actionval;
 
 switch ($action) {
 case 'savedata':
-    $F = new \Forms\Form($_POST['frm_id']);
-    if ($F->isNew) {
+    $F = new Forms\Form($_POST['frm_id']);
+    if ($F->isNew()) {
         COM_refresh($_CONF['site_url']);
     }
-    $redirect = str_replace('{site_url}', $_CONF['site_url'], $F->redirect);
+    $redirect = str_replace('{site_url}', $_CONF['site_url'], $F->getRedirect());
     $errmsg = $F->SaveData($_POST);
     if (empty($errmsg)) {
         // Success
-        if ($F->onsubmit & FRM_ACTION_DISPLAY) {
-            $redirect = FRM_PI_URL . '/index.php?results=x&res_id=' .
-                    $F->res_id;
-            if ($F->onsubmit & FRM_ACTION_STORE) {
-                $redirect .= '&token=' . $F->Result->Token();
-            }
+        if ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
+            $redirect = FRM_PI_URL . '/index.php?myresult=x&res_id=' .
+                    $F->getResultID();
+            $redirect .= '&token=' . $F->getResult()->Token();
         } elseif (empty($redirect)) {
             $redirect = $_CONF['site_url'];
         }
         $u = parse_url($redirect);
-        if ($F->submit_msg != '') {
-            COM_setMsg($F->submit_msg);
+        if ($F->getSubmitMsg() != '') {
+            COM_setMsg($F->getSubmitMsg());
             $msg = '';
         } else {
             $msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';
@@ -97,24 +94,25 @@ case 'savedata':
     exit;
     break;
 
-case 'results':
+case 'myresult':
     $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
-    $frm_id = isset($_REQUEST['frm_id']) ? $_REQUEST['frm_id'] : '';
     $token  = isset($_GET['token']) ? $_GET['token'] : '';
-    echo COM_siteHeader();
-    if ($res_id > 0 && $frm_id != '') {
-        $F = new \Forms\Form($frm_id);
-        $F->ReadData($res_id);
+    $Result = new Forms\Result($res_id);
+    if (!$Result->isNew()) {
+        $Form = Forms\Form::getInstance($Result->getFormID());
+        echo COM_siteHeader();
+        $Form->ReadData($res_id);
         if (
-            ($F->Result->uid == $_USER['uid'] && $F->Result->Token() == $token)
+            $Form->isOwner()
             || plugin_isadmin_forms()
         ) {
-            $F->setToken($token);
+            $Form->setToken($token);
             $content .= '<h1>';
-            $content .= $F->submit_msg == '' ? $LANG_FORMS['def_submit_msg'] :
-                    $F->submit_msg;
+            $content .= $Form->getSubmitMsg() == '' ?
+                $LANG_FORMS['def_submit_msg'] :
+                $Form->getSubmitMsg();
             $content .= '</h1>';
-            $content .= $F->Prt($res_id);
+            $content .= $Form->Prt($res_id);
             $content .= '<hr />' . LB;
             $content .= '<center><a href="' . FRM_PI_URL .
                 '/index.php?print=x&res_id=' . $res_id . '&frm_id=' . $frm_id .
@@ -123,24 +121,87 @@ case 'results':
                 '/images/print.png" border="0" title="' .
                 $LANG01[65] . '"></a></center>';
         }
+        echo $content;
+        echo COM_siteFooter();
+        exit;
     }
-    echo $content;
-    echo COM_siteFooter();
-    exit;
     break;
 
 case 'print':
-    $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
-    $frm_id = isset($_GET['frm_id']) ? $_GET['frm_id'] : '';
-    if ($frm_id != '' && $res_id > 0) {
-        $F = \Forms\Form::getInstance($frm_id);
-        $F->ReadData($res_id);
-        if ((!empty($F->Result) && $F->Result->uid == $_USER['uid']) ||
-                plugin_isadmin_forms() ) {
-            $content .= $F->Prt($res_id, true);
+    $res_id = isset($_GET['res_id']) ? (int)$_GET['res_id'] : 0;
+    if ($res_id > 0) {
+        $Result = new Forms\Result($res_id);
+        $Form = Forms\Form::getInstance($Result->getFormID());
+        $Form->ReadData($res_id);
+        if (plugin_isadmin_forms() || $F->getResult()->getUid() == $_USER['uid']) {
+            // Make sure user is an admin or is viewing their own result
+            $content .= $Form->Prt($res_id, true);
         }
         echo $content;
         exit;
+    }
+    break;
+
+case 'export':
+    $Frm = Forms\Form::getInstance($frm_id);
+    if ($Frm->isOwner()) {
+        $content = $Frm->exportResultsCSV();
+        if (!empty($content)) {
+            header('Content-type: text/csv');
+            header('Content-Disposition: attachment; filename="'.$frm_id.'.csv"');
+            echo $content;
+            exit;
+        }
+    } else {
+        COM_setMsg($LANG_FORMS['no_results']);
+        COM_refresh(FRM_ADMIN_URL);
+    }
+    break;
+
+case 'reset':
+    $Frm = Forms\Form::getInstance($frm_id);
+    if ($Frm->isOwner()) {
+        $Frm->Reset();
+    }
+    COM_refresh(FRM_PI_URL . '/index.php?listforms');
+    break;
+
+case 'listforms':
+    echo COM_siteHeader();
+    echo Forms\Menu::User('myforms', '');
+    echo Forms\Form::adminList(false);
+    echo COM_siteFooter();
+    break;
+
+case 'preview':
+    // allow a form owner to preview their own form
+    $content = '';
+    if ($frm_id != '') {
+        $Form = new Forms\Form($frm_id);
+        if ($Form->isOwner()) {
+            $content .= Forms\Menu::User($view, 'hdr_form_preview');
+            $content .= $Form->Preview();
+        }
+    }
+    if ($content == '') {
+        COM_404();
+    } else {
+        echo COM_siteHeader();
+        echo $content;
+        echo COM_siteFooter();
+    }
+    break;
+
+case 'results':
+    $instance_id = isset($_GET['instance_id']) ? $_GET['instance_id'] : '';
+    $Form = Forms\Form::getInstance($frm_id);
+    if ($Form->isOwner()) {
+        echo COM_siteHeader();
+        echo Forms\Menu::User($view, 'hder_form_results');
+        echo Forms\Result::adminList($frm_id, $instance_id, false);
+        echo COM_siteFooter();
+    } else {
+        COM_404();
     }
     break;
 
@@ -172,18 +233,19 @@ function FRM_showForm($frm_id, $modal = false)
 
     // Instantiate the form and make sure the current user has access
     // to fill it out
-    $F = new \Forms\Form($frm_id, FRM_ACCESS_FILL);
+    $F = new Forms\Form($frm_id, FRM_ACCESS_FILL);
 
     $blocks = $modal ? 0 : -1;
-    echo \Forms\FRM_siteHeader($F->name, '', $blocks);
+    echo Forms\Menu::siteHeader($F->name, '', $blocks);
     if (isset($_GET['msg']) && !empty($_GET['msg'])) {
         echo COM_showMessage(
-                COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']);
+            COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']
+        );
     }
-    if ($F->id != '' && $F->access && $F->enabled) {
+    if ($F->getID() != '' && $F->hasAccess(FRM_ACCESS_FILL) && $F->isEnabled()) {
         echo $F->Render();
     } else {
-        $msg = $F->noaccess_msg;
+        $msg = $F->getNoAccessMsg();
         if (!empty($msg)) {
             echo $msg;
         } else {
@@ -191,7 +253,7 @@ function FRM_showForm($frm_id, $modal = false)
         }
     }
     $blocks = $modal ? 0 : -1;
-    echo \Forms\FRM_siteFooter($blocks);
+    echo Forms\Menu::siteFooter($blocks);
 }
 
 ?>

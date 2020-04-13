@@ -118,8 +118,10 @@ function service_printForm_forms($args, &$output, &$svc_msg)
                 '/index.php?print=x&res_id=' . $res_id .
                 '&frm_id=' . $args['frm_id'] .
                 '" target="_blank">' .
-                '<i class="uk-icon uk-icon-print frm-icon-info tooltip" '.
-                'title="' . $LANG01[65] . '"></i></a></center>';
+                Forms\Icon::getHTML('print', 'tooltip', array(
+                    'title' => $LANG01[65]
+                ) ) .
+                '</a></center>';
         }
     }
     $output = $content;
@@ -205,10 +207,13 @@ function service_resultId_forms($args, &$output, &$svc_msg)
         if (!isset($args['uid'])) {
             $args['uid'] = $_USER['uid'];
         }
-        $res_id = (int)DB_getItem($_TABLES['forms_results'], 'id',
-                "uid = '" . (int)$args['uid'] .
+        $res_id = (int)DB_getItem(
+            $_TABLES['forms_results'],
+            'res_id',
+            "uid = '" . (int)$args['uid'] .
                 "' AND frm_id = '" . DB_escapeString($args['frm_id']) .
-                "' ORDER BY dt DESC LIMIT 1");
+                "' ORDER BY dt DESC LIMIT 1"
+        );
     }
     $output = (int)$res_id;
     if ($output < 1) return PLG_RET_ERROR;
@@ -230,7 +235,7 @@ function service_getFormInfo_forms($args, &$output, &$svc_msg)
 
     $sql = "SELECT * FROM {$_TABLES['forms_frmdef']} WHERE 1=1";
     if (array_key_exists('frm_id', $args)) {
-        $sql .= " AND id = '" . DB_escapeString($args['frm_id']) . "'";
+        $sql .= " AND frm_id = '" . DB_escapeString($args['frm_id']) . "'";
     }
     if (isset($args['perm']) && (int)$args['perm'] > 0) {
         $sql .= COM_getPermSQL('AND', 0, (int)$args['perm']);
@@ -262,8 +267,8 @@ function service_getMyForms_forms($args, &$output, &$svc_msg)
     if (empty($args['basename'])) return PLG_RET_ERROR;
 
     $key = DB_escapeString($arg['basename']) . '%';
-    $sql = "SELECT id, name FROM {$_TABLES['forms_frmdef']}
-            WHERE id like '$key'";
+    $sql = "SELECT frm_id, frm_name FROM {$_TABLES['forms_frmdef']}
+            WHERE frm_id like '$key'";
     $res = DB_query($sql, 1);
     if (!$res) return PLG_RET_ERROR;
     while ($A = DB_fetchArray($res, true)) {

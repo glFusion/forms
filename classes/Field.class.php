@@ -3,14 +3,15 @@
  * Class to handle individual form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.3.1
+ * @version     v0.4.4
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms;
+
 
 /**
  * Base form field class.
@@ -19,15 +20,63 @@ class Field
 {
     /** Indicate that this is a new record vs one read from the DB.
      * @var boolean */
-    public $isNew;
+    protected $isNew = true;
+
+    /** Form record ID.
+     * @var string */
+    protected $frm_id = '';
+
+    /** Field record ID.
+     * @var integer */
+    protected $fld_id = 0;
+
+    /** Field order of appearance.
+     * @var integer */
+    protected $orderby = 9999;
+
+    /** Group with access to fill out.
+     * @var integer */
+    protected $fill_gid = 13;
+
+    /** Group with access to view results.
+     * @var integer */
+    protected $results_gid = 2;
+
+    /** Access type (required, normal, read-only).
+     * @var integer */
+    protected $access = 0;
+
+    /** Enabled flag.
+     * @var integer */
+    protected $enabled = 1;
+
+    /** Prompt to display.
+     * @var string */
+    protected $prompt = '';
+
+    /** Field name.
+     * @var string */
+    protected $fld_name = '';
+
+    /** Field type (checkbox, text, radio, etc.).
+     * @var string */
+    protected $type = 'text';
+
+    /** Help message.
+     * @var string */
+    protected $hlp_msg = '';
+
+    /** Field value provided by the submitter.
+     * @var string */
+    protected $value = '';
+
+    /** Value formatted for display based on options.
+     * @var string */
+    protected $value_text = '';
 
     /** Array of options.
      * @var array */
-    public $options = array();  // Form object needs access
-
-    /** Internal field properties accessed via `__set()` and `__get()`.
-     * @var array */
-    protected $properties = array();
+    protected $options = array();  // Form object needs access
 
     /** Submission type, either `ajax` or `regular`.
      * @var string */
@@ -48,15 +97,8 @@ class Field
     {
         global $_USER, $_CONF_FRM;
 
-        $this->isNew = true;
         if ($id == 0) {
             // Creating a new, empty object
-            $this->fld_id = 0;
-            $this->name = '';
-            $this->type = 'text';
-            $this->enabled = 1;
-            $this->access = 0;
-            $this->prompt = '';
             $this->frm_id = $frm_id;
             $this->fill_gid = $_CONF_FRM['fill_gid'];
             $this->results_gid = $_CONF_FRM['results_gid'];
@@ -103,7 +145,7 @@ class Field
             }
         }
 
-        $cls = __NAMESPACE__ . '\\Fields\\' . $fld['type'];
+        $cls = __NAMESPACE__ . '\\Fields\\' . ucfirst($fld['type']) . 'Field';
         return new $cls($fld);
     }
 
@@ -143,66 +185,39 @@ class Field
 
 
     /**
-     * Set a value into a property.
+     * Get all the field objects associated with a form.
      *
-     * @param   string  $name       Name of property
-     * @param   mixed   $value      Value to set
+     * @param   string  $frm_id     Form ID
+     * @return  array       Array of Field objects
      */
-    public function __set($name, $value)
+    public static function getByForm($frm_id)
     {
-        global $LANG_FORMS;
-        switch ($name) {
-        case 'frm_id':
-            $this->properties[$name] = COM_sanitizeID($value);
-            break;
+        global $_TABLES;
 
-        case 'fld_id':
-        case 'orderby':
-        case 'fill_gid':
-        case 'results_gid';
-        case 'access':
-            $this->properties[$name] = (int)$value;
-            break;
-
-        case 'enabled':
-            $this->properties[$name] = $value == 0 ? 0 : 1;
-            break;
-
-        case 'calcvalues':
-            if (is_array($value))
-                $this->properties[$name] = $value;
-            else
-                $this->properties[$name] = array();
-            break;
-
-        case 'prompt':
-        case 'name':
-        case 'type':
-        case 'help_msg':
-            $this->properties[$name] = trim($value);
-            break;
-
-        case 'value':
-            $this->properties['value'] = $this->setValue($value);
-            break;
-
+        $retval = array();
+        $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
+                WHERE frm_id = '" . DB_escapeString($frm_id) . "'
+                ORDER BY orderby ASC";
+        //echo $sql;die;
+        $res2 = DB_query($sql, 1);
+        while ($A = DB_fetchArray($res2, false)) {
+            $retval[$A['fld_name']] = self::getInstance($A);
         }
+        return $retval;
     }
 
 
+
     /**
-     * Get a property's value.
+     * Delete all the field records when a form is deleted.
      *
-     * @param   string  $name       Name of property
-     * @return  mixed       Value of property, or empty string if undefined
+     * @param   string  $frm_id     Form ID
      */
-    public function __get($name)
+    public static function deleteByForm($frm_id)
     {
-        if (array_key_exists($name, $this->properties)) {
-           return $this->properties[$name];
-        } else {
-            return '';
-        }
+        global $_TABLES;
+
+        DB_delete($_TABLES['forms_flddef'], 'frm_id', $frm_id);
     }
 
 
@@ -218,18 +233,18 @@ class Field
         if (!is_array($A))
             return false;
 
-        $this->fld_id = $A['fld_id'];
+        $this->fld_id = (int)$A['fld_id'];
         $this->frm_id = $A['frm_id'];
-        $this->orderby = empty($A['orderby']) ? 255 : $A['orderby'];
-        $this->enabled = isset($A['enabled']) ? $A['enabled'] : 0;
-        $this->access = $A['access'];
+        $this->orderby = empty($A['orderby']) ? 9999 : $A['orderby'];
+        $this->enabled = isset($A['enabled']) && $A['enabled'] ? 1 : 0;
+        $this->access = (int)$A['access'];
         $this->prompt = $A['prompt'];
-        $this->name = $A['name'];
+        $this->fld_name = $A['fld_name'];
         // Make sure 'type' is set before 'value'
         $this->type = $A['type'];
         $this->help_msg = $A['help_msg'];
-        $this->results_gid = $A['results_gid'];
-        $this->fill_gid = $A['fill_gid'];
+        $this->results_gid = (int)$A['results_gid'];
+        $this->fill_gid = (int)$A['fill_gid'];
 
         if (!$fromdb) {
             $this->options = $this->optsFromForm($A);
@@ -395,7 +410,7 @@ class Field
                     $_CONF_FRM['def_calc_format'] : $this->options['format'];
         // Create the selection list for the "Position After" dropdown.
         // Include all options *except* the current one
-        $sql = "SELECT orderby, name
+        $sql = "SELECT orderby, fld_name
                 FROM {$_TABLES['forms_flddef']}
                 WHERE fld_id <> '{$this->fld_id}'
                 AND frm_id = '{$this->frm_id}'
@@ -412,19 +427,22 @@ class Field
             } else {
                 $sel = '';
             }
-            $orderby_list .= "<option value=\"$orderby\" $sel>{$B['name']}</option>\n";
+            $orderby_list .= "<option value=\"$orderby\" $sel>{$B['fld_name']}</option>\n";
         }
 
         $autogen_opt = isset($this->options['autogen']) ?
                     (int)$this->options['autogen'] : 0;
         $T->set_var(array(
             //'admin_url' => FRM_ADMIN_URL,
-            'frm_name'  => DB_getItem($_TABLES['forms_frmdef'], 'name',
-                            "id='" . DB_escapeString($this->frm_id) . "'"),
+            'frm_name'  => DB_getItem(
+                $_TABLES['forms_frmdef'],
+                'frm_name',
+                "frm_id='" . DB_escapeString($this->frm_id) . "'"
+            ),
 //            'frm_id'    => $this->Form->id,
             'frm_id'    => $this->frm_id,
             'fld_id'    => $this->fld_id,
-            'name'      => $this->name,
+            'fld_name'  => $this->fld_name,
             'type'      => $this->type,
             'valuestr'  => $value_str,
             'defvalue'  => isset($this->options['default']) ? $this->options['default'] : '',
@@ -449,8 +467,8 @@ class Field
             'orderby_selection' => $orderby_list,
             'list_input' => $listinput,
             'help_msg'  => $this->help_msg,
-            'fill_gid_select' => FRM_GroupDropdown($this->fill_gid, 3),
-            'results_gid_select' => FRM_GroupDropdown($this->results_gid, 3),
+            'fill_gid_select' => $this->_groupDropdown($this->fill_gid),
+            'results_gid_select' => $this->_groupDropdown($this->results_gid),
             'permissions' => SEC_getPermissionsHTML(
                     $this->perm_owner, $this->perm_group,
                     $this->perm_members, $this->perm_anon),
@@ -481,13 +499,14 @@ class Field
         }
 
         // Sanitize the name, especially make sure there are no spaces
-        $A['name'] = COM_sanitizeID($A['name'], false);
-        if (empty($A['name']) || empty($A['type']))
+        $A['fld_name'] = COM_sanitizeID($A['fld_name'], false);
+        if (empty($A['fld_name']) || empty($A['type'])) {
             return;
+        }
 
         $this->setVars($A, false);
-        $this->fill_gid = $A['fill_gid'];
-        $this->results_gid = $A['results_gid'];
+        $this->fill_gid = (int)$A['fill_gid'];
+        $this->results_gid = (int)$A['results_gid'];
 
         if ($fld_id > 0) {
             // Existing record, perform update
@@ -499,7 +518,7 @@ class Field
         }
 
         $sql2 = "frm_id = '" . DB_escapeString($this->frm_id) . "',
-                name = '" . DB_escapeString($this->name) . "',
+                fld_name = '" . DB_escapeString($this->fld_name) . "',
                 type = '" . DB_escapeString($this->type) . "',
                 enabled = '{$this->enabled}',
                 access = '{$this->access}',
@@ -510,8 +529,7 @@ class Field
                 fill_gid = '{$this->fill_gid}',
                 results_gid = '{$this->results_gid}'";
         $sql = $sql1 . $sql2 . $sql3;
-        //echo $sql;die;
-        DB_query($sql, 1);
+        DB_query($sql);
 
         if (!DB_error()) {
             // After saving, reorder the fields
@@ -520,7 +538,6 @@ class Field
         } else {
             $msg = 5;
         }
-
         return $msg;
     }
 
@@ -552,19 +569,20 @@ class Field
         global $_TABLES;
 
         $res_id = (int)$res_id;
-        if ($res_id == 0)
+        if ($res_id == 0) {
             return false;
+        }
 
         if (isset($this->options['autogen']) &&
             $this->options['autogen'] == FRM_AUTOGEN_SAVE) {
-            $newval = self::AutoGen($this->properties, 'save');
+            $newval = $this->AutoGen('save');
         }
 
         // Put the new value back into the array after sanitizing
         $this->value = $newval;
         $db_value = $this->prepareForDB($newval);
 
-        //$this->name = $name;
+        //$this->fld_name = $name;
         $sql = "INSERT INTO {$_TABLES['forms_values']}
                     (results_id, fld_id, value)
                 VALUES (
@@ -589,10 +607,11 @@ class Field
      *
      * @return string  Date formatted for display
      */
-    public function DateDisplay()
+    public function XXDateDisplay()
     {
-        if ($this->type != 'date')
+        if ($this->type != 'date') {
             return $this->value_text;
+        }
 
         $dt_tm = explode(' ', $this->value);
         if (strpos($dt_tm[0], '-')) {
@@ -641,7 +660,6 @@ class Field
 
     /**
      * Get the defined date formats into an array.
-     * Static for now, maybe allow more user-defined options in the future.
      *
      * return   array   Array of date formats
      */
@@ -691,25 +709,27 @@ class Field
 
         switch ($this->type) {
         case 'date':
-            if (empty($vals[$this->name . '_month']) ||
-                empty($vals[$this->name . '_day']) ||
-                empty($vals[$this->name . '_year'])) {
+            if (
+                empty($vals[$this->fld_name . '_month']) ||
+                empty($vals[$this->fld_name . '_day']) ||
+                empty($vals[$this->fld_name . '_year'])
+            ) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
             }
             break;
         case 'time':
-            if (empty($vals[$this->name . '_hour']) ||
-                empty($vals[$this->name . '_minute'])) {
+            if (empty($vals[$this->fld_name . '_hour']) ||
+                empty($vals[$this->fld_name . '_minute'])) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
             }
             break;
         case 'radio':
-            if (empty($vals[$this->name])) {
+            if (empty($vals[$this->fld_name])) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
             }
             break;
         default:
-            if (empty($vals[$this->name])) {
+            if (empty($vals[$this->fld_name])) {
                 $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
             }
             break;
@@ -735,7 +755,7 @@ class Field
 
         $sql .= "INSERT INTO {$_TABLES['forms_flddef']} SET
                 frm_id = '" . DB_escapeString($this->frm_id) . "',
-                name = '" . DB_escapeString($this->name) . "',
+                name = '" . DB_escapeString($this->fld_name) . "',
                 type = '" . DB_escapeString($this->type) . "',
                 enabled = {$this->enabled},
                 access = {$this->access},
@@ -849,10 +869,12 @@ class Field
     {
         global $_USER;
 
-        if (empty($def) &&
-                isset($this->options['autogen']) &&
-                $this->options['autogen'] == FRM_AUTOGEN_FILL) {
-            return self::AutoGen($this->name, 'fill');
+        if (
+            empty($def) &&
+            isset($this->options['autogen']) &&
+            $this->options['autogen'] == FRM_AUTOGEN_FILL
+        ) {
+            return $this->AutoGen('fill');
         }
 
         $value = $def;      // by default just return the given value
@@ -889,7 +911,7 @@ class Field
      * @param   string  $timestr    Optional HH:MM string.  Seconds ignored.
      * @return  string  HTML for time selection field
      */
-    public function TimeField($timestr = '')
+    protected function TimeField($timestr = '')
     {
         $ampm_fld = '';
         $hour = '';
@@ -897,10 +919,10 @@ class Field
 
         // Check for POSTed values first, coming from a previous form
         // If one is set, all should be set, and empty values are ok
-        if (isset($_POST[$this->name . '_hour']) &&
-            isset($_POST[$this->name . '_minute'])) {
-            $hour = (int)$_POST[$this->name . '_hour'];
-            $minute = (int)$_POST[$this->name . '_minute'];
+        if (isset($_POST[$this->fld_name . '_hour']) &&
+            isset($_POST[$this->fld_name . '_minute'])) {
+            $hour = (int)$_POST[$this->fld_name . '_hour'];
+            $minute = (int)$_POST[$this->fld_name . '_minute'];
         }
         if (empty($hour) || empty($minute)) {
             if (!empty($timestr)) {
@@ -927,13 +949,13 @@ class Field
 
         if ($this->options['timeformat'] == '12') {
             list($hour, $ampm_sel) = $this->hour24to12($hour);
-            $ampm_fld = COM_getAmPmFormSelection($this->name . '_ampm', $ampm_sel);
+            $ampm_fld = COM_getAmPmFormSelection($this->fld_name . '_ampm', $ampm_sel);
         }
 
-        $h_fld = '<select name="' . $this->name . '_hour">' . LB .
+        $h_fld = '<select name="' . $this->fld_name . '_hour">' . LB .
                 COM_getHourFormOptions($hour, $this->options['timeformat']) .
                 '</select>' . LB;
-        $m_fld = '<select name="' . $this->name . '_minute">' . LB .
+        $m_fld = '<select name="' . $this->fld_name . '_minute">' . LB .
                 COM_getMinuteFormOptions($minute) .
                 '</select>' . LB;
         return $h_fld . ' ' . $m_fld . $ampm_fld;
@@ -967,29 +989,28 @@ class Field
      *   3. CUSTOM_forms_autogen()
      *   4. COM_makeSid()
      *
-     * @param   string  $A      Array of variable info
      * @param   string  $type   `fill` or `save` to indicate which function
      * @param   integer $uid    User ID, passwd through to autogen function
      * @return mixed       Generated field value
      */
-    public static function AutoGen($A, $type, $uid = 0)
+    private function AutoGen($type, $uid = 0)
     {
         global $_USER;
 
         if ($type != 'fill') $type = 'save';
         if ($uid == 0) $uid = (int)$_USER['uid'];
-        $var = $A['name'];
+        $var = $this->getName();
 
         $function = 'CUSTOM_forms_autogen';
-        if (function_exists($function . '_' . $type . '_' . $var))
+        if (function_exists($function . '_' . $type . '_' . $var)) {
             $retval = $function . '_' . $type . '_' . $var($A, $uid);
-        elseif (function_exists($function . '_' . $var))
+        } elseif (function_exists($function . '_' . $var)) {
             $retval =  $function . '_' . $var($A, $uid);
-        elseif (function_exists($function))
+        } elseif (function_exists($function)) {
             $retval = $function($A, $uid);
-        else
+        } else {
             $retval = COM_makeSID();
-
+        }
         return $retval;
     }
 
@@ -1035,7 +1056,7 @@ class Field
      */
     public function _elemID($val = '')
     {
-        $name  = str_replace(' ', '', $this->name);
+        $name  = str_replace(' ', '', $this->fld_name);
         $id = 'forms_' . $this->frm_id . '_' . $name;
         if (!empty($val)) {
             $id .= '_' . str_replace(' ', '', $val);
@@ -1079,7 +1100,20 @@ class Field
      */
     public function valueFromForm($A)
     {
-        return isset($A[$this->name]) ? $A[$this->name] : '';
+        return isset($A[$this->fld_name]) ? $A[$this->fld_name] : '';
+    }
+
+
+    /**
+     * Get the value to show in the CSV export of results.
+     * This allows a field like a checkbox to report the actual numeric value.
+     * The default behavior is to call displayValue().
+     *
+     * @return  mixed       Value to show in CSV export.
+     */
+    public function getValueForCSV($fields)
+    {
+        return $this->displayValue($fields);
     }
 
 
@@ -1092,8 +1126,6 @@ class Field
      */
     public function displayValue($fields)
     {
-        global $_GROUPS;
-
         if ($this->canViewResults()) {
             return htmlspecialchars($this->value);
         } else {
@@ -1110,7 +1142,133 @@ class Field
      */
     public function displayPrompt()
     {
-        return $this->prompt == '' ? $this->name : $this->prompt;
+        return $this->prompt == '' ? $this->fld_name : $this->prompt;
+    }
+
+
+    /**
+     * Get the field record ID.
+     *
+     * @return  integer     Field record ID
+     */
+    public function getID()
+    {
+        return (int)$this->fld_id;
+    }
+
+
+    /**
+     * Set the form ID for this field.
+     *
+     * @param   string  $frm_id     Form ID
+     * @return  object  $this
+     */
+    public function setFormID($frm_id)
+    {
+        $this->frm_id = $frm_id;
+        return $this;
+    }
+
+
+    /**
+     * Get the field short name.
+     *
+     * @return  string      Field name
+     */
+    public function getName()
+    {
+        return $this->fld_name;
+    }
+
+
+    /**
+     * Set the name of this field.
+     *
+     * @param   string  $name   Field name
+     * @return  object  $this
+     */
+    public function setName($name)
+    {
+        $this->fld_name = $name;
+        return $this;
+    }
+
+
+    /**
+     * Get the name of the field.
+     *
+     * @return  string      Field name
+     */
+    public function getPrompt()
+    {
+        return $this->prompt;
+    }
+
+
+    /**
+     * Get the field value.
+     *
+     * @return   mixed      Value submitted
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+
+    /**
+     * Get the help message for this field.
+     *
+     * @return  string      Help message
+     */
+    public function getHelpMsg()
+    {
+        return $this->help_msg;
+    }
+
+
+    /**
+     * Get the access setting for this field (normal, required, read-only)
+     *
+     * @return  integer     Access level flag
+     */
+    public function getAccess()
+    {
+        return (int)$this->access;
+    }
+
+
+    /**
+     * Check that the user has a given level of access to the field.
+     *
+     * @param   integer $req    Access required
+     * @return  boolean     True if access is allowed, False if not
+     */
+    public function checkAccess($req)
+    {
+        return $this->access & $req == $req;
+    }
+
+
+    /**
+     * Check if this field is enabled.
+     *
+     * @return  boolean     True if enabled, False if disabled
+     */
+    public function isEnabled()
+    {
+        return $this->enabled ? 1 : 0;
+    }
+
+
+    /**
+     * Get the type of field.
+     *
+     * @return  string      Field type
+     */
+    public function getType()
+    {
+        return $this->type;
     }
 
 
@@ -1119,11 +1277,27 @@ class Field
      * Default function just trims the input.
      *
      * @param   string  $value  Value to set
-     * @return  string  Sanitized value
+     * @return  object  $his
      */
     public function setValue($value)
     {
-        return trim($value);
+        if (is_array($value) && isset($value[$this->getName()])) {
+            $this->value = trim($value[$this->getName()]);
+        } else {
+            $this->value = trim($value);
+        }
+        return $this;
+    }
+
+
+    /**
+     * Get the group ID that is allowed to view results, e.g. in an autotag.
+     *
+     * @return  integer     Authorized group ID
+     */
+    public function getResultsGid()
+    {
+        return (int)$this->results_gid;
     }
 
 
@@ -1136,14 +1310,31 @@ class Field
     {
         static $sub_type = NULL;
         if ($sub_type === NULL) {
-            $form = Form::getInstance($this->frm_id);
+            $Form = Form::getInstance($this->frm_id);
             if (!$form) {
                 $sub_type = 'regular';
             } else {
-                $sub_type = $form->sub_type;
+                $sub_type = $Form->getSubType();
             }
         }
         return $sub_type;
+    }
+
+
+    /**
+     * Get the value for a specified option, if it is set.
+     *
+     * @param   string  $opt        Option name
+     * @param   mixed   $default    Default value if option not set
+     * @return  mixed       Option value, NULL if not set
+     */
+    protected function getOption($opt, $default=NULL)
+    {
+        if (isset($this->options[$opt])) {
+            return $this->options[$opt];
+        } else {
+            return $default;
+        }
     }
 
 
@@ -1157,9 +1348,9 @@ class Field
     protected function renderValue($res_id, $mode)
     {
         $value = '';
-        if (isset($_POST[$this->name])) {
+        if (isset($_POST[$this->fld_name])) {
             // First, check for a POSTed value. The form is being redisplayed.
-            $value = $_POST[$this->name];
+            $value = $_POST[$this->fld_name];
         } elseif ($this->getSubType() == 'ajax') {
             $sess_id = $this->_sessID();
             if (SESS_isSet($sess_id)) {
@@ -1318,7 +1509,7 @@ class Field
     {
         $retval = '';
         $Form = Form::getInstance($this->frm_id);
-        $d = addSlashes(htmlentities(trim($this->displayValue($Form->fields))));
+        $d = addSlashes(htmlentities(trim($this->displayValue($Form->getFields()))));
         // Replace spaces in prompts with underscores, then remove all other
         // non-alphanumerics
         $p = str_replace(' ', '_', $this->prompt);
@@ -1354,6 +1545,199 @@ class Field
     public function setCanviewResults($canview=false)
     {
         $this->canviewResults = $canview ? true : false;
+    }
+
+
+    /**
+     * Uses lib-admin to list the field definitions and allow updating.
+     *
+     * @param   string  $frm_id     Form ID
+     * @return  string              HTML for the list
+     */
+    public static function adminList($frm_id = '')
+    {
+        global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $_CONF_FRM;
+
+        $header_arr = array(
+            array(
+                'text' => $LANG_ADMIN['edit'],
+                'field' => 'edit',
+                'sort' => false,
+                'align' => 'center',
+            ),
+            array(
+                'text' => $LANG_FORMS['name'],
+                'field' => 'fld_name',
+                'sort' => false,
+            ),
+            array(
+                'text' => $LANG_FORMS['move'],
+                'field' => 'move',
+                'sort' => false,
+                'align' => 'center',
+            ),
+            array(
+                'text' => $LANG_FORMS['type'],
+                'field' => 'type',
+                'sort' => false,
+            ),
+            array(
+                'text' => $LANG_FORMS['enabled'],
+                'field' => 'enabled',
+                'sort' => false,
+                'align' => 'center',
+            ),
+            array(
+                'text' => $LANG_FORMS['fld_access'],
+                'field' => 'access',
+                'sort' => false,
+            ),
+            array('text' => $LANG_ADMIN['delete'],
+                'field' => 'delete',
+                'sort' => false,
+            ),
+        );
+        $defsort_arr = array('field' => 'orderby', 'direction' => 'asc');
+        $text_arr = array('form_url' => FRM_ADMIN_URL . '/index.php');
+        $options_arr = array(
+            'chkdelete' => true,
+            'chkname' => 'delfield',
+            'chkfield' => 'fld_id',
+        );
+        $query_arr = array(
+            'table' => 'forms_flddef',
+            'sql' => "SELECT * FROM {$_TABLES['forms_flddef']}",
+            'query_fields' => array('name', 'type', 'value'),
+            'default_filter' => '',
+        );
+        if ($frm_id != '') {
+            $query_arr['sql'] .= " WHERE frm_id='" . DB_escapeString($frm_id) . "'";
+        }
+        $form_arr = array();
+        $T = new \Template(FRM_PI_PATH . '/templates/admin');
+        $T->set_file('formfields', 'formfields.thtml');
+        $T->set_var(array(
+            'action_url'    => FRM_ADMIN_URL . '/index.php',
+            'frm_id'        => $frm_id,
+            'pi_url'        => FRM_PI_URL,
+            'field_adminlist' => ADMIN_list(
+                'forms_fieldlist',
+                array(__CLASS__, 'getListField'),
+                $header_arr,
+                $text_arr, $query_arr, $defsort_arr, '', '',
+                $options_arr, $form_arr
+            ),
+        ) );
+        $T->parse('output', 'formfields');
+        return $T->finish($T->get_var('output'));
+    }
+
+
+    /**
+     * Determine what to display in the admin list for each field.
+     *
+     * @param   string  $fieldname  Name of the field, from database
+     * @param   mixed   $fieldvalue Value of the current field
+     * @param   array   $A          Array of all name/field pairs
+     * @param   array   $icon_arr   Array of system icons
+     * @return  string              HTML for the field cell
+     */
+    public static function getListField($fieldname, $fieldvalue, $A, $icon_arr)
+    {
+        global $_CONF, $_CONF_FRM, $LANG_ACCESS, $LANG_FORMS;
+
+        $retval = '';
+
+        switch($fieldname) {
+        case 'edit':
+            $retval = COM_createLink(
+                Icon::getHTML('edit'),
+                FRM_ADMIN_URL . "/index.php?editfield=x&amp;fld_id={$A['fld_id']}"
+            );
+            break;
+
+        case 'delete':
+            $retval = COM_createLink(
+                Icon::getHTML('delete'),
+                FRM_ADMIN_URL . '/index.php?deleteFldDef=x&fld_id=' .
+                    $A['fld_id'] . '&frm_id=' . $A['frm_id'],
+                array(
+                    'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}');",
+                )
+            );
+            break;
+
+        case 'access':
+            $retval = 'Unknown';
+            switch ($fieldvalue) {
+            case FRM_FIELD_NORMAL:
+                $retval = $LANG_FORMS['normal'];
+                break;
+            case FRM_FIELD_READONLY:
+                $retval = $LANG_FORMS['readonly'];
+                break;
+            case FRM_FIELD_HIDDEN:
+                $retval = $LANG_FORMS['hidden'];
+                break;
+            case FRM_FIELD_REQUIRED:
+                $retval = $LANG_FORMS['required'];
+                break;
+            }
+            break;
+
+        case 'enabled':
+        case 'required':
+            if ($A[$fieldname] == 1) {
+                $chk = ' checked ';
+                $enabled = 1;
+            } else {
+                $chk = '';
+                $enabled = 0;
+            }
+            $retval = "<input name=\"{$fieldname}_{$A['fld_id']}\" " .
+                "type=\"checkbox\" $chk " .
+                "onclick='FRMtoggleEnabled(this, \"{$A['fld_id']}\", \"field\", \"{$fieldname}\", \"" . FRM_ADMIN_URL . "\");' ".
+                "/>\n";
+            break;
+
+        case 'fld_id':
+            return '';
+            break;
+
+        case 'move':
+            $retval = COM_createLink(
+                Icon::getHTML('arrow-up'),
+                FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}"
+            ) . '&nbsp;';
+            $retval .= COM_createLink(
+                Icon::getHTML('arrow-down'),
+                FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}"
+            );
+            break;
+
+        default:
+            $retval = $fieldvalue;
+            break;
+        }
+        return $retval;
+    }
+
+
+    /**
+     * Create a group selection.
+     *
+     * @param   integer $group_id   Selected group ID
+     * @param   string      Dropdown list or hidden field
+     */
+    private function _groupDropdown($group_id=0)
+    {
+        global $_TABLES;
+
+        return COM_optionList(
+            $_TABLES['groups'],
+            'grp_id,grp_name',
+            $group_id
+        );
     }
 
 }

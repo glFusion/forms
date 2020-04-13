@@ -15,6 +15,36 @@
 require_once '../lib-common.php';
 
 switch ($_POST['action']) {
+case 'toggleEnabled':
+    // Regular users and admins can toggle the enabled flag of their forms.
+    $oldval = $_POST['oldval'] == 0 ? 0 : 1;
+    $newval = 99;
+    $var = trim($_POST['var']);  // sanitized via switch below
+    $id = DB_escapeString($_POST['id']);
+    if (isset($_POST['type'])) {
+        switch ($_POST['type']) {
+        case 'form':
+            $Frm = Forms\Form::getInstance($_POST['id']);
+            if ($Frm->isOwner() || plugin_isadmin_forms()) {
+                $newval = Forms\Form::toggle($_POST['id'], 'enabled', $_POST['oldval']);
+            }
+            break;
+        }
+    }
+    $result = array(
+        'status' => $newval == $oldval ? false : true,
+        'statusMessage' => $newval == $oldval ? $LANG_FORMS['toggle_failure'] :
+                $LANG_FORMS['toggle_success'],
+        'newval' => $newval,
+    );
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, must-revalidate');
+    //A date in the past
+    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+    echo json_encode($result);
+    exit;
+    break;
+
 case 'ajax_fld_post':
     // Save a single field from an AJAX form. Expects form and field IDs
     // representing previously defined items.

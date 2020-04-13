@@ -33,7 +33,10 @@ case 'toggleEnabled':
     if (isset($_POST['type'])) {
         switch ($_POST['type']) {
         case 'form':
-            $newval = \Forms\Form::toggle($_POST['id'], 'enabled', $_POST['oldval']);
+            $Frm = Forms\Form::getInstance($_POST['id']);
+            if ($Frm->isOwner()) {
+                $newval = \Forms\Form::toggle($_POST['id'], 'enabled', $_POST['oldval']);
+            }
             /*$type = 'form';
             $table = 'forms_frmdef';
             $field = 'id';*/

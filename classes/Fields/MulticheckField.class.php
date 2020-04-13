@@ -13,10 +13,12 @@
  */
 namespace Forms\Fields;
 
+
 /**
  * Handle multi-checkbox form fields.
+ * @package forms
  */
-class multicheck extends \Forms\Field
+class MulticheckField extends \Forms\Field
 {
     /**
      * Create a single form field for data entry.
@@ -40,7 +42,7 @@ class multicheck extends \Forms\Field
             $elem_id = $this->_elemID($value);
             $sel = $this->renderValue($res_id, $mode, $value);
             $fld .= "<input $access type=\"checkbox\"
-                    name=\"{$this->name}[]\"
+                    name=\"{$this->getName()}[]\"
                     id=\"$elem_id\"
                     value=\"$value\" $sel $js>&nbsp;$value&nbsp;" . LB;
         }
@@ -77,7 +79,7 @@ class multicheck extends \Forms\Field
     protected function renderValue($res_id, $mode, $valname='')
     {
         $chk = false;
-        if (isset($_POST[$this->name])) {
+        if (isset($_POST[$this->getName()])) {
             // First, check for a POSTed value. The form is being redisplayed.
             $chk = true;
         } elseif ($this->getSubType() == 'ajax' && SESS_isSet($this->_elemID($valname))) {

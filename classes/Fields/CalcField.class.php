@@ -12,11 +12,13 @@
  * @filesource
  */
 namespace Forms\Fields;
+
+
 /**
  * Class to handle calculated fields.
  * Calculated fields show a value based on the submitted content in other fields.
  */
-class calc extends \Forms\Field
+class CalcField extends \Forms\Field
 {
 
     /**
@@ -56,7 +58,7 @@ class calc extends \Forms\Field
         foreach ($valnames as $val) {
             if (is_numeric($val))           // Normal numeric value
                 $values[] = $val;
-            elseif ($val == $this->name)    // Can't reference ourself
+            elseif ($val == $this->getName())    // Can't reference ourself
                 continue;
             elseif (is_object($fields[$val])) { // Another field value
                 $values[] = $fields[$val]->value;

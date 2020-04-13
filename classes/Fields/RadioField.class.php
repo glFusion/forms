@@ -1,24 +1,25 @@
 <?php
 /**
- * Class to handle dropdown form fields.
+ * Class to handle radio button form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
- * @since       0.3.1
+ * @version     v0.3.1
+ * @since       v0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms\Fields;
 
-/**
- * Dropdown form field class.
- */
-class select extends \Forms\Field
-{
 
+/**
+ * Radio button class.
+ * @package forms
+ */
+class RadioField extends \Forms\Field
+{
     /**
      * Create a single form field for data entry.
      *
@@ -28,23 +29,26 @@ class select extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
-        global $LANG_FORMS;
-
+        if (!$this->canViewField()) {
+            return NULL;
+        }
+        $values = FRM_getOpts($this->options['values']);
+        if (!is_array($values)) {
+            // Have to have some values for multiple checkboxes
+            return NULL;
+        }
+        $this->value = $this->renderValue($res_id, $mode);
         $elem_id = $this->_elemID();
         $js = $this->renderJS($mode);
         $access = $this->renderAccess();
-        $this->value = $this->renderValue($res_id, $mode);
-        $values = FRM_getOpts($this->options['values']);
-        if (empty($values)) return '';
-
-        $fld = "<select $access name=\"{$this->name}\"
-                    id=\"$elem_id\" $js>" . LB;
-        $fld .= "<option value=\"\">{$LANG_FORMS['select']}</option>\n";
+        $fld = '';
         foreach ($values as $id=>$value) {
-            $sel = $this->value == $value ? 'selected="selected"' : '';
-            $fld .= "<option value=\"$value\" $sel>{$value}</option>" . LB;
+            $sel = $this->value == $value ? 'checked="checked"' : '';
+            $fld .= '<input ' . $access  . ' type="radio" name="' . $this->getName().
+                    '"id="' . $elem_id . '_' . $value .
+                    '" value="' . $value . '" ' . $sel . $js .
+                    '>&nbsp;' . $value . '&nbsp;' . LB;
         }
-        $fld .= "</select>" . LB;
         return $fld;
     }
 

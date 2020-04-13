@@ -83,6 +83,28 @@ $formsConfigData = array(
         'set' => true,
         'group' => 'forms',
     ),
+    array(
+        'name' => 'def_spamx',
+        'default_value' => 1,
+        'type' => 'select',
+        'subgroup' => 0,
+        'fieldset' => 0,
+        'selection_array' => 3,
+        'sort' => 40,
+        'set' => true,
+        'group' => 'forms',
+    ),
+    array(
+        'name' => 'use_real_ip',
+        'default_value' => 0,
+        'type' => 'select',
+        'subgroup' => 0,
+        'fieldset' => 0,
+        'selection_array' => 3,
+        'sort' => 50,
+        'set' => true,
+        'group' => 'forms',
+    ),
 
     // Field defaults
     array(
