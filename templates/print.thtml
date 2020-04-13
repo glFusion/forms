@@ -17,7 +17,7 @@ colspan="2">
 {!else}
 class="alignright" valign="top">
   {!if prompt}
-    <label for="{fieldname}">{prompt}:</label>
+    <label>{prompt}:</label>
   {!endif}
   </td>
   <td>
