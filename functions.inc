@@ -191,8 +191,11 @@ function plugin_getuseroption_forms()
     if ($uid < 2) return '';
     $groups = implode(',', $_GROUPS);
 
-    $form_cnt = (int)DB_getItem($_TABLES['forms_frmdef'], 'COUNT(*)',
-                    "owner_id='{$uid}' OR group_id IN ({$groups})");
+    $form_cnt = (int)DB_getItem(
+        $_TABLES['forms_frmdef'],
+        'COUNT(*)',
+        "owner_id='{$uid}' OR group_id IN ({$groups})"
+    );
     if ($form_cnt < 1) return '';
 
     $menu = array(
@@ -488,8 +491,11 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!empty($instance_id))
                         $url .= '&instance_id=' . urlencode($instance_id);
                     if (empty($caption)) {
-                        $caption = DB_getItem($_TABLES['forms_frmdef'], 'name',
-                                "id='$frm_id'");
+                        $caption = DB_getItem(
+                            $_TABLES['forms_frmdef'],
+                            'frm_name',
+                            "id='$frm_id'"
+                        );
                     }
                     $opts = array(
                         'title' => $caption,
@@ -539,8 +545,11 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                 $url = COM_buildUrl(FRM_PI_URL . '/index.php?frm_id=' . $frm_id);
                 $caption = $autotag['parm2'];
                 if (empty($caption)) {
-                    $caption = DB_getItem($_TABLES['forms_frmdef'], 'name',
-                                "id='$frm_id'");
+                    $caption = DB_getItem(
+                        $_TABLES['forms_frmdef'],
+                        'frm_name',
+                        "id='$frm_id'"
+                    );
                 }
                 // Have to have a caption, otherwise there's no text to show
                 if (!empty($caption)) {
