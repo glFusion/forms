@@ -143,8 +143,7 @@ class DateField extends \Forms\Field
         ) );
         $T->parse('output', 'dt');
         $fld = $T->finish($T->get_var('output'));
-
-        if ($this->options['showtime'] == 1) {
+        if ($this->options['showtime'] == 1 && isset($datestr[1])) {
             $fld .= ' ' . $this->TimeField($datestr[1]);
         }
         return $fld;

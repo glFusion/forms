@@ -179,7 +179,7 @@ case 'preview':
     if ($frm_id != '') {
         $Form = new Forms\Form($frm_id);
         if ($Form->isOwner()) {
-            $content .= Forms\Menu::User($view, 'hdr_form_preview');
+            $content .= Forms\Menu::User($action, 'hdr_form_preview');
             $content .= $Form->Preview();
         }
     }
@@ -197,7 +197,7 @@ case 'results':
     $Form = Forms\Form::getInstance($frm_id);
     if ($Form->isOwner()) {
         echo COM_siteHeader();
-        echo Forms\Menu::User($view, 'hder_form_results');
+        echo Forms\Menu::User($action, 'hder_form_results');
         echo Forms\Result::adminList($frm_id, $instance_id, false);
         echo COM_siteFooter();
     } else {

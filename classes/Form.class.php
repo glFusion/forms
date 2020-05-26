@@ -143,6 +143,10 @@ class Form
      * @var boolean */
     private $use_spamx = 0;
 
+    /** Help message.
+     * @var string */
+    private $help_msg = '';
+
 
     /**
      * Create a forms object for the specified or current user ID.
@@ -193,7 +197,7 @@ class Form
     public static function getInstance($frm_id)
     {
         $key = 'form_' . $frm_id;
-        //$Obj = Cache::get($key);
+        $Obj = Cache::get($key);
         if ($Obj === NULL) {
             $Obj = new self($frm_id);
             Cache::set($key, $Obj);
@@ -253,7 +257,7 @@ class Form
      *
      * @return  string  Type of submission.
      */
-    private function getSubType()
+    public function getSubType()
     {
         return $this->sub_type == 'ajax' ? 'ajax' : 'regular';
     }
@@ -476,7 +480,7 @@ class Form
             $this->enabled = $A['enabled'];
             $this->onsubmit = $A['onsubmit'];
             $this->captcha = $A['captcha'];
-            $this->old_id = $A['id'];
+            $this->old_id = $A['frm_id'];
             $this->inblock = $A['inblock'];
             $this->req_approval = $A['req_approval'];
         } else {
@@ -547,7 +551,7 @@ class Form
                         'checked="checked"' : '',
             'emailadmin_chk' => $this->onsubmit & FRM_ACTION_MAILADMIN ?
                         'checked="checked"' : '',
-            'emailuser_chk' => $this->onsubmit & FRM_ACTION_MAILUSER ?
+            'emailuser_chk' => $this->onsubmit & FRM_ACTION_MAILOWNER ?
                         'checked="checked"' : '',
             'preview_chk' => $this->onsubmit & FRM_ACTION_DISPLAY ?
                         'checked="checked"' : '',
@@ -919,6 +923,7 @@ class Form
         $not_inline = true;
         switch ($mode) {
         case 'preview':
+            $isAdmin = plugin_isadmin_forms();
             if ($isAdmin) {
                 $referrer = FRM_ADMIN_URL . '/index.php';
             } else {
@@ -1067,7 +1072,7 @@ class Form
             'frm_link'      => FRM_PI_URL . '/index.php?frm_id=' . $this->getID(),
         ) );
         $T->parse('output', 'header');
-        $retval .= $T->finish($T->get_var('output'));
+        $retval = $T->finish($T->get_var('output'));
         $retval .= $this->Render('preview');
         return $retval;
     }
@@ -1140,31 +1145,17 @@ class Form
      * @uses    Result::Delete()
      * @param   integer $frm_id     Optional form ID, current object if empty
      */
-    public function DeleteDef($frm_id='')
+    public function DeleteDef()
     {
         global $_TABLES;
 
-        // If no ID specified, use the current object
-        if ($frm_id == '' && is_object($this)) {
-            $frm_id = $this->frm_id;
-        } else {
-            $frm_id = COM_sanitizeID($frm_id);
-        }
-
         // If still no valid ID, do nothing
-        if ($frm_id == '') return;
+        if ($this->frm_id == '') return;
 
+        $frm_id = DB_escapeString($this->frm_id);
         DB_delete($_TABLES['forms_frmdef'], 'frm_id', $frm_id);
         Field::deleteByForm($frm_id);
-
-        $sql = "SELECT id FROM {$_TABLES['forms_results']}
-            WHERE frm_id='$frm_id'";
-        $r = DB_query($sql, 1);
-        if ($r) {
-            while ($A = DB_fetchArray($r, false)) {
-                Result::Delete($A['id']);
-            }
-        }
+        Result::deleteByForm($frm_id);
     }
 
 
@@ -1224,7 +1215,7 @@ class Form
 
         foreach ($this->fields as $Field) {
             $Field->setFormID($this->frm_id);
-            $msg = $F->Duplicate();
+            $msg = $Field->Duplicate();
             if (!empty($msg)) {
                 return $msg;
             }
@@ -1632,7 +1623,7 @@ class Form
      */
     public function isOwner()
     {
-        global $_USERS, $_GROUPS;
+        global $_USER, $_GROUPS;
 
         return $this->owner_id == $_USER['uid'] || in_array($this->group_id, $_GROUPS);
     }

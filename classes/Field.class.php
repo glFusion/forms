@@ -753,7 +753,7 @@ class Field
             $options = $this->options;
         }
 
-        $sql .= "INSERT INTO {$_TABLES['forms_flddef']} SET
+        $sql = "INSERT INTO {$_TABLES['forms_flddef']} SET
                 frm_id = '" . DB_escapeString($this->frm_id) . "',
                 name = '" . DB_escapeString($this->fld_name) . "',
                 type = '" . DB_escapeString($this->type) . "',
@@ -1311,7 +1311,7 @@ class Field
         static $sub_type = NULL;
         if ($sub_type === NULL) {
             $Form = Form::getInstance($this->frm_id);
-            if (!$form) {
+            if (!$Form) {
                 $sub_type = 'regular';
             } else {
                 $sub_type = $Form->getSubType();

@@ -151,7 +151,7 @@ case 'updateform':
 case 'deleteFrmDef':
     // Delete a form definition.  Also deletes user values.
     $id = $_REQUEST['frm_id'];
-    $msg = Forms\Form::DeleteDef($id);
+    $msg = Forms\Form::getInstance($id)->DeleteDef();
     $view = 'listforms';
     break;
 
