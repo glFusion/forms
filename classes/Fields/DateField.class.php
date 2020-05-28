@@ -233,7 +233,9 @@ class DateField extends \Forms\Field
                 empty($vals[$this->getName() . '_year'])) {
                 $valid = false;
         }
-        if (!valid) $msg = $this->getPrompt() . ' ' . $LANG_FORMS['is_required'];
+        if (!$valid) {
+            $msg = $this->getPrompt() . ' ' . $LANG_FORMS['is_required'];
+        }
         return $msg;
     }
 
