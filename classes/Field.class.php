@@ -86,6 +86,26 @@ class Field
      * @var boolean */
     protected $canviewResults = false;
 
+    /** Help popup message.
+     * @var string */
+    protected $help_msg = '';
+
+    /** Owner permission.
+     * @var integer */
+    protected $perm_owner = 3;
+
+    /** Group permission.
+     * @var integer */
+    protected $perm_group = 2;
+
+    /** Site Member permission.
+     * @var integer */
+    protected $perm_members = 2;
+
+    /** Anonymous User permission.
+     * @var integer */
+    protected $perm_anon = 2;
+
 
     /**
      * Constructor. Sets the local properties using the array $item.
@@ -1281,8 +1301,10 @@ class Field
      */
     public function setValue($value)
     {
-        if (is_array($value) && isset($value[$this->getName()])) {
-            $this->value = trim($value[$this->getName()]);
+        if (is_array($value)) {
+            if (isset($value[$this->getName()])) {
+                $this->value = trim($value[$this->getName()]);
+            }
         } else {
             $this->value = trim($value);
         }
@@ -1449,6 +1471,9 @@ class Field
         }
         if (isset($A['spancols']) && $A['spancols'] == 1) {
             $options['spancols'] = 1;
+        }
+        if (isset($A['valuetext']) && $A['valuetext'] != '') {
+            $options['default'] = $A['valuetext'];
         }
         return $options;
     }

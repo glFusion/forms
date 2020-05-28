@@ -59,6 +59,19 @@ class StaticField extends \Forms\Field
         return '';
     }
 
+
+    /**
+     * A static text field value is always the defined default value.
+     *
+     * @param   mixed   $vals   Value to set (unused)
+     * @return  object  $this
+     */
+    public function setValue($vals)
+    {
+        $this->value = $this->options['default'];
+        return $this;
+    }
+
 }
 
 ?>
