@@ -17,6 +17,7 @@ if (!in_array('forms', $_PLUGINS)) {
     COM_404();
 }
 
+$content = '';
 $action = '';
 $actionval = '';
 $expected = array(

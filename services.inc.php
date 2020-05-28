@@ -28,14 +28,14 @@ if (!defined ('GVERSION')) {
 function service_renderForm_forms($args, &$output, &$svc_msg)
 {
     if (!isset($args['frm_id'])) return PLG_RET_ERROR;
-    $F = new \Forms\Form($args['frm_id']);
-    if ($F->isNew) return PLG_RET_ERROR;
+    $F = new Forms\Form($args['frm_id']);
+    if ($F->isNew()) return PLG_RET_ERROR;
     $res_id = isset($args['res_id']) ? (int)$args['res_id'] : '';
     if (isset($args['instance_id'])) {
         if (!isset($args['pi_name'])) $args['pi_name'] = 'unknown';
         $F->setInstance(array($args['pi_name'], $args['instance_id']));
     }
-    if (isset($args['pi_name'])) $F->pi_name = $args['pi_name'];
+    //if (isset($args['pi_name'])) $F->setPluginName($args['pi_name']);
     if (isset($args['nobuttons'])) {
         $mode = 'inline';
     } else {
@@ -43,7 +43,7 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
     }
     $output = array(
         'content'   =>   $F->Render($mode, $res_id),
-        'title'     =>  $F->name,
+        'title'     =>  $F->getName(),
     );
     return PLG_RET_OK;
 }
@@ -165,15 +165,17 @@ function service_getValues_forms($args, &$output, &$svc_msg)
     if ($res_id < 1) return PLG_RET_ERROR;
 
     $output = array();
-    $F = new \Forms\Form($args['frm_id']);
+    $F = new Forms\Form($args['frm_id']);
     $F->ReadData($res_id);
-    if ($F->Result->uid == $_USER['uid'] || plugin_isadmin_forms()) {
-        foreach ($F->fields as $Fld) {
-            if ($Fld->type == 'statictext') $Fld->prompt = '';
-            $output[$Fld->name] = array(
-                'prompt' => $Fld->prompt,
-                'value' => $Fld->value,
-                'displayvalue' => $Fld->DisplayValue($F->fields),
+    if ($F->getResult()->getUid() == $_USER['uid'] || plugin_isadmin_forms()) {
+        foreach ($F->getFields() as $Fld) {
+            if ($Fld->getType() == 'statictext') {
+                $Fld->setPrompt('');
+            }
+            $output[$Fld->getName()] = array(
+                'prompt' => $Fld->getPrompt(),
+                'value' => $Fld->getValue(),
+                'displayvalue' => $Fld->DisplayValue($F->getFields()),
             );
         }
     }
@@ -292,7 +294,7 @@ function service_saveData_forms($args, &$output, &$svc_msg)
     if (!isset($args['data']) || !isset($args['data']['frm_id'])) {
         return PLG_RET_PRECONDITION_FAILED;
     }
-    $F = new \Forms\Form($args['data']['frm_id']);
+    $F = new Forms\Form($args['data']['frm_id']);
     $output = $F->SaveData($args['data']);
     if ($output === '') {
         return PLG_RET_OK;
@@ -319,14 +321,14 @@ function service_validate_forms($args, &$output, &$svc_msg)
     $frm_id = $args['frm_id'];
     $res_id = $args['res_id'];
     $output = array();
-    $Res = new \Forms\Result($res_id);
-    if ($Res->isNew) {
+    $Res = new Forms\Result($res_id);
+    if ($Res->isNew()) {
         $output[] = 'No result fount';
         return PLG_PRECONDITION_FAILED;
     }
-    $Frm = \Forms\Form::getInstance($Res->frm_id);
-    $vals = $Res->getValues($Frm->fields);
-    foreach ($Frm->fields as $Fld) {
+    $Frm = Forms\Form::getInstance($Res->getFormID());
+    $vals = $Res->getValues($Frm->getFields());
+    foreach ($Frm->getFields() as $Fld) {
         $msg = $Fld->Validate($vals);
         if (!empty($msg)) {
             $output[] = $msg;
