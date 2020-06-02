@@ -1,24 +1,30 @@
 # Changelog - Forms plugin for glFusion
-## 0.4.4
-- Add html tags to print.thtml template
-- Add option to email form results to the submitter
 
-## 0.4.3
+## v0.5.0
+Release TBD
+- Export checkbox values to CSV as 1/0 instead of yes/no.
+- Add html tags to print.thtml template.
+- Add option to email form results to the submitter.
+- Remove option to store results to DB. Results are always saved.
+- Make SPAMX optional, may interfer with form auto-complete.
+- Add option to record real IP addresses or anonymized addresses.
+
+## v0.4.3
 Release 2019-05-22
 - Fix form definition SQL, remove default value from text data types
 
-## 0.4.2
+## v0.4.2
 Release 2019-03-25
 - Fix permissions when mailing or viewing user's own results.
 
-## 0.4.1
+## v0.4.1
 Release 2008-12-29
 - Fix call to undefined function when exporting CSV
 - Fix access check, disabled fields were affecting visibility of other fields
 - Admin was unable to save edits to submissions
 - Missing quote caused glFusion navigation menu to stop working
 
-## 0.4.0
+## v0.4.0
 Release 2018-12-28
 - Retire support for non-uikit themes
 - Handle inline form editing, validation and saving via service functions
@@ -32,7 +38,7 @@ Release 2018-12-28
 - Implement autotags for checkbox and radio fields, updating session vars only
 - Implement PHP class autoloader
 
-## 0.3.0
+## v0.3.0
 Release 2017-07-23
 - Implement "Forms" namespace
 - Change Mootools elements to JQuery

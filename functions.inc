@@ -24,7 +24,7 @@ $_CONF_FRM = $frm_config->get_config('forms');
 require_once 'forms.php';
 
 /** Define the absolute path to the plugin's directory */
-define('FRM_PI_PATH', $_CONF['path'] . 'plugins/' . $_CONF_FRM['pi_name']);
+define('FRM_PI_PATH', __DIR__);
 /** Define the base public url for the plugin */
 define('FRM_PI_URL', $_CONF['site_url'] . '/' . $_CONF_FRM['pi_name']);
 /** Define the administration url for the plugin */
@@ -32,7 +32,6 @@ define('FRM_ADMIN_URL',
             $_CONF['site_admin_url'] . '/plugins/' . $_CONF_FRM['pi_name']);
 
 define('FRM_ACTION_NONE', 0);
-define('FRM_ACTION_STORE', 1);
 define('FRM_ACTION_MAILOWNER', 2);
 define('FRM_ACTION_MAILGROUP', 4);
 define('FRM_ACTION_MAILADMIN', 8);
@@ -106,10 +105,6 @@ spl_autoload_register(function ($class)
         require $file;
     }
 });
-
-/** Import plugin-specific functions. */
-function USES_forms_functions()
-{   require_once __DIR__ . '/forms_functions.inc.php';  }
 
 /** Include service functions */
 require_once __DIR__ . '/services.inc.php';
@@ -197,13 +192,18 @@ function plugin_getuseroption_forms()
     if ($uid < 2) return '';
     $groups = implode(',', $_GROUPS);
 
-    $form_cnt = (int)DB_getItem($_TABLES['forms_frmdef'], 'COUNT(*)',
-                    "owner_id='{$uid}' OR group_id IN ({$groups})");
+    $form_cnt = (int)DB_getItem(
+        $_TABLES['forms_frmdef'],
+        'COUNT(*)',
+        "owner_id='{$uid}' OR group_id IN ({$groups})"
+    );
     if ($form_cnt < 1) return '';
 
-    $menu = array($LANG_FORMS['menu_title'],
-            FRM_ADMIN_URL . '/index.php?view=listforms',
-            $form_cnt);
+    $menu = array(
+        $LANG_FORMS['menu_title'],
+        FRM_PI_URL . '/index.php?listforms',
+        $form_cnt
+    );
     return $menu;
 }
 
@@ -263,7 +263,7 @@ function plugin_autouninstall_forms()
         // give all vars with their name
         'vars'=> array()
     );
-    \Forms\Cache::clear();
+    Forms\Cache::clear();
     return $out;
 }
 
@@ -382,6 +382,13 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
         $fldnames = false;
         $target = '_self';
         $instance_id = '';
+        // Collect options to pass to autotag class parse functions
+        $t1 = explode(' ', $autotag['parm2']);
+        $opts = array();
+        foreach ($t1 as $tmp) {
+            $t2 = explode(':', $tmp);
+            $opts[$t2[0]] = isset($t2[1]) ? $t2[1] : '';
+        }
 
         switch ($autotag['tag']) {
         case 'forms':
@@ -461,20 +468,21 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         break;
                     }
 
-                    $F = new \Forms\Form($frm_id, FRM_ACCESS_FILL);
-                    $F->setInstance($instance_id);
-                    if ($F->enabled) {
-                        $HTML = $F->Render($template);
+                    $Form = new Forms\Form($frm_id, FRM_ACCESS_FILL);
+                    $Form->setInstance($instance_id);
+                    if ($Form->isEnabled()) {
+                        $HTML = $Form->Render($template);
                     } else {
-                        $HTML = $F->noaccess_msg;
+                        $HTML = $Form->getNoAccessMsg();
                     }
                 }
                 break;
 
             case 'results':
-                if ($frm_id != '') {
-                    USES_forms_functions();
-                    $HTML = \Forms\FRM_ResultsTable($frm_id, $fldnames, $instance_id);
+                $cls = 'Forms\Autotags\\' . $option;
+                if (class_exists($cls)) {
+                    $AT = new $cls;
+                    $HTML = $AT->parse($autotag['parm1'], $opts, $autotag['tagstr']);
                 }
                 break;
 
@@ -484,8 +492,11 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!empty($instance_id))
                         $url .= '&instance_id=' . urlencode($instance_id);
                     if (empty($caption)) {
-                        $caption = DB_getItem($_TABLES['forms_frmdef'], 'name',
-                                "id='$frm_id'");
+                        $caption = DB_getItem(
+                            $_TABLES['forms_frmdef'],
+                            'frm_name',
+                            "id='$frm_id'"
+                        );
                     }
                     $opts = array(
                         'title' => $caption,
@@ -507,10 +518,9 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
             case 'radio':       // radio button field
                 if (!empty($fld_value)) {
                     if (empty($fld_name)) $fld_name = 'radio1';
-                    //$F = new \Forms\Field_autotag('radio', $fld_name, $fld_value);
-                    $F = new \Forms\Fields\autotag('radio', $fld_name, $fld_value);
+                    $Field = new Forms\Fields\autotag('radio', $fld_name, $fld_value);
                     $chk = isset($is_default) ? true : false;
-                    $HTML = $F->Render($chk);
+                    $HTML = $Field->Render($chk);
                 }
                 break;
 
@@ -519,10 +529,9 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!isset($fld_value) || empty($fld_value)) {
                         $fld_value = 1;
                     }
-                    //$F = new \Forms\Field_autotag('checkbox', $fld_name, $fld_value);
-                    $F = new \Forms\Fields\autotag('checkbox', $fld_name, $fld_value);
+                    $Field = new Forms\Fields\autotag('checkbox', $fld_name, $fld_value);
                     $chk = isset($is_default) ? true : false;
-                    $HTML = $F->Render($chk);
+                    $HTML = $Field->Render($chk);
                 }
                 break;
 
@@ -537,13 +546,19 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                 $url = COM_buildUrl(FRM_PI_URL . '/index.php?frm_id=' . $frm_id);
                 $caption = $autotag['parm2'];
                 if (empty($caption)) {
-                    $caption = DB_getItem($_TABLES['forms_frmdef'], 'name',
-                                "id='$frm_id'");
+                    $caption = DB_getItem(
+                        $_TABLES['forms_frmdef'],
+                        'frm_name',
+                        "id='$frm_id'"
+                    );
                 }
                 // Have to have a caption, otherwise there's no text to show
                 if (!empty($caption)) {
-                    $HTML = COM_createLink($caption, $url,
-                                    array('title'=>$caption));
+                    $HTML = COM_createLink(
+                        $caption,
+                        $url,
+                        array('title'=>$caption)
+                    );
                 }
             }
             break;
@@ -652,13 +667,7 @@ function plugin_configmanager_select_results_gid_forms()
  */
 function plugin_user_move_forms($origUID, $destUID)
 {
-    global $_TABLES;
-
-    $origUID = (int)$origUID;
-    $destUID = (int)$destUID;
-
-    DB_query("UPDATE {$_TABLES['forms_results']}
-            SET uid = $destUID WHERE uid = $origUID", 1);
+    Forms\Result::changeUID($origUID, $destUID);
 }
 
 
@@ -687,12 +696,12 @@ function plugin_moderationvalues_forms()
  * Performs plugin exclusive work for items approved by moderation.
  * Notifies users of approval/denial, and subscribers if approved.
  *
- * @param   string  $id         ID of the ad
+ * @param   string  $id         ID of the result
  * @return  string              Empty string.
  */
 function plugin_moderationapprove_forms($id)
 {
-    \Forms\Result::Approve($id);
+    Forms\Result::Approve($id);
     return '';
 }
 
@@ -732,12 +741,12 @@ function plugin_itemlist_forms()
         $plugin = new Plugin();
         $plugin->submissionlabel = $LANG_FORMS['menu_title'];
         $plugin->getsubmissionssql = "SELECT
-                    res.id, frm.name as subject,
+                    res.res_id, frm.frm_name as subject,
                     FROM_UNIXTIME(res.dt) as date,
                     'n/a', res.uid
                 FROM {$_TABLES['forms_results']} res
                 LEFT JOIN {$_TABLES['forms_frmdef']} frm
-                    ON res.frm_id = frm.id
+                    ON res.frm_id = frm.frm_id
                 WHERE approved = 0";
         $plugin->addSubmissionHeading('Form Name');
         $plugin->addSubmissionHeading('Date');
@@ -753,17 +762,8 @@ function plugin_itemlist_forms()
  * @param   integer $uid    User ID
  */
  function plugin_user_deleted_forms($uid)
-{
-    global $_TABLES;
-
-    $uid = (int)$uid;
-    $sql = "SELECT id FROM {$_TABLES['forms_results']}
-            WHERE uid = '$uid'";
-    $res = DB_query($sql);
-    $A = DB_fetchAll($res, false);
-    foreach ($A as $id=>$res) {
-        \Forms\Result::Delete($res['id']);
-    }
+ {
+    Forms\Result::deleteByUser($uid);
 }
 
 
@@ -780,20 +780,20 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
 {
     global $_TABLES, $_USER, $_CONF_FRM;
 
-    $retval = '';
-    $sql = "SELECT id FROM {$_TABLES['forms_results']} WHERE uid = '$uid'";
+    $retval = "<{$_CONF_FRM['pi_name']}>\n";
+    $sql = "SELECT res_id FROM {$_TABLES['forms_results']} WHERE uid = '$uid'";
     $res = DB_query($sql);
     $A = DB_fetchAll($res, false);
     foreach ($A as $id=>$res_id) {
-        $R = new \Forms\Result($res_id['id']);
-        $F = \Forms\Form::getInstance($R->frm_id);
-        $R->GetValues($F->fields);
-        $form_name = str_replace(' ', '_', $F->name);
+        $R = new Forms\Result($res_id['id']);
+        $F = Forms\Form::getInstance($R->getFormID());
+        $R->GetValues($F->getFields);
+        $form_name = str_replace(' ', '_', $F->getName());
         $retval .= "<$form_name>\n";
-        $dt = new Date($R->dt, $_USER['tzid']);
+        $dt = new Date($R->getTimestamp(), $_USER['tzid']);
         $retval .= '<date>' . $dt->format($dt->getUserFormat(),true) . "</date>\n";
-        $retval .= "<ip>{$R->ip}</ip>\n";
-        foreach ($F->fields as $fld) {
+        $retval .= "<ip>{$R->getIP()}</ip>\n";
+        foreach ($F->getFields() as $fld) {
             $retval .= $fld->XML();
         }
         $retval .= "</$form_name>\n";
@@ -805,17 +805,6 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
         }
     }
     return $retval;
-}
-
-
-/**
- * Enable service functions.
- *
- * @return  boolean     True to enable web service functions
- */
-function plugin_wsEnabled_forms()
-{
-    return true;
 }
 
 
@@ -840,32 +829,6 @@ function FRM_GetGroups($selected=0)
         }
     }
     return $A;
-}
-
-
-/**
- * Convert the hour from 12-hour time to 24-hour.
- * This is meant to convert incoming values from forms to 24-hour format.  If
- * the site uses 24-hour time, the form values should already be that way
- * (and there will be no am/pm indicator), so the hour is returned unchanged.
- *
- * @param   integer $hour   Hour to check (0 - 23)
- * @param   string  $ampm   Either 'am' or 'pm'
- * @return  integer         Hour after switching it to 24-hour time.
- */
-function FRM_12to24($hour, $ampm='')
-{
-    global $_CONF;
-
-    $hour = (int)$hour;
-
-    if ($hour < 0 || $hour > 23) $hour = 0;
-    if ($_CONF['hour_mode'] == 24) return $hour;
-
-    if ($ampm == 'am' && $hour == 12) $hour = 0;
-    if ($ampm == 'pm' && $hour < 12) $hour += 12;
-
-    return $hour;
 }
 
 ?>

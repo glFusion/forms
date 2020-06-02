@@ -5,19 +5,20 @@
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     v0.5.0
+ * @since       v0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms\Fields;
 
+
 /**
  * Checkbox field handler.
  */
-class checkbox extends \Forms\Field
+class CheckboxField extends \Forms\Field
 {
-
     /**
      * Create a single form field for data entry.
      *
@@ -35,7 +36,7 @@ class checkbox extends \Forms\Field
         $access = $this->renderAccess();
 
         $chk = $this->value == 1 ? 'checked="checked"' : '';
-        $fld = "<input $access name=\"{$this->name}\"
+        $fld = "<input $access name=\"{$this->getName()}\"
                     id=\"$elem_id\" type=\"checkbox\" value=\"1\"
                     $chk $js />" . LB;
         return $fld;
@@ -51,7 +52,21 @@ class checkbox extends \Forms\Field
      */
     public function setValue($value)
     {
-        return $value == 0 ? 0 : 1;
+        $this->value = $value == 0 ? 0 : 1;
+        return $this;
+    }
+
+
+    /**
+     * Get the value to show in the CSV export of results.
+     * For checkboxes, return "1" if checked and "0" if not.
+     * The default behavior is to call displayValue().
+     *
+     * @return  mixed       Value to show in CSV export.
+     */
+    public function getValueForCSV($fields)
+    {
+        return $this->value;
     }
 
 

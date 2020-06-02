@@ -3,10 +3,10 @@
  * Upgrade routines for the Forms plugin.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.4.0
- * @license     http://opensource.org/licenses/gpl-2.0.php 
+ * @version     v0.5.0
+ * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
@@ -90,35 +90,42 @@ function FRM_do_upgrade($dvlp=false)
         $current_ver = '0.1.8';
         COM_errorLog("Updating Plugin to $current_ver");
         if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
-        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.2.0')) {
         $current_ver = '0.2.0';
         COM_errorLog("Updating Plugin to $current_ver");
         if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
-        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.2.2')) {
         $current_ver = '0.2.2';
         COM_errorLog("Updating Plugin to $current_ver");
         if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
-        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.3.1')) {
         $current_ver = '0.3.1';
         COM_errorLog("Updating Plugin to $current_ver");
         if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
-        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
     }
 
     if (!COM_checkVersion($current_ver, '0.4.0')) {
         $current_ver = '0.4.0';
         COM_errorLog("Updating Plugin to $current_ver");
         if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
-        if (!FRM_do_set_version($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
+    }
+
+    if (!COM_checkVersion($current_ver, '0.5.0')) {
+        $current_ver = '0.5.0';
+        COM_errorLog("Updating Plugin to $current_ver");
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
     }
 
     // Final version setting and cleanup
@@ -152,8 +159,10 @@ function FRM_do_upgrade_sql($version, $dvlp=false)
     global $_TABLES, $_CONF_FRM, $_FRM_UPGRADE_SQL;
 
     // If no sql statements passed in, return success
-    if (!isset($_FRM_UPGRADE_SQL[$version]) || 
-            !is_array($_FRM_UPGRADE_SQL[$version])) {
+    if (
+        !isset($_FRM_UPGRADE_SQL[$version]) ||
+        !is_array($_FRM_UPGRADE_SQL[$version])
+    ) {
             return true;
     }
 
@@ -317,6 +326,20 @@ function FRM_remove_old_files()
             'templates/admin/editfield.uikit.thtml',
             'templates/admin/editform.uikit.thtml',
             'templates/form.uikit.thtml',
+            // 0.5.0
+            'forms_functions.inc.php',
+            'classes/Fields/calc.class.php',
+            'classes/Fields/checkbox.class.php',
+            'classes/Fields/date.class.php',
+            'classes/Fields/hidden.class.php',
+            'classes/Fields/multicheck.class.php',
+            'classes/Fields/numeric.class.php',
+            'classes/Fields/radio.class.php',
+            'classes/Fields/select.class.php',
+            'classes/Fields/statictext.class.php',
+            'classes/Fields/textarea.class.php',
+            'classes/Fields/text.class.php',
+            'classes/Fields/time.class.php',
         ),
         // public_html/forms
         $_CONF['path_html'] . 'forms' => array(

@@ -2,6 +2,11 @@
 */
 var FRMtoggleEnabled = function(cbox, id, type, component) {
     oldval = cbox.checked ? 0 : 1;
+    if (type == 'form') {
+        var ajax_url = glfusionSiteUrl + "/forms/ajax.php";
+    } else {
+        var ajax_url = site_admin_url + "/plugins/forms/ajax.php";
+    }
     var dataS = {
         "action" : "toggleEnabled",
         "id": id,
@@ -13,7 +18,7 @@ var FRMtoggleEnabled = function(cbox, id, type, component) {
     $.ajax({
         type: "POST",
         dataType: "json",
-        url: site_admin_url + "/plugins/forms/ajax.php",
+        url: ajax_url,
         data: data,
         success: function(result) {
             cbox.checked = result.newval == 1 ? true : false;

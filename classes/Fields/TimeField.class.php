@@ -3,19 +3,20 @@
  * Class to handle time-entry form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms\Fields;
 
+
 /**
  * Time-entry field type.
  */
-class time extends \Forms\Field
+class TimeField extends \Forms\Field
 {
 
     /**
@@ -27,21 +28,19 @@ class time extends \Forms\Field
      */
     public function valueFromForm($vals)
     {
-        $hour = isset($vals[$this->name.'_hour']) ?
-                            (int)$vals[$this->name.'_hour'] : 0;
-        $minute = isset($vals[$this->name.'_minute']) ?
-                            (int)$vals[$this->name.'_minute'] : 0;
-        $second = isset($vals[$this->name.'_second']) ?
-                            (int)$vals[$this->name.'_second'] : 0;
-        $ampm = isset($vals[$this->name.'_ampm']) ?
-                            $vals[$this->name.'_ampm'] : 'am';
-        if (isset($this->options['timeformat']) && $this->options['timeformat'] == '12') {
+        $hour = isset($vals[$this->getName().'_hour']) ?
+            (int)$vals[$this->getName().'_hour'] : 0;
+        $minute = isset($vals[$this->getName().'_minute']) ?
+            (int)$vals[$this->getName().'_minute'] : 0;
+        $second = isset($vals[$this->getName().'_second']) ?
+            (int)$vals[$this->getName().'_second'] : 0;
+        $ampm = isset($vals[$this->getName().'_ampm']) ?
+            $vals[$this->getName().'_ampm'] : 'am';
+        if ($this->getOption('timeformat') == '12') {
             list($hour, $ampm) = $this->hour24to12($hour);
-            $this->properties['value_text'] = sprintf('%02d:%02d %s',
-                            $hour, $minute, $ampm);
+            $this->value_text = sprintf('%02d:%02d %s', $hour, $minute, $ampm);
         } else {
-            $this->properties['value_text'] = sprintf('%02d:%02d',
-                            $hour, $minute);
+            $this->value_text = sprintf('%02d:%02d', $hour, $minute);
         }
         return sprintf('%02d:%02d:%02d', $hour, $minute, $second);
     }
@@ -60,13 +59,11 @@ class time extends \Forms\Field
         $hour = $A[0];
         $min = isset($A[1]) ? $A[1] : '00';
         $sec = isset($A[2]) ? $A[2] : '00'; // just used for the SQL value
-        if ($this->options['timeformat'] == '12') {
+        if ($this->getOption('timeformat') == '12') {
             list($hour, $ampm) = $this->hour24to12($hour);
-            $this->properties['value_text'] = sprintf('%02d:%02d %s',
-                            $hour, $min, $ampm);
+            $this->value_text = sprintf('%02d:%02d %s', $hour, $min, $ampm);
         } else {
-            $this->properties['value_text'] = sprintf('%02d:%02d',
-                            $hour, $min);
+            $this->value_text = sprintf('%02d:%02d', $hour, $min);
         }
         return $value;
     }
@@ -81,8 +78,11 @@ class time extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
-        if (!$this->canViewField()) return NULL;
-        return $this->TimeField($this->value);
+        if (!$this->canViewField()) {
+            return NULL;
+        } else {
+            return $this->TimeField($this->value);
+        }
     }
 
 
@@ -97,13 +97,17 @@ class time extends \Forms\Field
         global $LANG_FORMS;
 
         $msg = '';
-        if (!$this->enabled) return $msg;   // not enabled
-        if (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED)
+        if (
+            !$this->isEnabled() ||
+            !$this->checkAccess(FRM_FIELD_REQUIRED)
+        ) {
             return $msg;        // not required
-
-        if (empty($vals[$this->name . '_hour']) ||
-            empty($vals[$this->name . '_minute'])) {
-            $msg = $this->prompt . ' ' . $LANG_FORMS['is_required'];
+        }
+        if (
+            empty($vals[$this->getName() . '_hour']) ||
+            empty($vals[$this->getName() . '_minute'])
+        ) {
+            $msg = $this->getPrompt() . ' ' . $LANG_FORMS['is_required'];
         }
         return $msg;
     }
@@ -122,6 +126,15 @@ class time extends \Forms\Field
         // Add options specific to this field type
         $options['timeformat'] = $A['timeformat'] == '24' ? '24' : '12';
         return $options;
+    }
+
+
+    public static function to24hour($parts, $var)
+    {
+        if (isset($parts[$var . '_ampm']) && $parts[$var . '_ampm'] == 'pm') {
+            $parts[$var . '_hour'] += 12;
+        }
+        return $parts[$var . '_hour'] . ':' . $parts[$var . '_minute'];
     }
 
 }

@@ -13,10 +13,12 @@
  */
 namespace Forms\Fields;
 
+
 /**
  * Handles hidden form fields.
+ * @package forms
  */
-class hidden extends \Forms\Field
+class HiddenField extends \Forms\Field
 {
 
     /**
@@ -33,7 +35,7 @@ class hidden extends \Forms\Field
         global $_CONF, $LANG_FORMS, $_CONF_FRM;
 
         $elem_id = $this->_elemID();
-        $fld = '<input type="hidden" name="' . $this->name .
+        $fld = '<input type="hidden" name="' . $this->getName() .
                     '" value="' . $this->value .
                     '" id="' . $elem_id . '"/>';
        return $fld;

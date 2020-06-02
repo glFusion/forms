@@ -141,7 +141,7 @@ $LANG_FORMS = array(
     'radio' => 'Radio Buttons',
     'date' => 'Date',
     'time'  => 'Time',
-    'statictext' => 'Static',
+    'static' => 'Static',
     'calc'  => 'Calculation',
     'hidden'  => 'Hidden',
 ),

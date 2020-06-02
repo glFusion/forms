@@ -131,7 +131,7 @@ function insertRow(list) {
       <label for="fieldname" class="uk-form-label">{$LANG_FORMS['fieldname']}</label>
       <div class="uk-form-controls">
         <span id="hlp_fld_name" class="tooltip_cfg tooltipstered"></span>
-        <input id="fieldname" type="text" size="32" name="name" value="{name}" />
+        <input id="fieldname" type="text" size="32" name="fld_name" value="{fld_name}" />
       </div>
     </div>
 

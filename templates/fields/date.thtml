@@ -1,0 +1,35 @@
+{# begin {templatelocation} #}
+{!if mdy}
+{$LANG_FORMS['month']}: <select {access} id="{varname}_month" name="{varname}_month">
+    <option value="0">--{$LANG_FORMS['select']}--</option>
+    {m_options}
+    </select>
+{$LANG_FORMS['day']}: <select {access} id="{varname}_day" name="{varname}_day">
+    <option value=\"0\">--{$LANG_FORMS['select']}--</option>
+    {d_options}
+    </select>
+{!else}
+{$LANG_FORMS['day']}: <select {access} id="{varname}_day" name="{varname}_day">
+    <option value=\"0\">--{$LANG_FORMS['select']}--</option>
+    {d_options}
+    </select>
+{$LANG_FORMS['month']}: <select {access} id="{varname}_month" name="{varname}_month">
+    <option value="0">--{$LANG_FORMS['select']}--</option>
+    {m_options}
+    </select>
+{!endif}
+{$LANG_FORMS['year']}: <input {access} type="text" id="{varname}_year" name="{varname}_year"
+    size="5" value="{curyear}" />
+<input type="hidden" name="{varname}" id="f_date_{varname}" value="{curdate}"
+    data-uk-datepicker onchange="FRM_updateDate(this.value, '{varname}', 0);"/>
+<script type="text/javascript">
+$( "#f_date_{varname}").datepicker({
+    buttonImage: "/images/datepicker.jpg",
+    buttonImageOnly: true,
+    showOn: "button",
+    dateFormat: "yy-mm-dd",
+    changeMonth: true,
+    changeYear: true,
+});
+</script>
+{# end {templatelocation} #}

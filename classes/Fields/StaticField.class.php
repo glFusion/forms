@@ -12,11 +12,12 @@
  */
 namespace Forms\Fields;
 
+
 /**
  * Static Text Fields.
  * There is no input for these fields, they are simply displayed.
  */
-class statictext extends \Forms\Field
+class StaticField extends \Forms\Field
 {
 
     /**
@@ -56,6 +57,19 @@ class statictext extends \Forms\Field
     public function XML()
     {
         return '';
+    }
+
+
+    /**
+     * A static text field value is always the defined default value.
+     *
+     * @param   mixed   $vals   Value to set (unused)
+     * @return  object  $this
+     */
+    public function setValue($vals)
+    {
+        $this->value = $this->options['default'];
+        return $this;
     }
 
 }

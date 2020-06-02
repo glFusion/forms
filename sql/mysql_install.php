@@ -15,8 +15,8 @@
 global $_TABLES;
 
 $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
-  `id` varchar(40) NOT NULL DEFAULT '',
-  `name` varchar(32) NOT NULL,
+  `frm_id` varchar(40) NOT NULL DEFAULT '',
+  `frm_name` varchar(32) NOT NULL DEFAULT '',
   `onsubmit` tinyint(1) NOT NULL DEFAULT '2',
   `email` varchar(80) DEFAULT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
@@ -36,25 +36,26 @@ $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
   `captcha` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `inblock` tinyint(1) NOT NULL DEFAULT '0',
   `max_submit` int(5) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`)
-)";
+  `use_spamx` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`frm_id`)
+) ENGINE=MyISAM";
 
 $_SQL['forms_results'] = "CREATE TABLE {$_TABLES['forms_results']} (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `res_id` int(11) NOT NULL AUTO_INCREMENT,
   `frm_id` varchar(40) NOT NULL DEFAULT '',
-  `instance_id` varchar(60),
+  `instance_id` varchar(60) DEFAULT NULL,
   `uid` int(11) NOT NULL DEFAULT '0',
   `dt` int(11) NOT NULL DEFAULT '0',
   `approved` tinyint(1) DEFAULT '1',
   `ip` varchar(16) DEFAULT NULL,
   `token` varchar(40) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`)
-)";
+  PRIMARY KEY (`res_id`)
+) ENGINE=MyISAM";
 
 $_SQL['forms_flddef'] = "CREATE TABLE {$_TABLES['forms_flddef']} (
   `fld_id` int(11) NOT NULL AUTO_INCREMENT,
   `frm_id` varchar(40) NOT NULL DEFAULT '',
-  `name` varchar(32) NOT NULL,
+  `fld_name` varchar(32) NOT NULL DEFAULT '',
   `type` varchar(32) NOT NULL DEFAULT 'text',
   `enabled` tinyint(1) NOT NULL DEFAULT '1',
   `access` tinyint(1) unsigned NOT NULL DEFAULT '0',
@@ -65,57 +66,56 @@ $_SQL['forms_flddef'] = "CREATE TABLE {$_TABLES['forms_flddef']} (
   `fill_gid` mediumint(8) unsigned NOT NULL DEFAULT '1',
   `results_gid` mediumint(8) unsigned NOT NULL DEFAULT '1',
   PRIMARY KEY (`fld_id`)
-)";
+) ENGINE=MyISAM";
 
 $_SQL['forms_values'] = "CREATE TABLE {$_TABLES['forms_values']} (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `val_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `results_id` int(11) NOT NULL DEFAULT '0',
   `fld_id` int(11) NOT NULL,
   `value` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`val_id`),
   UNIQUE KEY `res_fld` (`results_id`,`fld_id`)
-)";
+) ENGINE=MyISAM";
 
 global $FRM_sampledata;
-$FRM_sampledata = array();
-$FRM_sampledata[] = "INSERT INTO {$_TABLES['forms_frmdef']} (
-    id, name, onsubmit, email,
-    enabled, req_approval, owner_id, group_id, fill_gid, results_gid,
-    introtext, submit_msg, noaccess_msg, noedit_msg, max_submit_msg
-  ) VALUES (
-    'testform', 'Test Profile Form', 1, '{$_CONF['site_mail']}',
-    1, 0, 2, 1, 1, 1,
-    '', '', '', '', ''
-  )";
-
 $insert = "INSERT INTO {$_TABLES['forms_flddef']} (
-    fld_id, frm_id, name, type, enabled, access,
+    fld_id, frm_id, fld_name, type, enabled, access,
     prompt,
     options, orderby, help_msg, fill_gid, results_gid
   ) VALUES (";
-$FRM_sampledata[] = "$insert 1, 'testform', 'address1', 'text', 1, 1,
-    'Address Line 1',
-    'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 10, '', 1, 1)";
-$FRM_sampledata[] = "$insert 2, 'testform', 'address2', 'text', 1, 0,
-    'Address Line 2',
-    'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 20, '', 1, 1)";
-$FRM_sampledata[] = "$insert 3, 'testform', 'city', 'text', 1, 1,
-    'City',
-    'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 30, '', 1, 1)";
-$FRM_sampledata[] = "$insert 4, 'testform', 'state', 'text', 1, 1,
-    'State',
-    'a:2:{s:4:\"size\";i:2;s:9:\"maxlength\";i:2;}', 40, '', 1, 1)";
-$FRM_sampledata[] = "$insert 5, 'testform', 'zip', 'text', 1, 1,
-    'Zip Code',
-    'a:2:{s:4:\"size\";i:10;s:9:\"maxlength\";i:10;}', 50, '', 1, 1)";
-$FRM_sampledata[] = "$insert 6, 'testform', 'favcolor', 'radio', 1, 1,
-    'Favorite color',
-    'a:2:{s:7:\"default\";s:4:\"Blue\";s:6:\"values\";s:51:\"a:3:{i:0;s:3:\"Red\";i:1;s:4:\"Blue\";i:2;s:5:\"Green\";}\";}', 60, 'Select your favorite color',
-    1, 1)";
-$FRM_sampledata[] = "$insert 7, 'testform', 'birthdate', 'date', 1, 1,
-    'BirthDate',
-    'a:5:{s:7:\"default\";s:0:\"\";s:8:\"showtime\";i:0;s:10:\"timeformat\";s:2:\"12\";s:6:\"format\";N;s:12:\"input_format\";i:1;}', 70, '', 1, 1)";
-
+$FRM_sampledata = array(
+    "INSERT INTO {$_TABLES['forms_frmdef']} (
+        frm_id, frm_name, onsubmit, email,
+        enabled, req_approval, owner_id, group_id, fill_gid, results_gid,
+        introtext, submit_msg, noaccess_msg, noedit_msg, max_submit_msg
+      ) VALUES (
+        'testform', 'Test Profile Form', 1, '{$_CONF['site_mail']}',
+        1, 0, 2, 1, 1, 1,
+        '', '', '', '', ''
+      )",
+    "$insert 1, 'testform', 'address1', 'text', 1, 1,
+        'Address Line 1',
+        'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 10, '', 1, 1)",
+    "$insert 2, 'testform', 'address2', 'text', 1, 0,
+        'Address Line 2',
+        'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 20, '', 1, 1)",
+    "$insert 3, 'testform', 'city', 'text', 1, 1,
+        'City',
+        'a:2:{s:4:\"size\";i:40;s:9:\"maxlength\";i:80;}', 30, '', 1, 1)",
+    "$insert 4, 'testform', 'state', 'text', 1, 1,
+        'State',
+        'a:2:{s:4:\"size\";i:2;s:9:\"maxlength\";i:2;}', 40, '', 1, 1)",
+    "$insert 5, 'testform', 'zip', 'text', 1, 1,
+        'Zip Code',
+        'a:2:{s:4:\"size\";i:10;s:9:\"maxlength\";i:10;}', 50, '', 1, 1)",
+    "$insert 6, 'testform', 'favcolor', 'radio', 1, 1,
+        'Favorite color',
+        'a:2:{s:7:\"default\";s:4:\"Blue\";s:6:\"values\";s:51:\"a:3:{i:0;s:3:\"Red\";i:1;s:4:\"Blue\";i:2;s:5:\"Green\";}\";}', 60, 'Select your favorite color',
+        1, 1)",
+    "$insert 7, 'testform', 'birthdate', 'date', 1, 1,
+        'BirthDate',
+        'a:5:{s:7:\"default\";s:0:\"\";s:8:\"showtime\";i:0;s:10:\"timeformat\";s:2:\"12\";s:6:\"format\";N;s:12:\"input_format\";i:1;}', 70, '', 1, 1)",
+    );
 
 global $_FRM_UPGRADE_SQL;
 $_FRM_UPGRADE_SQL = array(
@@ -190,6 +190,15 @@ $_FRM_UPGRADE_SQL = array(
         "UPDATE {$_TABLES['forms_flddef']} SET type='statictext' WHERE type='static'",
         "ALTER TABLE {$_TABLES['forms_frmdef']}
             CHANGE `moderate` `req_approval` tinyint(1) unsigned NOT NULL DEFAULT 0",
+    ),
+    '0.5.0' => array(
+        "ALTER TABLE {$_TABLES['forms_frmdef']} CHANGE `id` `frm_id` varchar(40) NOT NULL DEFAULT ''",
+        "ALTER TABLE {$_TABLES['forms_frmdef']} CHANGE `name` `frm_name` varchar(32) NOT NULL DEFAULT ''",
+        "ALTER TABLE {$_TABLES['forms_frmdef']} ADD `use_spamx` tinyint(1) unsigned NOT NULL DEFAULT '1' AFTER `max_submit`",
+        "ALTER TABLE {$_TABLES['forms_flddef']} CHANGE `name` `fld_name` varchar(32) NOT NULL DEFAULT ''",
+        "ALTER TABLE {$_TABLES['forms_results']} CHANGE `id` `res_id` int(11) NOT NULL auto_increment",
+        "UPDATE {$_TABLES['forms_flddef']} SET `type` = 'static' where `type` = 'statictext'",
+        "ALTER TABLE {$_TABLES['forms_values']} CHANGE `id` `val_id` int(11) unsigned NOT NULL AUTO_INCREMENT",
     ),
 );
 

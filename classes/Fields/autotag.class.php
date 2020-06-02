@@ -11,6 +11,8 @@
  * @filesource
  */
 namespace Forms\Fields;
+
+
 /**
  * Class to handle individual AJAX form fields from autotags.
  * Only single checkboxes and radio buttons are supported since other
