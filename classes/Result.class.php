@@ -693,6 +693,11 @@ class Result
         $extras = array(
             'isAdmin' => $isAdmin,
         );
+        $retval .= '<h1>' . $LANG_FORMS['form_results'] . ': ' . $frm_id;
+        if ($instance_id != '') {
+            $retval .= ', ' . $LANG_FORMS['instance'] . ': ' . $instance_id;
+        }
+        $retval .= '</h1>';
         $retval .= ADMIN_list(
             'forms_resultlist',
             array(__CLASS__, 'getListField'),
