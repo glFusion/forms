@@ -121,13 +121,15 @@ class DateField extends \Forms\Field
                 empty($value) &&
                 $this->getOption('default') != ''
             ) {
-                $this->value = $this->options['default'];
+                $this->value = $this->getOption('default');
             } else {
-                $dt = new \Date('now', $_CONF['timezone']);
-                $this->value = $dt->format('Y-m-d', true);
+                $this->value = '_-_-_';     // dummy to make empty selections
             }
             $datestr = explode(' ', $this->value);  // separate date & time
             $dt = explode('-', $datestr[0]);        // get date components
+            $month = isset($dt[1]) ? $dt[1] : '';
+            $day = isset($dt[2]) ? $dt[2] : '';
+            $year = $dt[0];
         }
 
         $T = new \Template(FRM_PI_PATH . '/templates/fields');
@@ -135,11 +137,11 @@ class DateField extends \Forms\Field
         $T->set_var(array(
             'access'    => $access,
             'varname'   => $this->getName(),
-            'm_options' => COM_getMonthFormOptions($dt[1]),
-            'd_options' => COM_getDayFormOptions($dt[2]),
+            'm_options' => COM_getMonthFormOptions($month]),
+            'd_options' => COM_getDayFormOptions($day),
             'mdy'       => $this->options['input_format'] == 1,
             'curdate'   => $this->value,
-            'curyear'   => $dt[0],
+            'curyear'   => $year,
         ) );
         $T->parse('output', 'dt');
         $fld = $T->finish($T->get_var('output'));
