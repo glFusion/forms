@@ -1142,6 +1142,19 @@ class Field
 
 
     /**
+     * Set the prompt string for the field.
+     *
+     * @param   string  $prompt     Field prompt
+     * @return  object  $this
+     */
+    public function setPrompt($prompt)
+    {
+        $this->prompt = $prompt;
+        return $this;
+    }
+
+
+    /**
      * Get the name of the field.
      *
      * @return  string      Field name

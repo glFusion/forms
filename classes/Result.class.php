@@ -287,7 +287,7 @@ class Result
         }
         // Then they can be pushed into the field array
         foreach ($fields as $field) {
-            if (isset($vals[$field->getID()])) {
+            if ($field->isEnabled() && isset($vals[$field->getID()])) {
                 $field->setValue($vals[$field->getID()]['value']);
                 $retval[$field->getName()] = $field->getValue();
             }

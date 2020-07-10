@@ -442,6 +442,7 @@ class Form
             $this->Result = new Result($res_id);
             $this->Result->GetValues($this->fields);
         }
+        return $this;
     }
 
 

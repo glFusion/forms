@@ -144,7 +144,9 @@ function service_getValues_forms($args, &$output, &$svc_msg)
 {
     global $_USER, $_TABLES, $LANG_FORMS, $LANG01, $_CONF;
 
-    if (!isset($args['frm_id']) || empty($args['frm_id'])) return PLG_RET_ERROR;
+    if (!isset($args['frm_id']) || empty($args['frm_id'])) {
+        return PLG_RET_ERROR;
+    }
     $viewtypes = array('display', 'raw');
     if (!isset($args['viewtype']) || !in_array($viewtypes, $args['viewtype'])) {
         $viewtype = 'display';
@@ -162,14 +164,16 @@ function service_getValues_forms($args, &$output, &$svc_msg)
                 "' AND frm_id = '" . DB_escapeString($args['frm_id']) .
                 "' ORDER BY dt DESC LIMIT 1");*/
     }
-    if ($res_id < 1) return PLG_RET_ERROR;
+    if ($res_id < 1) {
+        return PLG_RET_ERROR;
+    }
 
     $output = array();
     $F = new Forms\Form($args['frm_id']);
     $F->ReadData($res_id);
     if ($F->getResult()->getUid() == $_USER['uid'] || plugin_isadmin_forms()) {
         foreach ($F->getFields() as $Fld) {
-            if ($Fld->getType() == 'statictext') {
+            if ($Fld->getType() == 'static') {
                 $Fld->setPrompt('');
             }
             $output[$Fld->getName()] = array(
