@@ -137,7 +137,7 @@ class DateField extends \Forms\Field
         $T->set_var(array(
             'access'    => $access,
             'varname'   => $this->getName(),
-            'm_options' => COM_getMonthFormOptions($month]),
+            'm_options' => COM_getMonthFormOptions($month),
             'd_options' => COM_getDayFormOptions($day),
             'mdy'       => $this->options['input_format'] == 1,
             'curdate'   => $this->value,
