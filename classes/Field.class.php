@@ -5,7 +5,7 @@
  * @author      Lee Garner <lee@leegarner.com>
  * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.4.4
+ * @version     v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -330,24 +330,28 @@ class Field
         $curdtformat = 0;
         switch ($this->type) {
         case 'date':
-            if ($this->options['timeformat'] == '24') {
+            if ($this->getOption('timeformat') == '24') {
                 $T->set_var('24h_sel', 'checked');
             } else {
                 $T->set_var('12h_sel', 'checked');
             }
 
-            $T->set_var('shtime_chk', $this->options['showtime'] == 1 ?
-                'checked="checked"' : '');
-            $T->set_var('format', isset($this->options['format']) ?
-                    $this->options['format'] : $_CONF_FRM['def_date_format']);
-            $curdtformat = (isset($this->options['input_format'])) ?
-                    (int)$this->options['input_format'] : 0;
-            $T->set_var('cent_chk', $this->options['century'] == 1 ?
-                'checked="checked"' : '');
+            $T->set_var(
+                'shtime_chk',
+                $this->getOption('showtime', 0) ? 'checked="checked"' : ''
+            );
+            $T->set_var(
+                'format',
+                $this->getOption('format', $_CONF_FRM['def_date_format'])
+            );
+            $curdtformat = (int)$this->getOption('input_format', 0);
+            if ($this->getOption('century', '') != '') {
+                $T->set_var('cent_chk', 'checked="checked"');
+            }
             break;
 
         case 'time':
-            if ($this->options['timeformat'] == '24') {
+            if ($this->getOption('timeformat', '24') == '24') {
                 $T->set_var('24h_sel', 'checked');
             } else {
                 $T->set_var('12h_sel', 'checked');
@@ -356,7 +360,7 @@ class Field
 
         case 'checkbox':
             $value_str = '1';
-            if (isset($this->options['default']) && $this->options['default'] == 1) {
+            if ($this->getOption('default', 0) == 1) {
                 $T->set_var('defchk_chk', 'checked="checked"');
             }
             //if (!isset($opts['values']) || !is_array($opts['values']) {
@@ -365,7 +369,7 @@ class Field
             break;
         case 'select':
         case 'radio':
-            $values = FRM_getOpts($this->options['values']);
+            $values = FRM_getOpts($this->getOption('values'), array());
             //foreach ($vals as $val=>$valname) {
             //if (is_array($this->options['values'])) {
             if (is_array($values)) {
@@ -374,7 +378,7 @@ class Field
                 foreach ($values as $valname) {
                     $listinput .= '<li><input type="text" id="vName' . $i .
                         '" value="' . $valname . '" name="selvalues[]" />';
-                    $sel = $this->options['default'] == $valname ?
+                    $sel = $this->getOption('default') == $valname ?
                         ' checked="checked"' : '';
                     $listinput .= "<input type=\"radio\" name=\"sel_default\"
                         value=\"$i\" $sel />";
@@ -400,7 +404,7 @@ class Field
                 foreach ($values as $valname) {
                     $listinput .= '<li><input type="text" id="vName' . $i .
                         '" value="' . $valname . '" name="selvalues[]" />';
-                    $sel = $valname == $this->options['default'] ?
+                    $sel = $valname == $this->getOption('default') ?
                         ' checked="checked"' : '';
                     $listinput .= "<input type=\"radio\" name=\"sel_default\"
                         value=\"$i\" $sel />";
@@ -415,19 +419,16 @@ class Field
             break;
 
         case 'calc':
-            $value_str = $this->options['value'];
-            //$format_str = empty($this->options['format']) ?
-            //        $_CONF_FRM['def_calc_format'] : $this->options['format'];
+            $value_str = $this->getOption('value');
             break;
 
         case 'static':
-            $value_str = $this->options['default'];
+            $value_str = $this->getOption('default', '');
             break;
 
         }
 
-        $format_str = empty($this->options['format']) ?
-                    $_CONF_FRM['def_calc_format'] : $this->options['format'];
+        $format_str = $this->getOption('format', $_CONF_FRM['def_calc_format']);
         // Create the selection list for the "Position After" dropdown.
         // Include all options *except* the current one
         $sql = "SELECT orderby, fld_name
@@ -450,8 +451,7 @@ class Field
             $orderby_list .= "<option value=\"$orderby\" $sel>{$B['fld_name']}</option>\n";
         }
 
-        $autogen_opt = isset($this->options['autogen']) ?
-                    (int)$this->options['autogen'] : 0;
+        $autogen_opt = $this->getOption('autogen', 0);
         $T->set_var(array(
             //'admin_url' => FRM_ADMIN_URL,
             'frm_name'  => DB_getItem(
@@ -465,21 +465,20 @@ class Field
             'fld_name'  => $this->fld_name,
             'type'      => $this->type,
             'valuestr'  => $value_str,
-            'defvalue'  => isset($this->options['default']) ? $this->options['default'] : '',
+            'defvalue'  => $this->getOption('default', ''),
             'prompt'    => $this->prompt,
-            'size'      => isset($this->options['size']) ? $this->options['size'] : 40,
-            'cols'      => isset($this->options['cols']) ? $this->options['cols'] : 80,
-            'rows'      => isset($this->options['rows']) ? $this->options['rows'] : 3,
-            'maxlength' => isset($this->options['maxlength']) ? $this->options['maxlength'] : 255,
+            'size'      => $this->getOption('size', 40),
+            'cols'      => $this->getOption('cols', 80),
+            'rows'      => $this->getOption('rows', 3),
+            'maxlength' => $this->getOption('maxlength', 255),
             'ena_chk'   => $this->enabled == 1 ? 'checked="checked"' : '',
-            'span_chk'  => isset($this->options['spancols']) && $this->options['spancols'] == 1 ? 'checked="checked"' : '',
+            'span_chk'  => $this->getOption('spancols', 0) == 1 ? 'checked="checked"' : '',
             'format'    => $format_str,
             'doc_url'   => FRM_getDocURL('field_def.html'),
-            'mask'      => isset($this->options['mask']) ? $this->options['mask'] : '',
-            'vismask'   => isset($this->options['vismask']) ? $this->options['vismask'] : '',
+            'mask'      => $this->getOption('mask', ''),
+            'vismask'   => $this->getOption('vismask', ''),
             'autogen_sel_' . $autogen_opt => ' selected="selected"',
-            'stripmask_chk' => (isset($this->options['stripmask']) &&
-                        $this->options['stripmask']  == 1) ?
+            'stripmask_chk' => $this->getOption('stripmask', 0) == 1 ?
                         'checked="checked"' : '',
             'input_format' => self::DateFormatSelect($curdtformat),
             'orderby'   => $this->orderby,
@@ -490,14 +489,14 @@ class Field
             'fill_gid_select' => $this->_groupDropdown($this->fill_gid),
             'results_gid_select' => $this->_groupDropdown($this->results_gid),
             'permissions' => SEC_getPermissionsHTML(
-                    $this->perm_owner, $this->perm_group,
-                    $this->perm_members, $this->perm_anon),
+                $this->perm_owner, $this->perm_group,
+                $this->perm_members, $this->perm_anon
+            ),
             'access_chk' . $this->access => 'selected="selected"',
         ) );
 
         $T->parse('output', 'editform');
         $retval .= $T->finish($T->get_var('output'));
-
         return $retval;
     }
 
@@ -593,8 +592,7 @@ class Field
             return false;
         }
 
-        if (isset($this->options['autogen']) &&
-            $this->options['autogen'] == FRM_AUTOGEN_SAVE) {
+        if ($this->getOption('autogen') == FRM_AUTOGEN_SAVE) {
             $newval = $this->AutoGen('save');
         }
 
@@ -620,81 +618,6 @@ class Field
 
 
     /**
-     * Rudimentary date display function to mimic strftime().
-     * Timestamps don't handle dates far in the past or future.  This function
-     * does a str_replace using a subset of PHP's date variables.  Only the
-     * numeric variables with leading zeroes are used.
-     *
-     * @return string  Date formatted for display
-     */
-    public function XXDateDisplay()
-    {
-        if ($this->type != 'date') {
-            return $this->value_text;
-        }
-
-        $dt_tm = explode(' ', $this->value);
-        if (strpos($dt_tm[0], '-')) {
-            list($year, $month, $day) = explode('-', $dt_tm[0]);
-        } else {
-            $year = '0000';
-            $month = '01';
-            $day = '01';
-        }
-        if (isset($dt_tm[1]) && strpos($dt_tm[1], ':')) {
-            list($hour, $minute, $second) = explode(':', $dt_tm[1]);
-        } else {
-            $hour = '00';
-            $minute = '00';
-            $second = '00';
-        }
-
-        switch ($this->options['input_format']) {
-        case 2:
-            $retval = sprintf('%02d/%02d/%04d', $day, $month, $year);
-            break;
-        case 1:
-        default:
-            $retval = sprintf('%02d/%02d/%04d', $month, $day, $year);
-            break;
-        }
-        if ($this->options['showtime'] == 1) {
-            if ($this->options['timeformat'] == '12') {
-                list($hour, $ampm) = $this->hour24to12($hour);
-                $retval .= sprintf(' %02d:%02d %s', $hour, $minute, $ampm);
-            } else {
-                $retval .= sprintf(' %02d:%02d', $hour, $minute);
-            }
-        }
-
-        /*if (empty($this->options['format']))
-            return $this->value;
-
-        $formats = array('%Y', '%d', '%m', '%H', '%i', '%s');
-        $values = array($year, $day, $month, $hour, $minute, $second);
-        $retval = str_replace($formats, $values, $this->options['format']);*/
-
-        return $retval;
-    }
-
-
-    /**
-     * Get the defined date formats into an array.
-     *
-     * return   array   Array of date formats
-     */
-    public function DateFormats()
-    {
-        global $LANG_FORMS;
-        $_formats = array(
-            1 => $LANG_FORMS['month'].' '.$LANG_FORMS['day'].' '.$LANG_FORMS['year'],
-            2 => $LANG_FORMS['day'].' '.$LANG_FORMS['month'].' '.$LANG_FORMS['year'],
-        );
-        return $_formats;
-    }
-
-
-    /**
      * Provide a dropdown selection of date formats
      *
      * @param   integer $cur    Option to be selected by default
@@ -702,8 +625,13 @@ class Field
      */
     public function DateFormatSelect($cur=0)
     {
+        global $LANG_FORMS;
+
         $retval = '';
-        $_formats = self::DateFormats();
+        $_formats = array(
+            1 => $LANG_FORMS['month'].' '.$LANG_FORMS['day'].' '.$LANG_FORMS['year'],
+            2 => $LANG_FORMS['day'].' '.$LANG_FORMS['month'].' '.$LANG_FORMS['year'],
+        );
         foreach ($_formats as $key => $string) {
             $sel = $cur == $key ? 'selected="selected"' : '';
             $retval .= "<option value=\"$key\" $sel>$string</option>\n";
@@ -891,8 +819,7 @@ class Field
 
         if (
             empty($def) &&
-            isset($this->options['autogen']) &&
-            $this->options['autogen'] == FRM_AUTOGEN_FILL
+            $this->getOption('autogen') == FRM_AUTOGEN_FILL
         ) {
             return $this->AutoGen('fill');
         }
@@ -948,7 +875,7 @@ class Field
             if (!empty($timestr)) {
                 // Default to the specified time string
                 list($hour, $minute)  = explode(':', $timestr);
-            } elseif (!empty($this->options['default'])) {
+            } elseif (!empty($this->getOption('default'))) {
                 if (strtolower($this->options['default']) == '$now') {
                     // Handle the special "now" default"
                     list($hour, $minute) = explode(':', date('H:i:s'));
@@ -967,17 +894,17 @@ class Field
             list($hour, $minute) = array(0, 0);
         }
 
-        if ($this->options['timeformat'] == '12') {
+        if ($this->getOption('timeformat') == '12') {
             list($hour, $ampm_sel) = $this->hour24to12($hour);
             $ampm_fld = COM_getAmPmFormSelection($this->fld_name . '_ampm', $ampm_sel);
         }
 
         $h_fld = '<select name="' . $this->fld_name . '_hour">' . LB .
-                COM_getHourFormOptions($hour, $this->options['timeformat']) .
-                '</select>' . LB;
+            COM_getHourFormOptions($hour, $this->getOption('timeformat')) .
+            '</select>' . LB;
         $m_fld = '<select name="' . $this->fld_name . '_minute">' . LB .
-                COM_getMinuteFormOptions($minute) .
-                '</select>' . LB;
+            COM_getMinuteFormOptions($minute) .
+            '</select>' . LB;
         return $h_fld . ' ' . $m_fld . $ampm_fld;
     }
 
@@ -1556,7 +1483,14 @@ class Field
      */
     public function hasOption($opt, $val = 1)
     {
-        return isset($this->options[$opt]) && $this->options[$opt] == $val ? true : false;
+        if (
+            isset($this->options[$opt]) && 
+            $this->options[$opt] == $val
+        ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
