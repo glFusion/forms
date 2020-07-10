@@ -79,7 +79,7 @@ class Menu
             'text' => $LANG01[53],
         );
 
-        $text = $LANG_FORMS[$help_text];
+        $text = isset($LANG_FORMS[$help_text]) ? $LANG_FORMS[$help_text] : '';
         return ADMIN_createMenu($menu_arr, $text, plugin_geticon_forms());
     }
 
