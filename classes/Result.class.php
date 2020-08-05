@@ -670,7 +670,7 @@ class Result
             'direction' => 'desc',
         );
         $text_arr = array(
-            'form_url'  => FRM_ADMIN_URL . '/index.php?frm_id=' . $frm_id,
+            'form_url'  => FRM_ADMIN_URL . '/index.php?results&frm_id=' . $frm_id,
         );
         $sql = "SELECT *, FROM_UNIXTIME(dt) as submitted
             FROM {$_TABLES['forms_results']}
