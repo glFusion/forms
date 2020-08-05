@@ -2,9 +2,9 @@
     <id>forms</id>
     <name>Forms</name>
     <description>Provides the ability to create custom forms to collect data from users.  Form data may be saved to the database, emailed to the form administrator or other users, or downloaded as a CSV file.</description>
-    <version>0.4.3</version>
+    <version>0.5.0</version>
     <glfusionversion>1.7.0</glfusionversion>
-    <phpversion>7.0.0</phpversion>
+    <phpversion>7.3.0</phpversion>
     <url>http://www.leegarner.com</url>
     <maintainer>Lee Garner</maintainer>
 </plugin>

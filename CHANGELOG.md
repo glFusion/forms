@@ -8,6 +8,7 @@ Release TBD
 - Remove option to store results to DB. Results are always saved.
 - Make SPAMX optional, may interfer with form auto-complete.
 - Add option to record real IP addresses or anonymized addresses.
+- Use `ADMIN_list()` to show results table for more flexibility.
 
 ## v0.4.3
 Release 2019-05-22
