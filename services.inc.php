@@ -244,7 +244,7 @@ function service_getFormInfo_forms($args, &$output, &$svc_msg)
         $sql .= " AND frm_id = '" . DB_escapeString($args['frm_id']) . "'";
     }
     if (isset($args['perm']) && (int)$args['perm'] > 0) {
-        $sql .= COM_getPermSQL('AND', 0, (int)$args['perm']);
+        $sql .= SEC_buildAccessSql('AND', 'fill_gid');
     }
     $res = DB_query($sql);
     $output = array();
