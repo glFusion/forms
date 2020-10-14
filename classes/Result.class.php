@@ -626,7 +626,7 @@ class Result
      */
     public static function adminList($frm_id, $instance_id='', $isAdmin=true)
     {
-        global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS, $perm_sql;
+        global $_CONF, $_TABLES, $LANG_ADMIN, $LANG_FORMS;
 
         $retval = '';
 

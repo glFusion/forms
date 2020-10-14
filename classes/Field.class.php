@@ -90,22 +90,6 @@ class Field
      * @var string */
     protected $help_msg = '';
 
-    /** Owner permission.
-     * @var integer */
-    protected $perm_owner = 3;
-
-    /** Group permission.
-     * @var integer */
-    protected $perm_group = 2;
-
-    /** Site Member permission.
-     * @var integer */
-    protected $perm_members = 2;
-
-    /** Anonymous User permission.
-     * @var integer */
-    protected $perm_anon = 2;
-
 
     /**
      * Constructor. Sets the local properties using the array $item.
@@ -488,10 +472,6 @@ class Field
             'help_msg'  => $this->help_msg,
             'fill_gid_select' => $this->_groupDropdown($this->fill_gid),
             'results_gid_select' => $this->_groupDropdown($this->results_gid),
-            'permissions' => SEC_getPermissionsHTML(
-                $this->perm_owner, $this->perm_group,
-                $this->perm_members, $this->perm_anon
-            ),
             'access_chk' . $this->access => 'selected="selected"',
         ) );
 
