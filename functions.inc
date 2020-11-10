@@ -36,6 +36,7 @@ define('FRM_ACTION_MAILOWNER', 2);
 define('FRM_ACTION_MAILGROUP', 4);
 define('FRM_ACTION_MAILADMIN', 8);
 define('FRM_ACTION_DISPLAY', 16);
+define('FRM_ACTION_MAILUSER', 32);
 
 define('FRM_ACCESS_FILL', 1);   // access to fill out form
 define('FRM_ACCESS_VIEW', 2);   // access to view results
@@ -797,9 +798,11 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
         }
         $retval .= "</$form_name>\n";
     }
-    $retval .= "</{$_CONF_FRM['pi_name']}>\n";
-    if ( function_exists('tidy_repair_string')) {
-        $retval = tidy_repair_string($retval, array('input-xml' => 1));
+    if (!empty($retval)) {
+        $retval = "<{$_CONF_FRM['pi_name']}>\n$retval</{$_CONF_FRM['pi_name']}>\n";
+        if (function_exists('tidy_repair_string')) {
+            $retval = tidy_repair_string($retval, array('input-xml' => 1));
+        }
     }
     return $retval;
 }

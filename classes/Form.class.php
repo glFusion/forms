@@ -732,6 +732,22 @@ class Form
             }
         }
 
+        // Email the submitting user their own results.
+        // Only works for logged-in users.
+        if ($onsubmit & FRM_ACTION_MAILUSER) {
+            $uid = (int)$this->Result->uid;
+            if ($uid > 1) {
+                $email = DB_getItem(
+                    $_TABLES['users'],
+                    'email',
+                    "uid='$uid'"
+                );
+                if (COM_isEmail($email)) {
+                    $emails[$email] = COM_getDisplayName($uid);
+                }
+            }
+        }
+
         // Sending to specific addresses. Don't have names here, just
         // addresses
         if ($this->email != '') {
@@ -1110,6 +1126,10 @@ class Form
         $T = new \Template(FRM_PI_PATH . '/templates');
         $T->set_file('form', 'print.thtml');
         // Set template variables, without allowing caching
+        $filled_by = sprintf($LANG_FORMS['filled_out_by'],
+            COM_getDisplayName($this->Result->uid),
+            $dt->format($_CONF['date'], true)
+        );
         $T->set_var(array(
             'introtext'     => $this->introtext,
             'title'         => $this->frm_name,
