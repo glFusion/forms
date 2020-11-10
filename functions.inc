@@ -67,7 +67,7 @@ if (file_exists(__DIR__ . '/config.php')) {
 $langpath = __DIR__ . '/language';
 $langfile = $_CONF['language'] . '.php';
 if (!file_exists("$langpath/$langfile")) {
-    $langfile = 'english.php';
+    $langfile = 'english_utf-8.php';
 }
 
 /** Include plugin language file */
