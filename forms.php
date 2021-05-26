@@ -35,7 +35,7 @@ $_TABLES['forms_values']    = $_DB_table_prefix . 'forms_values';
 global $_CONF_FRM;
 $_CONF_FRM['pi_name']           = 'forms';
 $_CONF_FRM['pi_version']        = '0.5.0';
-$_CONF_FRM['gl_version']        = '1.7.0';
+$_CONF_FRM['gl_version']        = '1.7.9';
 $_CONF_FRM['pi_url']            = 'http://www.leegarner.com';
 $_CONF_FRM['pi_display_name']   = 'Forms';
 
