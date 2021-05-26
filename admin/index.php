@@ -30,7 +30,7 @@ $expected = array(
     'edit','updateform','editfield', 'updatefield',
     'save', 'print', 'editresult', 'updateresult', 'reorder',
     'editform', 'copyform', 'delbutton_x', 'showhtml',
-    'moderate',
+    'moderate', 'moderationapprove', 'moderationdelete',
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
     'results', 'preview',
 );
@@ -90,13 +90,27 @@ case 'reorder':
     $view = 'editform';
     break;
 
+case 'moderationapprove':
 case 'updateresult':
     $F = new Forms\Form($_POST['frm_id']);
     $R = new Forms\Result($_POST['res_id']);
     // Clear the moderation flag when saving a moderated submission
     $R->SaveData($_POST['frm_id'], $F->getFields(), $_POST, $R->getUid());
-    Forms\Result::Approve($R->getID());
+    $R->Approve();
+    if ($action == 'moderationapprove') {
+        if (isset($_POST['post_save']) && function_exists($_POST['post_save'])) {
+            $_POST['post_save']($R->getUid());
+        }
+        COM_refresh($_CONF['site_admin_url'] . '/moderation.php');
+    }
     $view = 'results';
+    break;
+
+case 'moderationdelete':
+    if (isset($_GET['res_id'])) {
+        plugin_moderationdelete_forms($_GET['res_id']);
+    }
+    COM_refresh($_CONF['site_admin_url'] . '/moderation.php');
     break;
 
 case 'updatefield':
@@ -236,7 +250,12 @@ case 'moderate':
         $Form = Forms\Form::getInstance($Result->getFormID());
         if (!$Form->isNew()) {
             $Form->ReadData($Result->getID());
-            $content .= $Form->Render('edit', $Result->getID());
+            if ($action == 'moderate') {
+                $mode = 'moderation';
+            } else {
+                $mode = 'edit';
+            }
+            $content .= $Form->Render($mode, $Result->getID());
         }
     }
     break;

@@ -55,22 +55,28 @@
     </div>
 {!endif}
 {!if ajax}
-{!elseif not_inline}
+{!elseif show_buttons}
     <div class="uk-form-row">
         <label class="uk-form-label" for="buttons">&nbsp;</label>
         <div class="uk-form-controls">
-            <button class="uk-button uk-button-success" type="submit" name="{btn_submit}" value="{$LANG_ADMIN['submit']}" {submit_disabled}>{$LANG_ADMIN['submit']}</button>
-            <button class="uk-button" type="reset" name="btnReset" value="{$LANG_FORMS['reset']}">{$LANG_FORMS['reset']}</button>
+{!if lang_submit}
+            <button class="uk-button uk-button-success" type="submit" name="{btn_submit}" value="{lang_submit}" {submit_disabled}>{lang_submit}</button>
+{!endif}
+{!if lang_reset}
+            <button class="uk-button uk-button-default" type="reset" name="btnReset" value="{lang_reset}">{lang_reset}</button>
+{!endif}
 {!if referrer}
-            <input type="hidden" name="referrer" value="{referrer}" />
-            <button class="uk-button uk-button-primary" type="reset" name="cancel" value="{$LANG_ADMIN['cancel']}"
-                onclick="javascript:document.location.href='{referrer}';"/>{$LANG_ADMIN['cancel']}</button>
+            <input type="hidden" name="_referrer" value="{referrer}" />
+            <a class="uk-button uk-button-primary" href="{referrer}">{lang_cancel}</a>
+{!endif}
+{!if lang_delete}
+			<a class="uk-button uk-button-danger" href="{site_admin_url}/plugins/forms/index.php?moderationdelete=x&res_id={res_id}" onclick="return confirm('{$LANG_FORMS['confirm_delete']}');">{lang_delete}</a>
 {!endif}
         </div>
     </div>
 {!endif}
-{!if not_inline}
     {hidden_vars}
+{!if not_inline}
 {!if use_spamx}
     {spamx}
 {!endif}

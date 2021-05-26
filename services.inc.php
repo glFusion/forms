@@ -29,20 +29,34 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
 {
     if (!isset($args['frm_id'])) return PLG_RET_ERROR;
     $F = new Forms\Form($args['frm_id']);
-    if ($F->isNew()) return PLG_RET_ERROR;
-    $res_id = isset($args['res_id']) ? (int)$args['res_id'] : '';
+    if ($F->isNew()) {
+        return PLG_RET_ERROR;
+    }
+
+    $res_id = 0;
+    if (isset($args['res_id']) && $args['res_id'] > 0) {
+        $res_id = (int)$args['res_id'];
+    } elseif (isset($args['uid']) && $args['uid'] > 0) {
+        $res_id = Forms\Result::FindResult($args['frm_id'], $args['uid']);
+    }
     if (isset($args['instance_id'])) {
-        if (!isset($args['pi_name'])) $args['pi_name'] = 'unknown';
-        $F->setInstance(array($args['pi_name'], $args['instance_id']));
+        if (!isset($args['pi_name'])) {
+            // Make sure something is set
+            $args['pi_name'] = 'unknown';
+        }
+        $F->setInstance($args['instance_id'], $args['pi_name']);
     }
     //if (isset($args['pi_name'])) $F->setPluginName($args['pi_name']);
-    if (isset($args['nobuttons'])) {
+    if (isset($args['mode'])) {
+        $mode = $args['mode'];
+    } elseif (isset($args['nobuttons'])) {
         $mode = 'inline';
     } else {
-        $mode = 'edit';
+        //$mode = 'edit';
+        $mode = 'normal';
     }
     $output = array(
-        'content'   =>   $F->Render($mode, $res_id),
+        'content'   =>   $F->Render($mode, $res_id, $args),
         'title'     =>  $F->getName(),
     );
     return PLG_RET_OK;

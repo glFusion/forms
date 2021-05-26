@@ -424,7 +424,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         break;
                     case 'popup':
                         // "popup:true" or just "popup" to get a popup form
-                        $popup = empty($val) ? true : $val == true ? true : false;
+                        $popup = empty($val) ? true : ($val == true ? true : false);
                         $skip++;
                         break;
                     case 'value':
@@ -701,7 +701,8 @@ function plugin_moderationvalues_forms()
  */
 function plugin_moderationapprove_forms($id)
 {
-    Forms\Result::Approve($id);
+    $Res = new Forms\Result($id);
+    $Res->Approve();
     return '';
 }
 
@@ -714,13 +715,7 @@ function plugin_moderationapprove_forms($id)
  */
 function plugin_moderationdelete_forms($res_id)
 {
-    global $_TABLES;
-
-    $res_id = (int)$res_id;
-    $sql = "DELETE FROM {$_TABLES['forms_values']}
-            WHERE results_id = $res_id";
-    DB_query($sql);
-    DB_delete($_TABLES['forms_results'], 'id', $res_id);
+    Forms\Result::Delete($res_id);
     return '';
 }
 
@@ -741,15 +736,17 @@ function plugin_itemlist_forms()
         $plugin = new Plugin();
         $plugin->submissionlabel = $LANG_FORMS['menu_title'];
         $plugin->getsubmissionssql = "SELECT
-                    res.res_id, frm.frm_name as subject,
-                    FROM_UNIXTIME(res.dt) as date,
-                    'n/a', res.uid
-                FROM {$_TABLES['forms_results']} res
-                LEFT JOIN {$_TABLES['forms_frmdef']} frm
-                    ON res.frm_id = frm.frm_id
-                WHERE approved = 0";
-        $plugin->addSubmissionHeading('Form Name');
-        $plugin->addSubmissionHeading('Date');
+            res.res_id as id,
+            frm.frm_name as subject,
+            FROM_UNIXTIME(res.dt) as date,
+            res.instance_id, res.uid
+            FROM {$_TABLES['forms_results']} res
+            LEFT JOIN {$_TABLES['forms_frmdef']} frm
+                ON res.frm_id = frm.frm_id
+            WHERE approved = 0";
+        $plugin->addSubmissionHeading($LANG_FORMS['formname']);
+        $plugin->addSubmissionHeading($LANG_FORMS['datetime']);
+        $plugin->addSubmissionHeading($LANG_FORMS['instance']);
         return $plugin;
     }
 }

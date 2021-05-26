@@ -11,7 +11,7 @@
  * @filesource
  */
 namespace Forms;
-use glFusion\FieldList;
+//use glFusion\FieldList;
 
 
 /**
@@ -401,6 +401,17 @@ class Form
 
 
     /**
+     * Get the moderation flag.
+     *
+     * @return  integer     1 if moderated, 0 if not
+     */
+    public function isModerated()
+    {
+        return $this->req_approval ? 1 : 0;
+    }
+
+
+    /**
      * Read all forms variables into the $items array.
      * Set the $uid paramater to read another user's forms into
      * the current object instance.
@@ -706,13 +717,12 @@ class Form
 
         // Always save data to the database.
         $this->Result = new Result($res_id);
-        $this->Result->setInstance($this->instance_id)
-                     ->setModerate($this->req_approval);
-        $this->res_id = $this->Result
-                             //->withFields($this->fields)
-                             ->SaveData(
-            $this->frm_id, $this->fields,
-            $vals, $this->uid
+        $this->Result->setInstance($this->instance_id)->setModeration($this->req_approval);
+        $this->res_id = $this->Result->SaveData(
+            $this->frm_id,
+            $this->fields,
+            $vals,
+            $this->uid
         );
 
         // Emailing or displaying results
@@ -1053,6 +1063,12 @@ class Form
                 }
             }
         }
+
+        if ($res_id > 0) {
+            $this->Result = new Result($res_id);
+            $this->instance_id = $this->Result->getInstance();
+        }
+
         // Get the result details for a heading when an admin is
         // editing a submission. Have to do it here, after ReadData().
         if ($mode == 'edit') {
@@ -1628,15 +1644,15 @@ class Form
                 $chk = '';
                 $enabled = 0;
             }
-            $retval = FieldList::checkbox(array(
+            $retval = "<input name=\"{$fieldname}_{$A['frm_id']}\" " .
+                "type=\"checkbox\" $chk " .
+                "onclick='FRMtoggleEnabled(this, \"{$A['frm_id']}\", \"form\", \"{$fieldname}\", \"" . $extras['base_url'] . "\");' " .
+                "/>\n";
+            /*$retval = FieldList::checkbox(array(
                 'name' => $fieldname . '_' . $A['frm_id'],
                 'checked' => $fieldvalue == 1,
                 'onclick' => "FRMtoggleEnabled(this, '{$A['frm_id']}', 'form', '{$fieldname}', '{$extras['base_url']}');",
-            ) );
-            /*$retval = "<input name=\"{$fieldname}_{$A['frm_id']}\" " .
-                "type=\"checkbox\" $chk " .
-                "onclick='FRMtoggleEnabled(this, \"{$A['frm_id']}\", \"form\", \"{$fieldname}\", \"" . $extras['base_url'] . "\");' " .
-                "/>\n";*/
+            ) );*/
             break;
 
         case 'frm_name':
@@ -1730,5 +1746,3 @@ class Form
     }
 
 }
-
-?>

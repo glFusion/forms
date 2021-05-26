@@ -56,7 +56,9 @@ case 'savedata':
     $errmsg = $F->SaveData($_POST);
     if (empty($errmsg)) {
         // Success
-        if ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
+        if (isset($_POST['_referrer'])) {
+            $redirect = $_POST['_referrer'];
+        } elseif ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
             $redirect = FRM_PI_URL . '/index.php?myresult=x&res_id=' .
                     $F->getResultID();
             $redirect .= '&token=' . $F->getResult()->Token();
@@ -67,8 +69,10 @@ case 'savedata':
         if ($F->getSubmitMsg() != '') {
             COM_setMsg($F->getSubmitMsg());
             $msg = '';
+        } elseif (isset($_POST['submit_msg'])) {
+            $msg = $_POST['submit_msg'];
         } else {
-            $msg = isset($_POST['submit_msg']) ? $_POST['submit_msg'] : '1';
+            $msg = '1';
         }
         $q = array();
         if (!empty($u['query'])) {
@@ -76,7 +80,7 @@ case 'savedata':
         }
         $q['msg'] = $msg;
         $q['plugin'] = $_CONF_FRM['pi_name'];
-        $q['frm_id'] = $F->id;
+        $q['frm_id'] = $F->getID();
         $redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
         $q_arr = array();
         foreach($q as $key=>$value) {
@@ -237,7 +241,7 @@ function FRM_showForm($frm_id, $modal = false)
     $F = new Forms\Form($frm_id, FRM_ACCESS_FILL);
 
     $blocks = $modal ? 0 : -1;
-    echo Forms\Menu::siteHeader($F->name, '', $blocks);
+    echo Forms\Menu::siteHeader($F->getName(), '', $blocks);
     if (isset($_GET['msg']) && !empty($_GET['msg'])) {
         echo COM_showMessage(
             COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']

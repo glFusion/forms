@@ -3,7 +3,7 @@
  * Class to handle the form results.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
@@ -42,9 +42,9 @@ class Result
      * @var boolean */
     private $approved = 1;
 
-    /** Moderation flag
+    /** Flag to indicate this result requires approval.
      * @var boolean */
-    private $moderate = 0;
+    private $moderate = false;
 
     /** IP address of submitter
      * @var string */
@@ -131,6 +131,9 @@ class Result
         $this->approved = $A['approved'] == 0 ? 0 : 1;
         $this->uid = (int)$A['uid'];
         $this->token = $A['token'];
+        if (isset($A['instance_id'])) {
+            $this->instance_id = $A['instance_id'];
+        }
 
         if (isset($A['ip'])) {
             $this->setIP($A['ip']);
@@ -151,6 +154,17 @@ class Result
     {
         $this->instance_id = $id;
         return $this;
+    }
+
+
+    /**
+     * Get the instance ID of this result.
+     *
+     * @return  string      Instance ID
+     */
+    public function getInstance()
+    {
+        return $this->instance_id;
     }
 
 
@@ -318,8 +332,9 @@ class Result
         } else {
             $res_id = $this->res_id;
         }
-        if (!$res_id)       // couldn't create a result set
+        if (!$res_id) {     // couldn't create a result set
             return false;
+        }
 
         foreach ($fields as $field) {
             // Get the value to save and have the field save it
@@ -348,16 +363,19 @@ class Result
         $this->setIP();
         $ip = DB_escapeString($this->ip);
         $this->token = md5(time() . rand(1,100));
+        $approved = $this->moderate ? 0 : 1;
         $sql = "INSERT INTO {$_TABLES['forms_results']} SET
                 frm_id='{$this->frm_id}',
                 instance_id='" . DB_escapeString($this->instance_id) . "',
                 uid='{$this->uid}',
                 dt='{$this->dt}',
                 ip = '$ip',
-                token = '{$this->token}'";
+                token = '{$this->token}',
+                approved = {$approved}";
         //echo $sql;die;
-        if ($this->moderate) {
-            $sql .= ', approved=0';
+        if (!$this->moderate) {
+            // Approve now, also notifying other plugins
+            $this->Approve(false);
         }
         DB_query($sql, 1);
         if (!DB_error()) {
@@ -376,7 +394,7 @@ class Result
      * @param   boolean $mod    True to moderate results, False to not
      * @return  object  $this
      */
-    public function setModerate($mod = false)
+    public function setModeration($mod = false)
     {
         $this->moderate = $mod ? true : false;
         return $this;
@@ -407,17 +425,44 @@ class Result
     /**
      * Approve a submission.
      *
-     * @param   integer $res_id     Result set ID to approve
+     * @param   boolean $is_moderated   True if result is moderated
      * @return  boolean         True if no DB error
      */
-    public static function Approve($res_id)
+    public function Approve($is_moderated=true)
     {
         global $_TABLES;
-        $res_id = (int)$res_id;
-        if ($res_id < 1) return false;
-        DB_query("UPDATE {$_TABLES['forms_results']}
-                SET approved = 1
-                WHERE id = '$res_id'", 1);
+
+        if ($this->res_id < 1) {
+            return false;
+        }
+        $sql = "UPDATE {$_TABLES['forms_results']}
+            SET approved = 1
+            WHERE res_id = {$this->res_id}";
+        DB_query($sql);
+        if (!DB_error()) {
+            // Give plugins a chance to act on the submission
+            if (!empty($this->instance_id)) {
+                $Form = Form::getInstance($this->frm_id);
+                $values = $this->getValues($Form->getFields());
+                list($pi_name, $pi_data) = explode('|', $this->instance_id);
+                if ($pi_name != 'forms') {  // avoid recursion
+                    $status = LGLIB_invokeService(
+                        $pi_name,
+                        'approvesubmission',
+                        array(
+                            'source' => 'forms',
+                            'source_id' => $this->frm_id,
+                            'moderated' => $is_moderated,
+                            'uid' => $this->getUid(),
+                            'pi_info' => $pi_data,
+                            'data' => $values,
+                        ),
+                        $output,
+                        $svc_msg
+                    );
+                }
+            }
+        }
         return DB_error() ? false : true;
     }
 
@@ -763,5 +808,3 @@ class Result
     }
 
 }
-
-?>
