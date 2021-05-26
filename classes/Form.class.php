@@ -11,6 +11,8 @@
  * @filesource
  */
 namespace Forms;
+use glFusion\FieldList;
+
 
 /**
  * Handle form objects and their related fields.
@@ -281,14 +283,14 @@ class Form
      *
      * @param   mixed   $vals   ID string, or array of values
      */
-    public function setInstance($vals)
+    public function setInstance($vals, $pi_name='unknown')
     {
         if (is_array($vals)) {
-            $val = implode('|', $vals);
+            $val = implode(':', $vals);
         } else {
             $val = $vals;
         }
-        $this->instance_id = $val;
+        $this->instance_id = $pi_name . '|' . $val;
     }
 
 
@@ -384,6 +386,17 @@ class Form
     public function getResultsGid()
     {
         return (int)$this->results_gid;
+    }
+
+
+    /**
+     * Get the group ID authorized to fill out the form.
+     *
+     * @return  integer     Authorized group ID
+     */
+    public function getFillGid()
+    {
+        return (int)$this->fill_gid;
     }
 
 
@@ -589,14 +602,18 @@ class Form
         global $LANG_FORMS, $_CONF, $_TABLES, $_CONF_FRM;
 
         // Check that $vals is an array; should be from $_POST;
-        if (!is_array($vals)) {
+        if (
+            !is_array($vals) ||
+            !$this->hasAccess(FRM_ACCESS_FILL)
+        ) {
             return false;
         }
 
         // Check that the user has access to fill out this form
-        if (!$this->hasAccess(FRM_ACCESS_FILL)) return false;
-        if ($this->captcha == 1 &&
-                function_exists('plugin_itemPreSave_captcha') ) {
+        if (
+            $this->captcha == 1 &&
+            function_exists('plugin_itemPreSave_captcha')
+        ) {
             $msg = plugin_itemPreSave_captcha('general', $vals['captcha']);
             if ($msg != '') {
                 return $msg;
@@ -606,6 +623,11 @@ class Form
         // Check whether the maximum submission number has been reached
         if (!$this->_checkMaxSubmit()) {
             COM_displayMessageAndAbort('7', 'forms');
+        }
+
+        // Override the successful submission message if one is provided.
+        if (isset($vals['success_msg'])) {
+            $this->submit_msg = $vals['success_msg'];
         }
 
         if (isset($vals['res_id']) && !empty($vals['res_id'])) {
@@ -661,14 +683,15 @@ class Form
         // Validate the form fields
         $msg = '';
         $invalid_flds = '';
-        foreach ($this->fields as $F) {
+        foreach ($this->fields as &$F) {
+            if (!$F->isEnabled()) {
+                // skip disabled fields
+                continue;
+            }
             $msg = $F->Validate($vals);
             if (!empty($msg)) {
                 $invalid_flds .= "<li>$msg</li>\n";
             } else {
-                /*if (isset($vals[$F->getName()])) {
-                    $F->setValue($vals[$F->getName()]);
-            }*/
                 $F->setValue($vals);
             }
         }
@@ -684,8 +707,10 @@ class Form
         // Always save data to the database.
         $this->Result = new Result($res_id);
         $this->Result->setInstance($this->instance_id)
-            ->setModerate($this->req_approval);
-        $this->res_id = $this->Result->SaveData(
+                     ->setModerate($this->req_approval);
+        $this->res_id = $this->Result
+                             //->withFields($this->fields)
+                             ->SaveData(
             $this->frm_id, $this->fields,
             $vals, $this->uid
         );
@@ -805,6 +830,9 @@ class Form
             }
         }
 
+        if (isset($vals['post_save']) && function_exists($vals['post_save'])) {
+            $vals['post_save']($vals);
+        }
         CTL_clearCache();   // So results autotag will work.
         return '';
     }
@@ -914,9 +942,9 @@ class Form
      * @param   integer $res_id     Result set ID to display data
      * @return  string  HTML for the form
      */
-    public function Render($mode='', $res_id=0)
+    public function Render($mode='', $res_id=0, $args=array())
     {
-        global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS, $_CONF_FRM;
+        global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS, $_CONF_FRM, $LANG_ADMIN;
 
         $retval = '';
         $isAdmin = false;
@@ -933,43 +961,74 @@ class Form
             return $this->max_submit_msg;
         }
 
+        $hidden = array();
         $success_msg = 1;
         $actionurl = FRM_PI_URL . '/index.php';
         $saveaction = 'savedata';
+        $delaction = 'delete';
         $allow_submit = true;
         $not_inline = true;
+        $show_buttons = (isset($args['show_buttons']) && !$args['show_buttons']) ? false : true;
+        $lang_submit = $LANG_ADMIN['submit'];
+        $lang_delete = '';
+        $lang_reject = '';
+        if (isset($args['redirect_success'])) {
+            $referrer = $args['redirect_success'];
+        } elseif (isset($args['referrer'])) {
+            $referrer = $args['referrer'];
+        } elseif (isset($_POST['referrer'])) {
+            $referrer = $_POST['referrer'];
+        } elseif (isset($_SERVER['HTTP_REFERER'])) {
+            $referrer = $_SERVER['HTTP_REFERER'];
+        } else {
+            $referrer = '';
+        }
+
         switch ($mode) {
         case 'preview':
-            $isAdmin = plugin_isadmin_forms();
-            if ($isAdmin) {
-                $referrer = FRM_ADMIN_URL . '/index.php';
-            } else {
-                $referrer = FRM_PI_URL . '/index.php?listforms';
+            if (!$referrer) {
+                if ($isAdmin) {
+                    $referrer = FRM_ADMIN_URL . '/index.php';
+                } else {
+                    $referrer = FRM_PI_URL . '/index.php?listforms';
+                }
             }
             $this->onetime = FRM_LIMIT_MULTI; // otherwise admin might not be able to view
             $allow_submit = false;
             break;
         case 'edit':    // admin editing submission
-            //$this->ReadData();
             $this->onetime = FRM_LIMIT_EDIT; // allow editing of result
             $success_msg = 3;
             // Refer the submitter back to the results page.
-            $referrer = FRM_ADMIN_URL . '/index.php?results=x&frm_id=' .
+            if (!$referrer) {
+                $referrer = FRM_ADMIN_URL . '/index.php?results=x&frm_id=' .
                     $this->frm_id;
+            }
             $actionurl = FRM_ADMIN_URL . '/index.php';
             $isAdmin = true;
             $saveaction = 'updateresult';
             break;
+        case 'moderation':
+            $lang_delete = 'Disapprove';
+            $lang_submit = 'Approve';
+            $saveaction = 'moderationapprove';
+            $delaction = 'moderationdelete';
+            $actionurl = FRM_ADMIN_URL . '/index.php';
+            break;
         case 'inline':
             $not_inline = false;
         default:
-            if (isset($_POST['referrer'])) {
-                $referrer = $_POST['referrer'];
-            } elseif (isset($_SERVER['HTTP_REFERER'])) {
-                $referrer = $_SERVER['HTTP_REFERER'];
-            } else {
-                $referrer = '';
-            }
+            /*if (!$referrer) {
+                if (isset($args['referrer'])) {
+                    $referrer = $args['referrer'];
+                } elseif (isset($_POST['referrer'])) {
+                    $referrer = $_POST['referrer'];
+                } elseif (isset($_SERVER['HTTP_REFERER'])) {
+                    $referrer = $_SERVER['HTTP_REFERER'];
+                } else {
+                    $referrer = '';
+                }
+        }*/
             break;
         }
         if ($this->inblock == 1) {
@@ -1008,19 +1067,33 @@ class Form
             $additional = '';
         }
 
+        /*foreach (array('success_msg', 'msg_error') as $key) {
+            if (isset($args[$key])) {
+                $hidden[$key] = '<input type="hidden" name="' . $key .
+                    '" value="' . $args[$key] . '" />';
+            }
+        }*/
+        if (isset($args['hidden']) && is_array($args['hidden'])) {
+            foreach ($args['hidden'] as $name=>$value) {
+                $hidden[$name] = '<input type="hidden" name="' . $name .
+                    '" value="' . $value . '" />';
+            }
+        }
+
         $T = new \Template(FRM_PI_PATH . '/templates');
         $T->set_file('form', 'form.thtml');
         // Set template variables without allowing caching
         $T->set_var(array(
             'frm_action'    => $actionurl,
             'btn_submit'    => $saveaction,
+            'btn_delete'    => $delaction,
             'frm_id'        => $this->frm_id,
             'introtext'     => $this->introtext,
             'error_msg'     => isset($_POST['forms_error_msg']) ?
                                 $_POST['forms_error_msg'] : '',
             'referrer'      => $referrer,
             'res_id'        => $res_id,
-            'success_msg'   => self::_stripHtml($success_msg),
+            //'success_msg'   => self::_stripHtml($success_msg),
             'help_msg'      => self::_stripHtml($this->help_msg),
             'pi_url'        => FRM_PI_URL,
             'submit_disabled' => $allow_submit ? '' : 'disabled="disabled"',
@@ -1028,11 +1101,14 @@ class Form
             'additional'    => $additional,
             'ajax'          => $this->sub_type == 'ajax' ? true : false,
             'not_inline'    => $not_inline,
+            'show_buttons'  => $show_buttons,
             'use_spamx'     => $this->use_spamx,
+            'lang_submit'   => $lang_submit,
+            'lang_cancel'   => $LANG_ADMIN['cancel'],
+            'lang_delete'   => $lang_delete,
         ), '', false, true );
 
         $T->set_block('form', 'QueueRow', 'qrow');
-        $hidden = '';
 
         foreach ($this->fields as $Field) {
             // Fields that can't be rendered (no permission, calc, disabled)
@@ -1059,8 +1135,7 @@ class Form
             $captcha = plugin_templatesetvars_captcha('general', $T);
             $T->set_var('captcha', $captcha);
         }
-
-        $T->set_var('hidden_vars', $hidden);
+        $T->set_var('hidden_vars', implode(LB, $hidden));
 
         PLG_templateSetVars ('form', $T);
 
@@ -1553,10 +1628,15 @@ class Form
                 $chk = '';
                 $enabled = 0;
             }
-            $retval = "<input name=\"{$fieldname}_{$A['frm_id']}\" " .
+            $retval = FieldList::checkbox(array(
+                'name' => $fieldname . '_' . $A['frm_id'],
+                'checked' => $fieldvalue == 1,
+                'onclick' => "FRMtoggleEnabled(this, '{$A['frm_id']}', 'form', '{$fieldname}', '{$extras['base_url']}');",
+            ) );
+            /*$retval = "<input name=\"{$fieldname}_{$A['frm_id']}\" " .
                 "type=\"checkbox\" $chk " .
                 "onclick='FRMtoggleEnabled(this, \"{$A['frm_id']}\", \"form\", \"{$fieldname}\", \"" . $extras['base_url'] . "\");' " .
-                "/>\n";
+                "/>\n";*/
             break;
 
         case 'frm_name':
