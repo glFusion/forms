@@ -52,8 +52,29 @@ class CheckboxField extends \Forms\Field
      */
     public function setValue($value)
     {
-        $this->value = $value == 0 ? 0 : 1;
+        if (is_array($value)) {
+            if (isset($value[$this->getName()])) {
+                $this->value = (int)$value[$this->getName()] == 0 ? 0 : 1;
+            } else {
+                $this->value = 0;
+            }
+        } else {
+            $this->value = $value == 0 ? 0 : 1;
+        }
         return $this;
+    }
+
+
+    /**
+     * Get the value form a form.
+     * Checkbox is unset for zero, set for the value.
+     *
+     * @param   array   $A      Array of submitted values
+     * @return  integer     0 if not set, configured value if set
+     */
+    public function valueFromForm($A)
+    {
+        return isset($A[$this->fld_name]) ? (int)$A[$this->fld_name] : 0;
     }
 
 
