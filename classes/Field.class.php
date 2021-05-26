@@ -277,10 +277,10 @@ class Field
 
         // Get defaults from the form, if defined
         if ($this->frm_id > 0) {
-            $form = Form::getInstance($this->frm_id);
-            if (!$form->isNew) {
-                $this->results_gid = $form->results_gid;
-                $this->fill_gid = $form->fill_gid;
+            $Form = Form::getInstance($this->frm_id);
+            if (!$Form->isNew()) {
+                $this->results_gid = $Form->getResultsGid();
+                $this->fill_gid = $Form->getFillGid();
             }
         }
         $T = new \Template(FRM_PI_PATH . '/templates/admin');
