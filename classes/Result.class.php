@@ -326,11 +326,15 @@ class Result
         $this->uid = $uid == 0 ? (int)$_USER['uid'] : (int)$uid;
         $this->frm_id = COM_sanitizeID($frm_id);
 
-        // Get the result set ID, creating a new one if needed
+        // Get the result set ID, creating a new one if needed.
+        // Save the isNew value to later check if result should be
+        // auto-approved.
         if ($this->isNew()) {
             $res_id = $this->Create($frm_id, $this->uid);
+            $isnew = true;
         } else {
             $res_id = $this->res_id;
+            $isnew = false;
         }
         if (!$res_id) {     // couldn't create a result set
             return false;
@@ -341,6 +345,13 @@ class Result
             $newval = $field->valueFromForm($vals);
             $field->SaveData($newval, $res_id);
         }
+
+        // Auto-approve the submission if new, and not moderated.
+        if ($isnew && !$this->moderate) {
+            // Approve now, also notifying other plugins
+            $this->Approve(false);
+        }
+
         Cache::clear(array('result_fields', 'result_' . $res_id));
         return $res_id;
     }
@@ -373,10 +384,6 @@ class Result
                 token = '{$this->token}',
                 approved = {$approved}";
         //echo $sql;die;
-        if (!$this->moderate) {
-            // Approve now, also notifying other plugins
-            $this->Approve(false);
-        }
         DB_query($sql, 1);
         if (!DB_error()) {
             $this->res_id = DB_insertID();
