@@ -284,15 +284,17 @@ function service_getMyForms_forms($args, &$output, &$svc_msg)
     global $_TABLES;
 
     $output = array();
-    if (empty($args['basename'])) return PLG_RET_ERROR;
+    if (!isset($args['basename'])) {
+        return PLG_RET_ERROR;
+    }
 
-    $key = DB_escapeString($arg['basename']) . '%';
+    $key = DB_escapeString($args['basename']) . '%';
     $sql = "SELECT frm_id, frm_name FROM {$_TABLES['forms_frmdef']}
             WHERE frm_id like '$key'";
     $res = DB_query($sql, 1);
     if (!$res) return PLG_RET_ERROR;
     while ($A = DB_fetchArray($res, true)) {
-        $output[$A['id']] = $A['name'];
+        $output[$A['frm_id']] = $A['frm_name'];
     }
     return PLG_RET_OK;
 }
