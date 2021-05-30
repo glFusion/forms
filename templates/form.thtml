@@ -16,7 +16,7 @@
   <input type="hidden" name="success_msg" value="{success_msg}" />
 {!endif}
   <!-- BEGIN QueueRow -->
-  <div class="uk-form-row">
+  <div class="uk-form-row uk-margin">
 {!if spancols}
 {!else}
 {!if prompt}
