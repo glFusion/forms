@@ -3,9 +3,9 @@
  *   Table definitions for the Profile plugin
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.4.0
+ * @version     0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -72,7 +72,7 @@ $_SQL['forms_values'] = "CREATE TABLE {$_TABLES['forms_values']} (
   `val_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `results_id` int(11) NOT NULL DEFAULT '0',
   `fld_id` int(11) NOT NULL,
-  `value` varchar(255) DEFAULT NULL,
+  `value` text DEFAULT NULL,
   PRIMARY KEY (`val_id`),
   UNIQUE KEY `res_fld` (`results_id`,`fld_id`)
 ) ENGINE=MyISAM";
@@ -199,7 +199,6 @@ $_FRM_UPGRADE_SQL = array(
         "ALTER TABLE {$_TABLES['forms_results']} CHANGE `id` `res_id` int(11) NOT NULL auto_increment",
         "UPDATE {$_TABLES['forms_flddef']} SET `type` = 'static' where `type` = 'statictext'",
         "ALTER TABLE {$_TABLES['forms_values']} CHANGE `id` `val_id` int(11) unsigned NOT NULL AUTO_INCREMENT",
+        "ALTER TABLE {$_TABLES['forms_values']} CHANGE `value` `value` text",
     ),
 );
-
-?>
