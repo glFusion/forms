@@ -10,6 +10,8 @@ Release TBD
 - Add option to record real IP addresses or anonymized addresses.
 - Use `ADMIN_list()` to show results table for more flexibility.
 - Implement moderation and notify other plugins of approval.
+- Use templates to render fields.
+- Don't check results-view permission when emailing results, assume good.
 
 ## v0.4.3
 Release 2019-05-22
