@@ -3,9 +3,9 @@
  * Class to handle hideen form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 20182021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     0.5.0
  * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -20,6 +20,17 @@ namespace Forms\Fields;
  */
 class HiddenField extends \Forms\Field
 {
+    /**
+     * Get the display prompt to show on the form.
+     * Normally just the prompt string, but for hidden fields use nothing.
+     *
+     * @return  string      Prompt to show on entry form
+     */
+    public function displayPrompt()
+    {
+        return '';
+    }
+
 
     /**
      * Create the hidden input field.
@@ -46,13 +57,16 @@ class HiddenField extends \Forms\Field
      * Override displayValue() to prevent any display for hidden fields.
      *
      * @param   array   $fields     Array of field objects (not used)
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  null                No return for hidden fields.
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
-        return NULL;
+        if ($this->canViewResults()) {
+            return $this->value;
+        } else {
+            return NULL;
+        }
     }
 
 }
-
-?>
