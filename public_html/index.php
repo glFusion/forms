@@ -56,16 +56,6 @@ case 'savedata':
     $errmsg = $F->SaveData($_POST);
     if (empty($errmsg)) {
         // Success
-        if (isset($_POST['_referrer'])) {
-            $redirect = $_POST['_referrer'];
-        } elseif ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
-            $redirect = FRM_PI_URL . '/index.php?myresult=x&res_id=' .
-                    $F->getResultID();
-            $redirect .= '&token=' . $F->getResult()->Token();
-        } elseif (empty($redirect)) {
-            $redirect = $_CONF['site_url'];
-        }
-        $u = parse_url($redirect);
         if ($F->getSubmitMsg() != '') {
             COM_setMsg($F->getSubmitMsg());
             $msg = '';
@@ -74,19 +64,37 @@ case 'savedata':
         } else {
             $msg = '1';
         }
-        $q = array();
-        if (!empty($u['query'])) {
-            parse_str($u['query'], $q);
+        if (empty($redirect)) {
+            if (isset($_POST['_referrer'])) {
+                $redirect = $_POST['_referrer'];
+            } elseif ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
+                $redirect = FRM_PI_URL . '/index.php?myresult=x&res_id=' .
+                    $F->getResultID();
+                $redirect .= '&token=' . $F->getResult()->Token();
+            } elseif (empty($redirect)) {
+                $redirect = $_CONF['site_url'];
+            }
+            $u = parse_url($redirect);
+            $q = array();
+            if (!empty($u['query'])) {
+                parse_str($u['query'], $q);
+            }
+            $q['msg'] = $msg;
+            $q['plugin'] = $_CONF_FRM['pi_name'];
+            $q['frm_id'] = $F->getID();
+            if (isset($u['scheme'])) {
+                $redirect = $u['scheme'] . '://' . $u['host'];
+                if (isset($u['path'])) {
+                    $redirect .= $u['path'];
+                }
+            }
+            $redirect .= '?';
+            $q_arr = array();
+            foreach($q as $key=>$value) {
+                $q_arr[] = "$key=" . urlencode($value);
+            }
+            $redirect .= http_build_query($q);
         }
-        $q['msg'] = $msg;
-        $q['plugin'] = $_CONF_FRM['pi_name'];
-        $q['frm_id'] = $F->getID();
-        $redirect = $u['scheme'].'://'.$u['host'].$u['path'].'?';
-        $q_arr = array();
-        foreach($q as $key=>$value) {
-            $q_arr[] = "$key=" . urlencode($value);
-        }
-        $redirect .= http_build_query($q);
         echo COM_refresh($redirect);
     } else {
         $msg = '2';
