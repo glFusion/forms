@@ -4,18 +4,19 @@
 <table border="0" cellpadding="3">
 <!-- BEGIN QueueRow -->
 <tr>
-  <td 
+	<td
 {!if spancols}
-colspan="2">
+		colspan="2">
 {!else}
-class="alignright" valign="top">
+		class="alignright" valign="top">
   {!if fld_prompt}
-    <label for="{fld_prompt}">{fld_prompt}:</label>
+		<label for="{fld_prompt}">{fld_prompt}:</label>
   {!endif}
-  </td>
-  <td>
+	</td>
+	<td>
 {!endif}
-    {fld_value}</td>
+		{fld_value}
+	</td>
 </tr>
 <!-- END QueueRow -->
 </table>
