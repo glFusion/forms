@@ -815,12 +815,12 @@ class Form
 
             $T->set_block('mailresults', 'QueueRow', 'qrow');
             foreach ($this->fields as $Fld) {
-                if (!$Fld->enabled) continue; // no disabled fields
+                if (!$Fld->isEnabled()) continue; // no disabled fields
                 $Fld->setCanviewResults(true);
                 $T->set_var(array(
-                    'fld_name'      => $Fld->frm_name,
-                    'fld_prompt'    => $Fld->prompt,
-                    'fld_value'     => $Fld->displayValue($this->fields),
+                    'fld_name'      => $Fld->getName(),
+                    'fld_prompt'    => $Fld->getPrompt(),
+                    'fld_value'     => $Fld->displayValue($this->fields, false),
                     'spancols'      => $Fld->hasOption('spancols'),
                 ) );
                 $T->parse('qrow', 'QueueRow', true);
@@ -1132,8 +1132,8 @@ class Form
             $rendered = $Field->displayField($res_id, $mode);
             if ($rendered !== NULL) {
                 $T->set_var(array(
-                    'prompt'    => PLG_replaceTags($Field->getPrompt()),
-                    'safe_prompt' => self::_stripHtml($Field->getPrompt()),
+                    'prompt'    => PLG_replaceTags($Field->displayPrompt()),
+                    'safe_prompt' => self::_stripHtml($Field->displayPrompt()),
                     'fieldname' => $Field->getName(),
                     'field'     => $rendered,
                     'help_msg'  => self::_stripHtml($Field->getHelpMsg()),
