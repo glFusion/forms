@@ -37,6 +37,9 @@ class results
         $retval = '';
         $frm_id = '';
         $fieldlist = false;
+        $sortfields = array('dt', 'ip', 'username', 'fullname', 'uid');
+        $sortby = 'dt';
+        $sortdir = 'ASC';
 
         foreach ($opts as $key=>$val) {
             $val = strtolower($val);
@@ -47,6 +50,17 @@ class results
                 break;
             case 'fields':
                 $fieldlist = explode(',', $val);
+                break;
+            case 'sortby':
+                if (in_array($val, $sortfields)) {
+                    $sortby = $val;
+                }
+                break;
+            case 'sortdir':
+                $sortdir = strtoupper(substr($val, 3));
+                if ($sortdir != 'ASC') {
+                    $sortdir = 'DESC';
+                }
                 break;
             }
         }
@@ -66,12 +80,14 @@ class results
 
         // Get the form results. We've already verified this user's access to
         // the form by instantiating it.
-        $sql = "SELECT * FROM {$_TABLES['forms_results']}
-            WHERE frm_id='$frm_id' AND approved = 1";
+        $sql = "SELECT r.*, u.username, u.fullname
+            FROM {$_TABLES['forms_results']} r
+            LEFT JOIN {$_TABLES['users']} u ON u.uid = r.uid
+            WHERE r.frm_id='$frm_id' AND r.approved = 1";
         if (!empty($instance_id)) {
-            $sql .= " AND instance_id = '" . DB_escapeString($instance_id) . "'";
+            $sql .= " AND r.instance_id = '" . DB_escapeString($instance_id) . "'";
         }
-        $sql .= ' ORDER BY dt ASC';
+        $sql .= " ORDER BY `$sortby` $sortdir";
         //echo $sql;die;
         $res = DB_query($sql, 1);
         if (DB_numRows($res) < 1) {
