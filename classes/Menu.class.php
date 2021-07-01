@@ -54,7 +54,7 @@ class Menu
      */
     public static function Admin($view ='', $help_text = '')
     {
-        global $_CONF, $LANG_FORMS, $LANG01, $isAdmin;
+        global $_CONF, $LANG_FORMS, $LANG01;
 
         USES_lib_admin();
 
@@ -63,7 +63,7 @@ class Menu
             $help_text = 'admin_text';
         }
 
-        if ($view == 'listforms' && $isAdmin) {
+        if ($view == 'listforms') {
             $menu_arr[] = array(
                 'url' => FRM_ADMIN_URL . '/index.php?action=editform',
                 'text' => $LANG_FORMS['add_form'],
@@ -157,5 +157,3 @@ class Menu
     }
 
 }
-
-?>
