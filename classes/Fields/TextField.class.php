@@ -3,7 +3,7 @@
  * Class to handle text form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     v0.5.0
  * @since       v0.3.1
@@ -20,6 +20,8 @@ namespace Forms\Fields;
  */
 class TextField extends \Forms\Field
 {
+    private $T = NULL;
+
     /**
      * Create a single form field for data entry.
      *
@@ -31,19 +33,36 @@ class TextField extends \Forms\Field
     {
         global $_CONF, $LANG_FORMS, $_CONF_FRM;
 
-        if (!$this->canViewField()) return NULL;
-        $value = $this->renderValue($res_id, $mode);
-        $elem_id = $this->_elemID();
-        $js = $this->renderJS($mode);
-        $access = $this->renderAccess();
-        $size = $this->options['size'];
-        $maxlength = min($this->options['maxlength'], 255);
+        if (!$this->canViewField()) {
+            return NULL;
+        }
 
-        $fld = "<input $access name=\"{$this->getName()}\"
-                    id=\"$elem_id\"
-                    size=\"$size\" maxlength=\"$maxlength\"
-                    type=\"text\" value=\"{$value}\" $js />";
-        return $fld;
+        if ($this->T === NULL) {
+            $this->T = new \Template(__DIR__ . '/../../templates/fields/');
+            $this->T->set_file('field', 'text.thtml');
+        }
+
+        $attributes = array(
+            'name' => $this->getName(),
+            'value' => $this->renderValue($res_id, $mode),
+            'id' => $this->_elemID(),
+            'size' => $this->options['size'],
+            'maxlength' => min($this->options['maxlength'], 255),
+        );
+        $attributes = array_merge($attributes, $this->renderAccess());
+        $attributes = array_merge($attributes, $this->renderJS($mode));
+
+        $this->T->set_block('field', 'Attr', 'attribs');
+        foreach ($attributes as $name=>$value) {
+            $this->T->set_var(array(
+                'name' => $name,
+                'value' => $value,
+            ) );
+            $this->T->parse('attribs', 'Attr', true);
+        }
+        $this->T->parse('output', 'field');
+        $this->T->clear_var('attribs');
+        return $this->T->finish($this->T->get_var('output'));
     }
 
 
@@ -65,7 +84,5 @@ class TextField extends \Forms\Field
             FRM_AUTOGEN_NONE;
         return $options;
     }
- 
-}
 
-?>
+}

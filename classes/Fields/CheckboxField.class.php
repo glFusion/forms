@@ -3,7 +3,7 @@
  * Class to handle single checkbox form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     v0.5.0
  * @since       v0.3.1
@@ -30,16 +30,36 @@ class CheckboxField extends \Forms\Field
     {
         global $_CONF, $LANG_FORMS, $_CONF_FRM;
 
-        $this->value = $this->renderValue($res_id, $mode);
-        $elem_id = $this->_elemID();
-        $js = $this->renderJS($mode);
-        $access = $this->renderAccess();
+        static $T = NULL;
+        if ($T === NULL) {
+            $T = new \Template(__DIR__ . '/../../templates/fields/');
+            $T->set_file('field', 'checkbox.thtml');
+        }
 
-        $chk = $this->value == 1 ? 'checked="checked"' : '';
-        $fld = "<input $access name=\"{$this->getName()}\"
-                    id=\"$elem_id\" type=\"checkbox\" value=\"1\"
-                    $chk $js />" . LB;
-        return $fld;
+        $this->value = $this->renderValue($res_id, $mode);
+        $attributes = array(
+            'name' => $this->getName(),
+            'id' => $this->_elemID(),
+        );
+        if ($this->value == 1) {
+            $attributes['checked'] = 'checked';
+        } else {
+            unset($attributes['checked']);
+        }
+        $attributes = array_merge($attributes, $this->renderJS($mode));
+        $attributes = array_merge($attributes, $this->renderAccess());
+
+        $T->set_block('field', 'Attr', 'attribs');
+        foreach ($attributes as $name=>$value) {
+            $T->set_var(array(
+                'name' => $name,
+                'value' => $value,
+            ) );
+            $T->parse('attribs', 'Attr', true);
+        }
+        $T->parse('output', 'field');
+        $T->clear_var('attribs');
+        return $T->finish($T->get_var('output'));
     }
 
 
@@ -95,13 +115,16 @@ class CheckboxField extends \Forms\Field
      * Get the formatted value for display in the results.
      *
      * @param   array   $fields     Array of all field objects
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  string              Language string corresponding to value
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
         global $LANG_FORMS;
 
-        if (!$this->canViewResults()) return NULL;
+        if ($chkaccess && !$this->canViewResults()) {
+            return NULL;
+        }
         return $this->value == 1 ? $LANG_FORMS['yes'] : $LANG_FORMS['no'];
     }
 
@@ -135,5 +158,3 @@ class CheckboxField extends \Forms\Field
     }
 
 }
-
-?>

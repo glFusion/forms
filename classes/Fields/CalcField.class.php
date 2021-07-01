@@ -3,9 +3,9 @@
  * Calculated field class.
  *
  * @author     Lee Garner <lee@leegarner.com>
- * @copyright  Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @copyright  Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package    forms
- * @version    0.3.1
+ * @version    0.5.0
  * @since      0.3.1
  * @license    http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -31,7 +31,7 @@ class CalcField extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
-        return NULL; 
+        return NULL;
     }
 
 
@@ -41,11 +41,14 @@ class CalcField extends \Forms\Field
      * the fields are provided to save time.
      *
      * @param   array   $fields     Array of field objects
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  float               Calculated value of this field
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
-        if (!$this->canViewResults()) return NULL;
+        if ($chkaccess && !$this->canViewResults()) {
+            return NULL;
+        }
         $result = '';
 
         // Get the calculation definition, return if none defined.
@@ -143,5 +146,3 @@ class CalcField extends \Forms\Field
     }
 
 }
-
-?>

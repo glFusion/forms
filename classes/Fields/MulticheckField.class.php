@@ -3,9 +3,9 @@
  * Class to handle multi-checkbox form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     0.5.0
  * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -29,24 +29,46 @@ class MulticheckField extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
+        static $T = NULL;
+
         if (!$this->canViewField()) return NULL;
+
         $values = $this->options['values'];
         if (!is_array($values) || empty($values)) {
             // Have to have some values for multiple checkboxes
             return '';
         }
-        $js = $this->renderJS($mode);
-        $access = $this->renderAccess();
-        $fld = '';
-        foreach ($values as $id=>$value) {
-            $elem_id = $this->_elemID($value);
-            $sel = $this->renderValue($res_id, $mode, $value);
-            $fld .= "<input $access type=\"checkbox\"
-                    name=\"{$this->getName()}[]\"
-                    id=\"$elem_id\"
-                    value=\"$value\" $sel $js>&nbsp;$value&nbsp;" . LB;
+
+        if ($T === NULL) {
+            $T = new \Template(__DIR__ . '/../../templates/fields');
+            $T->set_file('field', 'multicheck.thtml');
         }
-        return $fld;
+
+        $attributes = $this->renderJS($mode);
+        $attributes = array_merge($attributes, $this->renderAccess());
+        $attributes['name'] = $this->getName() . '[]';
+        $T->set_block('field', 'OptionRow', 'option');
+        foreach ($values as $id=>$value) {
+            $attributes['id'] = $this->_elemID($value);
+            if ($this->renderValue()) {
+                $attributes['checked'] = 'checked';
+            } else {
+                unset($attributes['checked']);
+            }
+            $T->set_block('field', 'Attr', 'attribs');
+            foreach ($attributes as $attr_name=>$attr_value) {
+                $T->set_var(array(
+                    'name' => $attr_name,
+                    'value' => $attr_value,
+                ) );
+                $T->parse('attribs', true);
+            }
+            $T->parse('option', 'OptionRow', true);
+        }
+        $T->parse('output', 'field');
+        $T->clear_var('attribs');
+        $T->clear_var('option');
+        return $T->finish($T->get_var('output'));
     }
 
 
@@ -90,7 +112,7 @@ class MulticheckField extends \Forms\Field
                 $chk = in_array($valname, $this->value) ? true : false;
             }
         }
-        return $chk ? 'checked="checked"' : '';
+        return $chk;// ? 'checked="checked"' : '';
     }
 
 
@@ -144,11 +166,14 @@ class MulticheckField extends \Forms\Field
      * Displays the selected options as "opt1, opt2, opt3..."
      *
      * @param   array   $fields     Array of all field objects (not used)
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  string              Formatted value for display
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
-        if (!$this->canViewResults()) return NULL;
+        if ($chkaccess && !$this->canViewResults()) {
+            return NULL;
+        }
         if (is_array($this->value)) {
             return implode(', ', $this->value);
         } else {
@@ -157,5 +182,3 @@ class MulticheckField extends \Forms\Field
     }
 
 }
-
-?>

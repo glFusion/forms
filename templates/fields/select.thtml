@@ -1,0 +1,9 @@
+{# begin {templatelocation} #}
+<select class="uk-select uk-form-width-medium uk-form-small"
+<!-- BEGIN Attr -->
+	{name}="{value}"
+<!-- END Attr -->
+>
+{option_list}
+</select>
+{# end {templatelocation} #}

@@ -1,0 +1,7 @@
+{# begin {templatelocation} #}
+<textarea class="uk-textarea"
+<!-- BEGIN Attr -->
+	{name}="{value}"
+<!-- END Attr -->
+>{text_value}</textarea>
+{# end {templatelocation} #}

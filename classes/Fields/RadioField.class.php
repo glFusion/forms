@@ -3,9 +3,9 @@
  * Class to handle radio button form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.3.1
+ * @version     v0.5.0
  * @since       v0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -29,6 +29,8 @@ class RadioField extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
+        static $T = NULL;
+
         if (!$this->canViewField()) {
             return NULL;
         }
@@ -38,18 +40,42 @@ class RadioField extends \Forms\Field
             return NULL;
         }
         $this->value = $this->renderValue($res_id, $mode);
-        $elem_id = $this->_elemID();
-        $js = $this->renderJS($mode);
-        $access = $this->renderAccess();
-        $fld = '';
-        foreach ($values as $id=>$value) {
-            $sel = $this->value == $value ? 'checked="checked"' : '';
-            $fld .= '<input ' . $access  . ' type="radio" name="' . $this->getName().
-                    '"id="' . $elem_id . '_' . $value .
-                    '" value="' . $value . '" ' . $sel . $js .
-                    '>&nbsp;' . $value . '&nbsp;' . LB;
+
+        if ($T === NULL) {
+            $T = new \Template(__DIR__ . '/../../templates/fields/');
+            $T->set_file('field', 'radio.thtml');
         }
-        return $fld;
+
+        $attributes = array(
+            'name' => $this->getName(),
+        );
+        $attributes = array_merge($attributes, $this->renderJS($mode));
+        $attributes = array_merge($attributes, $this->renderAccess());
+
+        $elem_id = $this->_elemID();
+
+        $T->set_block('field', 'Options', 'opts');
+        foreach ($values as $id=>$value) {
+            $attributes['id'] = $elem_id . '_' . $value;
+            if ($this->value == $value) {
+                $attributes['checked'] = 'checked';
+            } else {
+                unset($attributes['checked']);
+            }
+            $T->set_block('field', 'Attr', 'attribs');
+            foreach ($attributes as $attr_name=>$attr_value) {
+                $T->set_var(array(
+                    'name' => $attr_name,
+                    'value' => $attr_value,
+                ) );
+                $T->parse('attribs', 'Attr', true);
+            }
+            $T->set_var('value', $value);
+            $T->parse('opts', 'Options', true);
+            $T->clear_var('attribs');
+        }
+        $T->parse('output', 'field');
+        return $T->finish($T->get_var('output'));
     }
 
 
@@ -82,5 +108,3 @@ class RadioField extends \Forms\Field
     }
 
 }
-
-?>

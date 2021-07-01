@@ -3,9 +3,9 @@
  * Class to handle dropdown form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     0.5.0
  * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -32,22 +32,43 @@ class SelectField extends \Forms\Field
     {
         global $LANG_FORMS;
 
-        $elem_id = $this->_elemID();
-        $js = $this->renderJS($mode);
-        $access = $this->renderAccess();
-        $this->value = $this->renderValue($res_id, $mode);
+        static $T = NULL;
         $values = FRM_getOpts($this->options['values']);
         if (empty($values)) return '';
 
-        $fld = "<select $access name=\"{$this->getName()}\"
-                    id=\"$elem_id\" $js>" . LB;
-        $fld .= "<option value=\"\">{$LANG_FORMS['select']}</option>\n";
+        if ($T === NULL) {
+            $T = new \Template(__DIR__ . '/../../templates/fields/');
+            $T->set_file('field', 'select.thtml');
+        }
+
+        $attributes = array(
+            'id' => $this->_elemID(),
+            'name' => $this->getName(),
+        );
+        $attributes = array_merge($attributes, $this->renderJS($mode));
+        $attributes = array_merge($attributes, $this->renderAccess());
+
+        /*$elem_id = $this->_elemID();
+        $js = $this->renderJS($mode);
+        $access = $this->renderAccess();*/
+        $this->value = $this->renderValue($res_id, $mode);
+        $T->set_block('field', 'Attr', 'attribs');
+        foreach ($attributes as $name=>$value) {
+            $T->set_var(array(
+                'name' => $name,
+                'value' => $value,
+            ) );
+            $T->parse('attribs', 'Attr', true);
+        }
+        $options = "<option value=\"\">{$LANG_FORMS['select']}</option>\n";
         foreach ($values as $id=>$value) {
             $sel = $this->value == $value ? 'selected="selected"' : '';
-            $fld .= "<option value=\"$value\" $sel>{$value}</option>" . LB;
+            $options .= "<option value=\"$value\" $sel>{$value}</option>" . LB;
         }
-        $fld .= "</select>" . LB;
-        return $fld;
+        $T->set_var('option_list', $options);
+        $T->parse('output', 'field');
+        $T->clear_var('attribs');
+        return $T->finish($T->get_var('output'));
     }
 
 
@@ -80,5 +101,3 @@ class SelectField extends \Forms\Field
     }
 
 }
-
-?>

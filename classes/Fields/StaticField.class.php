@@ -3,9 +3,10 @@
  * Class to handle static text form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2017 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     0.5.0
+ * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -41,9 +42,11 @@ class StaticField extends \Forms\Field
      * @param   array   $fields     Array of all field objects
      * @return  string      Defined static field value
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
-        if (!$this->canViewResults()) return NULL;
+        if ($chkaccess && !$this->canViewResults()) {
+            return NULL;
+        }
         return $this->GetDefault($this->options['default']);
     }
 
@@ -73,5 +76,3 @@ class StaticField extends \Forms\Field
     }
 
 }
-
-?>

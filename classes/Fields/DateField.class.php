@@ -3,7 +3,7 @@
  * Date field class.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     0.5.0
  * @since       0.3.1
@@ -76,7 +76,7 @@ class DateField extends \Forms\Field
         } else {
             $this->value = trim($val);
         }
-        $this->value_text = $this->displayValue();
+        $this->value_text = $this->displayValue(NULL, false);
         return $this;
     }
 
@@ -135,7 +135,7 @@ class DateField extends \Forms\Field
         $T = new \Template(FRM_PI_PATH . '/templates/fields');
         $T->set_file('dt', 'date.thtml');
         $T->set_var(array(
-            'access'    => $access,
+//            'access'    => $access,
             'varname'   => $this->getName(),
             'm_options' => COM_getMonthFormOptions($month),
             'd_options' => COM_getDayFormOptions($day),
@@ -159,11 +159,12 @@ class DateField extends \Forms\Field
      * numeric variables with leading zeroes are used.
      *
      * @param   array   $fields     Array of all fields (not used here)
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  string  Date formatted for display
      */
-    public function displayValue($fields = NULL)
+    public function displayValue($fields = NULL, $chkaccess = true)
     {
-        if (!$this->canViewResults()) {
+        if ($chkaccess && !$this->canViewResults()) {
             return NULL;
         }
         $dt_tm = explode(' ', $this->value);
@@ -265,5 +266,3 @@ class DateField extends \Forms\Field
     }
 
 }
-
-?>

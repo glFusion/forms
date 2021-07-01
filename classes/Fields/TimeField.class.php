@@ -3,9 +3,10 @@
  * Class to handle time-entry form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.5.0
+ * @version     v0.5.0
+ * @since       v0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -129,6 +130,13 @@ class TimeField extends \Forms\Field
     }
 
 
+    /**
+     * Convert a time to 24-hour format.
+     *
+     * @param   array   $parts  Time parts
+     * @param   string  $var    Variable name
+     * @return  string      Time in 24-hour format
+     */
     public static function to24hour($parts, $var)
     {
         if (isset($parts[$var . '_ampm']) && $parts[$var . '_ampm'] == 'pm') {
@@ -138,5 +146,3 @@ class TimeField extends \Forms\Field
     }
 
 }
-
-?>

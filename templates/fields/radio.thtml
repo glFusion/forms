@@ -1,0 +1,9 @@
+{# begin {templatelocation} #}
+<!-- BEGIN Options -->
+<input type="radio"
+<!-- BEGIN Attr -->
+  {name}="{value}"
+<!-- END Attr -->
+/>&nbsp;{value}&nbsp;
+<!-- END Options -->
+{# end {templatelocation} #}

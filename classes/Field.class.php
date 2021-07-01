@@ -3,7 +3,7 @@
  * Class to handle individual form fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
@@ -874,11 +874,22 @@ class Field
             list($hour, $minute) = array(0, 0);
         }
 
+        $T = new \Template(__DIR__ . '/../templates/fields');
+        $T->set_file('field', 'time.thtml');
+        $T->set_var(array(
+            'fld_name' => $this->fld_name,
+            'hour_opts' => COM_getHourFormOptions($hour, $this->getOption('timeformat')),
+            'minute_opts' => COM_getMinuteFormOptions($minute),
+        ) );
         if ($this->getOption('timeformat') == '12') {
             list($hour, $ampm_sel) = $this->hour24to12($hour);
-            $ampm_fld = COM_getAmPmFormSelection($this->fld_name . '_ampm', $ampm_sel);
+            $T->set_var(
+                'ampm_select',
+                COM_getAmPmFormSelection($this->fld_name . '_ampm', $ampm_sel)
+            );
         }
-
+        $T->parse('output', 'field');
+        return $T->finish($T->get_var('output'));
         $h_fld = '<select name="' . $this->fld_name . '_hour">' . LB .
             COM_getHourFormOptions($hour, $this->getOption('timeformat')) .
             '</select>' . LB;
@@ -1049,11 +1060,12 @@ class Field
      * Just returns the raw value.
      *
      * @param   array   $fields     Array of all field objects (for calc-type)
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  string      Display value
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
-        if ($this->canViewResults()) {
+        if (!$chkaccess || $this->canViewResults()) {
             return htmlspecialchars($this->value);
         } else {
             return NULL;
@@ -1137,7 +1149,7 @@ class Field
     /**
      * Get the name of the field.
      *
-     * @return  string      Field name
+     * @return  string      Field prompt
      */
     public function getPrompt()
     {
@@ -1217,7 +1229,7 @@ class Field
      * Default function just trims the input.
      *
      * @param   string  $value  Value to set
-     * @return  object  $his
+     * @return  object  $this
      */
     public function setValue($value)
     {
@@ -1318,17 +1330,18 @@ class Field
      */
     protected function renderAccess()
     {
+        $access = array();
         switch ($this->access) {
         case FRM_FIELD_READONLY:
-            return 'disabled = "disabled"';
+            $access['disabled'] = 'disabled';
             break;
         case FRM_FIELD_REQUIRED:
-            return 'required';
+            $access['required'] = 'required';
             break;
         default:
-            return '';
             break;
         }
+        return $access;
     }
 
 
@@ -1342,16 +1355,14 @@ class Field
     {
         global $LANG_FORMS;
 
+        $js = array();
         if ($this->getSubType() == 'ajax') {
             // Only ajax fields get this
             if ($mode == 'preview') {
-                $js = 'onchange="FORMS_ajaxDummySave(\'' . $LANG_FORMS['save_disabled'] . '\')"';
+                $js['onchange'] = "FORMS_ajaxDummySave('{$LANG_FORMS['save_disabled']}');";
             } else {
-                $js = "onchange=\"FORMS_ajaxSave('" . $this->frm_id . "','" . $this->fld_id .
-                    "',this);\"";
+                $js['onchange'] = "FORMS_ajaxSave('{$this->frm_id}','{$this->fld_id}',this);";
             }
-        } else {
-            $js = '';
         }
         return $js;
     }
@@ -1693,5 +1704,3 @@ class Field
     }
 
 }
-
-?>

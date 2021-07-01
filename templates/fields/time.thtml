@@ -1,0 +1,9 @@
+{# begin {templatelocation} #}
+<select class="uk-select uk-form-xsmall uk-form-width-xsmall" name="{fld_name}_hour">
+{hour_opts}
+</select>
+<select class="uk-select uk-form-xsmall uk-form-width-xsmall" name="{fld_name}_minute">
+{minute_opts}
+</select>
+{ampm_select}
+{# end {templatelocation} #}

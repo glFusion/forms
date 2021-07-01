@@ -3,9 +3,9 @@
  * Class to handle numeric input fields.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.3.1
+ * @version     0.5.0
  * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -37,11 +37,14 @@ class NumericField extends TextField
      * Get the formatted value for display in the results
      *
      * @param   array   $fields     Array of all field objects (not used)
+     * @param   boolean $chkaccess  True to check user access, False to skip
      * @return  string              Formatted numeric display
      */
-    public function displayValue($fields)
+    public function displayValue($fields, $chkaccess=true)
     {
-        if (!$this->canViewResults()) return NULL;
+        if ($chkaccess && !$this->canViewResults()) {
+            return NULL;
+        }
         $fmt = $this->getOption('format', '%f');
         return sprintf($fmt, $this->value);
     }
@@ -78,5 +81,3 @@ class NumericField extends TextField
     }
  
 }
-
-?>

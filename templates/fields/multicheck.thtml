@@ -1,0 +1,9 @@
+{# begin {templatelocation} #}
+<!-- BEGIN optionRow -->
+<span class="nowrap"><input type="checkbox"
+<!-- BEGIN Attr -->
+	{name}="{value}"
+<!-- END Attr -->
+/>&nbsp;{text}</span>&nbsp;&nbsp;
+<!-- END optionRow -->
+{# end {templatelocation} #}
