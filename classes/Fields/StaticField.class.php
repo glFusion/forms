@@ -75,4 +75,17 @@ class StaticField extends \Forms\Field
         return $this;
     }
 
+
+    /**
+     * Save this field to the database.
+     *
+     * @param   mixed   $newval Data value to save
+     * @param   integer $res_id Result ID associated with this field
+     * @return  boolean     True on success, False on failure
+     */
+    public function SaveData($newval, $res_id=0)
+    {
+        return true;
+    }
+
 }
