@@ -442,7 +442,7 @@ class Form
         $this->SetVars($A, true);
         $this->access = $this->hasAccess($access);
 
-        $this->fields = Field::getByForm($this->frm_id);
+        $this->fields = Field::getByForm($this);
         return true;
     }
 
@@ -770,7 +770,7 @@ class Form
         // Email the submitting user their own results.
         // Only works for logged-in users.
         if ($onsubmit & FRM_ACTION_MAILUSER) {
-            $uid = (int)$this->Result->uid;
+            $uid = (int)$this->Result->getUid();
             if ($uid > 1) {
                 $email = DB_getItem(
                     $_TABLES['users'],
@@ -1218,7 +1218,7 @@ class Form
         $T->set_file('form', 'print.thtml');
         // Set template variables, without allowing caching
         $filled_by = sprintf($LANG_FORMS['filled_out_by'],
-            COM_getDisplayName($this->Result->uid),
+            COM_getDisplayName($this->Result->getUid()),
             $dt->format($_CONF['date'], true)
         );
         $T->set_var(array(
@@ -1427,7 +1427,7 @@ class Form
      */
     public function exportResultsCSV()
     {
-        $Results = Result::getByForm($this->frm_id);
+        $Results = Result::getByForm($this);
         if (empty($Results)) {
             return '';
         }
