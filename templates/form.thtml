@@ -3,7 +3,7 @@
 {!if additional}
 <div class="uk-alert uk-alert-danger">{additional}</div>
 {!endif}
-<form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
+<form uk-form class="uk-form uk-form-horizontal" id="forms_form{frm_id}" action="{frm_action}" method="post">
 {!endif}
 {introtext}
 {!if error_msg}
