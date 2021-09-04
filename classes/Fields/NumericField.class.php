@@ -56,7 +56,7 @@ class NumericField extends TextField
      * @param   float   $value  Value, should be numeric
      * @return  float           Sanitized numeric value
      */
-    protected function prepareForDB($value)
+    protected function _prepareForDB($value)
     {
         return (float)$value;
     }

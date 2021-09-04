@@ -12,6 +12,7 @@
  * @filesource
  */
 namespace Forms\Fields;
+use Forms\FieldList;
 
 
 /**
@@ -40,14 +41,13 @@ class CheckboxField extends \Forms\Field
         $attributes = array(
             'name' => $this->getName(),
             'id' => $this->_elemID(),
+            'checked' => $this->value == 1,
+            'value' => 1,
         );
-        if ($this->value == 1) {
-            $attributes['checked'] = 'checked';
-        } else {
-            unset($attributes['checked']);
-        }
         $attributes = array_merge($attributes, $this->renderJS($mode));
         $attributes = array_merge($attributes, $this->renderAccess());
+
+        return FieldList::checkbox($attributes);
 
         $T->set_block('field', 'Attr', 'attribs');
         foreach ($attributes as $name=>$value) {
@@ -135,7 +135,7 @@ class CheckboxField extends \Forms\Field
      * @param   integer $value      Raw value
      * @return  integer             Sanitized value, either 0 or 1
      */
-    protected function prepareForDB($value)
+    protected function _prepareForDB($value)
     {
         return $value == 0 ? 0 : 1;
     }

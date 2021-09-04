@@ -122,8 +122,9 @@ class Result
      */
     public function setVars($A)
     {
-        if (!is_array($A))
+        if (!is_array($A)) {
             return false;
+        }
 
         $this->res_id = (int)$A['res_id'];
         $this->frm_id = COM_sanitizeID($A['frm_id']);
@@ -198,13 +199,13 @@ class Result
      * @param   string  $frm_id     Form ID
      * @return  array       Array of Result objects
      */
-    public static function getByForm($frm_id)
+    public static function getByForm($Form)
     {
         global $_TABLES;
 
         $retval = array();
         $sql = "SELECT * FROM {$_TABLES['forms_results']}
-            WHERE frm_id = '" . DB_escapeString($frm_id) . "'";
+            WHERE frm_id = '" . DB_escapeString($Form->getID()) . "'";
         $res = DB_query($sql);
         while ($A = DB_fetchArray($res, false)) {
             $retval[$A['res_id']] = new self($A);
@@ -287,7 +288,7 @@ class Result
      */
     public function getValues($fields)
     {
-        global $_TABLES;
+        global $_TABLES, $_CONF_FRM;
 
         $retval = array();
         $sql = "SELECT * from {$_TABLES['forms_values']}
@@ -302,7 +303,19 @@ class Result
         // Then they can be pushed into the field array
         foreach ($fields as $field) {
             if ($field->isEnabled() && isset($vals[$field->getID()])) {
-                $field->setValue($vals[$field->getID()]['value']);
+                // Get the value of the submission and decrypt if required.
+                // If decryption fails, just show the value.
+                $val = $vals[$field->getID()]['value'];
+                if ($field->isEncrypted()) {
+                    $value = $field->decrypt($val);
+                    if ($value !== false) {
+                        $val = $value;
+                    }
+                }
+                $field->setValue($val);
+//                if ($field->getID() == 31) {
+//                    var_dump($field);die;
+                //            }
                 $retval[$field->getName()] = $field->getValue();
             }
         }
@@ -610,7 +623,7 @@ class Result
             if ($data === NULL) {
                 continue;
             }
-            var_dump($F);die;
+            //var_dump($F);die;
             $prompt = $F->displayPrompt();
 /*
             if (!in_array($F->results_gid, $_GROUPS)) {

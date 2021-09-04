@@ -12,6 +12,7 @@
  * @filesource
  */
 namespace Forms\Fields;
+use Forms\FieldList;
 
 
 /**
@@ -29,8 +30,6 @@ class RadioField extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
-        static $T = NULL;
-
         if (!$this->canViewField()) {
             return NULL;
         }
@@ -40,12 +39,6 @@ class RadioField extends \Forms\Field
             return NULL;
         }
         $this->value = $this->renderValue($res_id, $mode);
-
-        if ($T === NULL) {
-            $T = new \Template(__DIR__ . '/../../templates/fields/');
-            $T->set_file('field', 'radio.thtml');
-        }
-
         $attributes = array(
             'name' => $this->getName(),
         );
@@ -54,28 +47,14 @@ class RadioField extends \Forms\Field
 
         $elem_id = $this->_elemID();
 
-        $T->set_block('field', 'Options', 'opts');
+        $fields = array();
         foreach ($values as $id=>$value) {
             $attributes['id'] = $elem_id . '_' . $value;
-            if ($this->value == $value) {
-                $attributes['checked'] = 'checked';
-            } else {
-                unset($attributes['checked']);
-            }
-            $T->set_block('field', 'Attr', 'attribs');
-            foreach ($attributes as $attr_name=>$attr_value) {
-                $T->set_var(array(
-                    'name' => $attr_name,
-                    'value' => $attr_value,
-                ) );
-                $T->parse('attribs', 'Attr', true);
-            }
-            $T->set_var('value', $value);
-            $T->parse('opts', 'Options', true);
-            $T->clear_var('attribs');
+            $attributes['checked'] = $this->value == $value;
+            $attributes['value'] = $value;
+            $fields[] = FieldList::radio($attributes) . '&nbsp;' . $value;
         }
-        $T->parse('output', 'field');
-        return $T->finish($T->get_var('output'));
+        return implode('&nbsp;', $fields);
     }
 
 

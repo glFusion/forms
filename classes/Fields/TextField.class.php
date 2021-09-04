@@ -31,14 +31,17 @@ class TextField extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
-        global $_CONF, $LANG_FORMS, $_CONF_FRM;
+        global $_CONF, $LANG_FORMS, $_CONF_FRM, $_SYSTEM;
 
         if (!$this->canViewField()) {
             return NULL;
         }
 
         if ($this->T === NULL) {
-            $this->T = new \Template(__DIR__ . '/../../templates/fields/');
+            $this->T = new \Template(array(
+                __DIR__ . '/../../templates/fields/' . $_SYSTEM['framework'],
+                __DIR__ . '/../../templates/fields/',
+            ) );
             $this->T->set_file('field', 'text.thtml');
         }
 

@@ -74,6 +74,7 @@ $LANG_FORMS = array(
 'name'      => 'Name',
 'type'      => 'Type',
 'enabled'   => 'Enabled',
+'encrypted' => 'Encrypted',
 'required'  => 'Required',
 'hidden'    => 'Hidden',
 'normal'    => 'Normal',

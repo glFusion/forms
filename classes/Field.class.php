@@ -68,7 +68,7 @@ class Field
 
     /** Field value provided by the submitter.
      * @var string */
-    protected $value = '';
+    protected $value = NULL;
 
     /** Value formatted for display based on options.
      * @var string */
@@ -89,6 +89,10 @@ class Field
     /** Help popup message.
      * @var string */
     protected $help_msg = '';
+
+    /** Flag to encrypt form results.
+     * @var boolean */
+    protected $encrypt = 0;
 
 
     /**
@@ -194,13 +198,13 @@ class Field
      * @param   string  $frm_id     Form ID
      * @return  array       Array of Field objects
      */
-    public static function getByForm($frm_id)
+    public static function getByForm($Form)
     {
         global $_TABLES;
 
         $retval = array();
         $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id = '" . DB_escapeString($frm_id) . "'
+                WHERE frm_id = '" . DB_escapeString($Form->getID()) . "'
                 ORDER BY orderby ASC";
         //echo $sql;die;
         $res2 = DB_query($sql, 1);
@@ -249,6 +253,9 @@ class Field
         $this->help_msg = $A['help_msg'];
         $this->results_gid = (int)$A['results_gid'];
         $this->fill_gid = (int)$A['fill_gid'];
+        if (isset($A['encrypt'])) {
+            $this->encrypt = (int)$A['encrypt'];
+        }
 
         if (!$fromdb) {
             $this->options = $this->optsFromForm($A);
@@ -263,6 +270,8 @@ class Field
 
     /**
      * Edit a field definition.
+     * This function handles all field types instead of handing off to the
+     * field classes so that the type may be changed.
      *
      * @uses    DateFormatSelect()
      * @return  string      HTML for editing form
@@ -278,11 +287,12 @@ class Field
         // Get defaults from the form, if defined
         if ($this->frm_id > 0) {
             $Form = Form::getInstance($this->frm_id);
-            if (!$Form->isNew()) {
+            if (!$Form->isNew() && $this->fld_id == 0) {
                 $this->results_gid = $Form->getResultsGid();
                 $this->fill_gid = $Form->getFillGid();
             }
         }
+
         $T = new \Template(FRM_PI_PATH . '/templates/admin');
         $T->set_file('editform', 'editfield.thtml');
 
@@ -307,11 +317,19 @@ class Field
         }
         $T->set_var('calc_fld_options', $type_options);
 
-        // Populate the options specific to certain field types
-        //$opts = FRM_getOpts($this->options['values']);
-
         $value_str = '';
         $curdtformat = 0;
+        $defvalue = '';
+
+        // Set the checkbox type for the default values.
+        // Multicheck needs to be able to select multiple values,
+        // Select and Checkbox fields only need one.
+        $def_check_type = 'radio';
+        $def_check_name = 'sel_default';
+
+        // Set up the selected values for the current field type.
+        // If the type is changed, the other type fields will be set to
+        // defaults.
         switch ($this->type) {
         case 'date':
             if ($this->getOption('timeformat') == '24') {
@@ -332,6 +350,7 @@ class Field
             if ($this->getOption('century', '') != '') {
                 $T->set_var('cent_chk', 'checked="checked"');
             }
+            $defvalue = $this->getOption('default', '');
             break;
 
         case 'time':
@@ -340,6 +359,7 @@ class Field
             } else {
                 $T->set_var('12h_sel', 'checked');
             }
+            $defvalue = $this->getOption('default', '');
             break;
 
         case 'checkbox':
@@ -377,6 +397,8 @@ class Field
             break;
 
         case 'multicheck':
+            $def_check_type = 'checkbox';
+            $def_check_name = 'sel_default[]';
             if (isset($this->options['values'])) {
                 $values = FRM_getOpts($this->options['values']);
             } else {
@@ -390,7 +412,7 @@ class Field
                         '" value="' . $valname . '" name="selvalues[]" />';
                     $sel = $valname == $this->getOption('default') ?
                         ' checked="checked"' : '';
-                    $listinput .= "<input type=\"radio\" name=\"sel_default\"
+                    $listinput .= "<input type=\"checkbox\" name=\"sel_default[]\"
                         value=\"$i\" $sel />";
                     $listinput .= '</li>' . "\n";
                     $i++;
@@ -409,7 +431,9 @@ class Field
         case 'static':
             $value_str = $this->getOption('default', '');
             break;
-
+        default:
+            $defvalue = $this->getOption('default', '');
+            break;
         }
 
         $format_str = $this->getOption('format', $_CONF_FRM['def_calc_format']);
@@ -449,7 +473,7 @@ class Field
             'fld_name'  => $this->fld_name,
             'type'      => $this->type,
             'valuestr'  => $value_str,
-            'defvalue'  => $this->getOption('default', ''),
+            'defvalue'  => $defvalue,
             'prompt'    => $this->prompt,
             'size'      => $this->getOption('size', 40),
             'cols'      => $this->getOption('cols', 80),
@@ -473,6 +497,7 @@ class Field
             'fill_gid_select' => $this->_groupDropdown($this->fill_gid),
             'results_gid_select' => $this->_groupDropdown($this->results_gid),
             'access_chk' . $this->access => 'selected="selected"',
+            'def_check_type' => $def_check_type,
         ) );
 
         $T->parse('output', 'editform');
@@ -526,7 +551,8 @@ class Field
                 orderby = '{$this->orderby}',
                 help_msg = '" . DB_escapeString($this->help_msg) . "',
                 fill_gid = '{$this->fill_gid}',
-                results_gid = '{$this->results_gid}'";
+                results_gid = '{$this->results_gid}',
+                encrypt = {$this->encrypt}";
         $sql = $sql1 . $sql2 . $sql3;
         DB_query($sql);
 
@@ -692,7 +718,8 @@ class Field
                 help_msg = '" . DB_escapeString($this->help_msg) . "',
                 fill_gid = {$this->fill_gid},
                 results_gid = {$this->results_gid},
-                orderby = '" . (int)$this->orderby . "'";
+                orderby = '" . (int)$this->orderby . "',
+                encrypt = {$this->encrypt}";
         DB_query($sql, 1);
         $msg = DB_error() ? 5 : '';
         return $msg;
@@ -1214,6 +1241,17 @@ class Field
 
 
     /**
+     * Check if this is an encrypted field.
+     *
+     * @return  boolean     1 if encrypted, 0 if not
+     */
+    public function isEncrypted()
+    {
+        return $this->encrypt ? 1 : 0;
+    }
+
+
+    /**
      * Get the type of field.
      *
      * @return  string      Field type
@@ -1370,14 +1408,31 @@ class Field
 
     /**
      * Get the data formatted for saving to the database.
-     * Field types can override this as needed.
+     * First calls _prepareForDB() for field-specific preparation.
      *
      * @param   mixed   $newval     New data to save
      * @return  mixed       Data formatted for the DB
      */
-    protected function prepareForDB($newval)
+    private function prepareForDB($newval)
     {
-        return DB_escapeString(COM_checkWords(strip_tags($newval)));
+        $newval = $this->_prepareForDB($newval);
+        if ($this->encrypt) {
+            $newval = $this->encrypt($newval);
+        }
+        return DB_escapeString($newval);
+    }
+
+
+    /**
+     * Internal function to prepare a field for database storage.
+     * This default works on text and textarea fields.
+     *
+     * @param   mixed   $newval     New value being saved
+     * @return  mixed       Sanitized version to save in the DB
+     */
+    protected function _prepareForDB($newval)
+    {
+        return COM_checkWords(strip_tags($newval));
     }
 
 
@@ -1488,7 +1543,7 @@ class Field
     public function hasOption($opt, $val = 1)
     {
         if (
-            isset($this->options[$opt]) && 
+            isset($this->options[$opt]) &&
             $this->options[$opt] == $val
         ) {
             return true;
@@ -1696,11 +1751,37 @@ class Field
     {
         global $_TABLES;
 
-        return COM_optionList(
+        $retval = '<option value="0">-- None --</option>' . LB;
+        $retval .= COM_optionList(
             $_TABLES['groups'],
             'grp_id,grp_name',
             $group_id
         );
+        return $retval;
+    }
+
+
+    /**
+     * Encrypt the field contents if this is an encrypted field.
+     *
+     * @param   mixed   $val    Value to be encrypted
+     * @return  string      Encrypted value
+     */
+    protected function encrypt($val)
+    {
+        return COM_encrypt($val);
+    }
+
+
+    /**
+     * Decrypt the field contents of an encrypted field.
+     *
+     * @param   string  $val    Encrypted value
+     * @return  mixed       Decrypted value
+     */
+    public function decrypt($val)
+    {
+        return COM_decrypt($val);
     }
 
 }

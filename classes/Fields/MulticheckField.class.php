@@ -12,6 +12,7 @@
  * @filesource
  */
 namespace Forms\Fields;
+use Forms\FieldList;
 
 
 /**
@@ -29,46 +30,37 @@ class MulticheckField extends \Forms\Field
      */
     public function displayField($res_id = 0, $mode = NULL)
     {
-        static $T = NULL;
-
-        if (!$this->canViewField()) return NULL;
+        if (!$this->canViewField()) {
+            return NULL;
+        }
 
         $values = $this->options['values'];
         if (!is_array($values) || empty($values)) {
             // Have to have some values for multiple checkboxes
-            return '';
+            return NULL;
         }
 
-        if ($T === NULL) {
-            $T = new \Template(__DIR__ . '/../../templates/fields');
-            $T->set_file('field', 'multicheck.thtml');
+        // Get the values. If the field has no value (no submission),
+        // use the default. Otherwise use the value from the result.
+        if ($this->value === NULL) {
+            $checked = (array)$this->getOption('default');  // todo
+        } elseif (is_array($this->value)) {
+            $checked = $this->value;
+        } else {
+            $checked = array();
         }
 
         $attributes = $this->renderJS($mode);
         $attributes = array_merge($attributes, $this->renderAccess());
         $attributes['name'] = $this->getName() . '[]';
-        $T->set_block('field', 'OptionRow', 'option');
+        $boxes = array();
         foreach ($values as $id=>$value) {
             $attributes['id'] = $this->_elemID($value);
-            if ($this->renderValue()) {
-                $attributes['checked'] = 'checked';
-            } else {
-                unset($attributes['checked']);
-            }
-            $T->set_block('field', 'Attr', 'attribs');
-            foreach ($attributes as $attr_name=>$attr_value) {
-                $T->set_var(array(
-                    'name' => $attr_name,
-                    'value' => $attr_value,
-                ) );
-                $T->parse('attribs', true);
-            }
-            $T->parse('option', 'OptionRow', true);
+            $attributes['checked'] = in_array($value, $checked);
+            $attributes['value'] = $value;
+            $boxes[] = FieldList::checkbox($attributes) . '&nbsp;' . $value;
         }
-        $T->parse('output', 'field');
-        $T->clear_var('attribs');
-        $T->clear_var('option');
-        return $T->finish($T->get_var('output'));
+        return implode('&nbsp;', $boxes);
     }
 
 
@@ -80,14 +72,14 @@ class MulticheckField extends \Forms\Field
      * @param   array   $newval     Array of field values
      * @return  string      Serialized string
      */
-    protected function prepareForDB($newval)
+    protected function _prepareForDB($newval)
     {
         if (is_array($newval)) {
             $newval = serialize($newval);
         } else {
             $newval = serialize(array($newval));
         }
-        return DB_escapeString($newval);
+        return $newval;
     }
 
 
@@ -112,7 +104,7 @@ class MulticheckField extends \Forms\Field
                 $chk = in_array($valname, $this->value) ? true : false;
             }
         }
-        return $chk;// ? 'checked="checked"' : '';
+        return $chk;
     }
 
 
@@ -127,8 +119,12 @@ class MulticheckField extends \Forms\Field
     {
         if (!is_array($value)) {
             $value = @unserialize($value);
+            if ($value === false) {
+                $value = array();
+            }
         }
-        return $value;
+        $this->value = $value;
+        return $this;
     }
 
 
@@ -149,11 +145,12 @@ class MulticheckField extends \Forms\Field
                 $newvals[] = $val;
             }
         }
-        $options['default'] = '';  // override, fill in below
+        $options['default'] = array();  // override, fill in below
         if (isset($A['sel_default'])) {
-            $default = (int)$A['sel_default'];
-            if (isset($A['selvalues'][$default])) {
-                $options['default'] = $A['selvalues'][$default];
+            foreach ($A['sel_default'] as $key) {
+                if (isset($A['selvalues'][$key])) {
+                    $options['default'][] = $A['selvalues'][$key];
+                }
             }
         }
         $options['values'] = $newvals;

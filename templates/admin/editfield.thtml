@@ -109,7 +109,7 @@ function insertRow(list) {
 	var new_element = document.createElement('li');
 	new_element.innerHTML =
 			'<input id=\"vName'+count+'\" name=\"selvalues[]\" />' +
-		'<input type="radio" name="sel_default" value="' + count + '" />';
+		'<input type="{def_check_type"" name="{def_check_name}" value="' + count + '" />';
 	list.insertBefore(new_element, list.lastChild);
 	//document.getElementById('vName'+count).hide().slideDown('medium').focus();
 	document.getElementById('vName'+count).focus();
@@ -319,6 +319,14 @@ function insertRow(list) {
 		<div class="uk-form-controls">
 		<span id="hlp_enabled" class="tooltip_cfg tooltipstered"></span>
 		<input id="f_enabled" type="checkbox" value="1" name="enabled" {ena_chk} />
+		</div>
+	</div>
+
+	<div class="uk-form-row">
+		<label for="f_encrypted" class="uk-form-label">{$LANG_FORMS['encrypted']}</label>
+		<div class="uk-form-controls">
+			<span id="hlp_encrypted" class="tooltip_cfg tooltipstered"></span>
+			<input id="f_encrypted" type="checkbox" value="1" name="encrypt" {encrypt_chk} />
 		</div>
 	</div>
 

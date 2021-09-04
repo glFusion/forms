@@ -12,6 +12,7 @@ Release TBD
 - Implement moderation and notify other plugins of approval.
 - Use templates to render fields.
 - Don't check results-view permission when emailing results, assume good.
+- Support encryption at rest for user data.
 
 ## v0.4.3
 Release 2019-05-22
