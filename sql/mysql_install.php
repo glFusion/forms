@@ -13,6 +13,7 @@
 
 /** @global array $_TABLES */
 global $_TABLES;
+$_SQL = array();
 
 $_SQL['forms_frmdef'] = "CREATE TABLE {$_TABLES['forms_frmdef']} (
   `frm_id` varchar(40) NOT NULL DEFAULT '',
