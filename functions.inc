@@ -469,11 +469,10 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     }
 
                     $Form = new Forms\Form($frm_id, FRM_ACCESS_FILL);
-                    $Form->setInstance($instance_id);
-                    if ($Form->isEnabled()) {
+                    if (!$Form->isNew() && $Form->isEnabled()) {
+                        // Make sure it's a valid form
+                        $Form->setInstance($instance_id);
                         $HTML = $Form->Render($template);
-                    } else {
-                        $HTML = $Form->getNoAccessMsg();
                     }
                 }
                 break;
