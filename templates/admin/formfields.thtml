@@ -1,4 +1,5 @@
 {# begin {templatelocation} #}
+<a id="frm_fldlist"></a>
 <p>{field_adminlist}</p>
 <form action="{action_url}" method="POST">
   <input type="hidden" name="frm_id" value="{frm_id}" />

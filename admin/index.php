@@ -117,7 +117,7 @@ case 'updatefield':
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
     $Field = Forms\Field::getInstance($_POST, $frm_id);
     $msg = $Field->SaveDef($_POST);
-    $view = 'editform';
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $frm_id . '#frm_fldlist');
     break;
 
 case 'delbutton_x':
@@ -151,12 +151,12 @@ case 'copyform':
 case 'updateform':
     $Form = new Forms\Form($_POST['old_id']);
     $msg = $Form->SaveDef($_POST);
-    if ($msg != '') {                   // save operation failed
+    if ($msg > 0) {                   // save operation failed
         $view = 'editform';
-    } elseif (empty($_POST['old_id'])) {    // New form, return to add fields
-        $frm_id = $Form->getID();
-        $view = 'editform';
-        $msg = 6;
+    } elseif (empty($_POST['old_id']) || count($Form->getFields()) == 0) {
+        // New form, return to add fields
+        COM_setMsg($LANG_FORMS['now_add_fields']);
+        echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $Form->getID() . '#frm_fldlist');
     } else {
         $view = 'listforms';
     }
