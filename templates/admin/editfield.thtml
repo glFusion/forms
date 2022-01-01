@@ -117,6 +117,7 @@ function insertRow(list) {
 
 </script>
 
+<h2>{$LANG_FORMS['edit_field']}</h2>
 <form id="frm1" class="uk-form uk-form-horizontal frmForms" method="post"
 	action="{site_url}/admin/plugins/forms/index.php">
 	<input type="hidden" name="fld_id" value="{fld_id}" />
@@ -131,7 +132,8 @@ function insertRow(list) {
 		<label for="fieldname" class="uk-form-label">{$LANG_FORMS['fieldname']}</label>
 		<div class="uk-form-controls">
 		<span id="hlp_fld_name" class="tooltip_cfg tooltipstered"></span>
-		<input id="fieldname" type="text" size="32" name="fld_name" value="{fld_name}" />
+		<input id="fieldname" class="uk-input required" required type="text" size="32" name="fld_name" value="{fld_name}" />
+		<i class="uk-icon uk-icon-triangle-exclamation uk-text-danger"></i>
 		</div>
 	</div>
 
@@ -401,7 +403,7 @@ function insertRow(list) {
 		<div class="uk-form-controls">
 			<button class="uk-button uk-button-success" name="updatefield" type="submit" value="{$LANG_ADMIN['submit']}"/>{$LANG_ADMIN['submit']}</button>
 			<button class="uk-button uk-button-primary" name="reset" type="reset" value="{$LANG_FORMS['reset']}">{$LANG_FORMS['reset']}</button>
-			<button class="uk-button" name="editform" type="submit" value="{$LANG_ADMIN['cancel']}">{$LANG_ADMIN['cancel']}</button>
+			<a class="uk-button uk-button-default" href="{site_admin_url}/plugins/forms/index.php?editform=x&frm_id={frm_id}#frm_fldlist">{$LANG_ADMIN['cancel']}</a>
 		</div>
 	</div>
 

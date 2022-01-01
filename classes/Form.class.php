@@ -854,7 +854,7 @@ class Form
      * @param   array   $A      Array of values (e.g. $_POST)
      * @return  string      Error message, empty on success
      */
-    public function SaveDef($A = '')
+    public function SaveDef(?array $A = NULL) : string
     {
         global $_TABLES, $LANG_FORMS;
 
@@ -926,7 +926,7 @@ class Form
             }
             CTL_clearCache();       // so autotags pick up changes
             Cache::delete('form_' . $this->frm_id);      // Clear plugin cache
-            $msg = '';              // no error message if successful
+            $msg = 0;              // no error message if successful
         } else {
             $msg = 5;
         }

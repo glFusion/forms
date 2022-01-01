@@ -3,7 +3,7 @@
  * Upgrade routines for the Forms plugin.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2021 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
@@ -340,6 +340,10 @@ function FRM_remove_old_files()
             'classes/Fields/textarea.class.php',
             'classes/Fields/text.class.php',
             'classes/Fields/time.class.php',
+            'language/english.php',
+            'language/dutch.php',
+            'language/german.php',
+            'language/german_formal.php',
         ),
         // public_html/forms
         $_CONF['path_html'] . 'forms' => array(
@@ -356,4 +360,3 @@ function FRM_remove_old_files()
     }
 }
 
-?>

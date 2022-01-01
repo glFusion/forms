@@ -175,6 +175,13 @@ $LANG_FORMS = array(
 'regular' => 'Regular Form',
 'field_updated' => 'Field updated',
 'save_disabled' => 'Saving disabled in form preview.',
+'filled_out_by' => 'Filled out by %1$s on %2$s',
+'use_spamx' => 'Use SPAMX Plugin?',
+'no_results' => 'No results found',
+'reset_results' => 'Remove all results for this form.',
+'confirm_form_reset' => 'Are you sure you want to delete all submissions for this form?',
+'edit_field' => 'Editing Field',
+'now_add_fields' => 'Form has been updated, now add fields.',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
