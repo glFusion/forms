@@ -24,7 +24,7 @@
     data-uk-datepicker onchange="FRM_updateDate(this.value, '{varname}', 0);"/>
 <script type="text/javascript">
 $( "#f_date_{varname}").datepicker({
-    buttonImage: "/data/images/datepicker.jpg",
+    buttonImage: "/forms/images/month.png",
     buttonImageOnly: true,
     showOn: "button",
     dateFormat: "yy-mm-dd",
