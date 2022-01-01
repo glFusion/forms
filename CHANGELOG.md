@@ -1,7 +1,7 @@
 # Changelog - Forms plugin for glFusion
 
 ## v0.5.0
-Release TBD
+Release 2022-01-01
 - Export checkbox values to CSV as 1/0 instead of yes/no.
 - Add html tags to print.thtml template.
 - Add option to email form results to the submitter.
@@ -13,6 +13,9 @@ Release TBD
 - Use templates to render fields.
 - Don't check results-view permission when emailing results, assume good.
 - Support encryption at rest for user data.
+- PHP v8 fixes.
+- Don't show anything for the `show` autotag if form is not available.
+- Redirect to create fields after saving new form.
 
 ## v0.4.3
 Release 2019-05-22

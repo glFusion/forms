@@ -3,7 +3,7 @@
  * Table definitions and other static config variables.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2018 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2022 Lee Garner <lee@leegarner.com>
  * @package     forms
  * @version     v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php 
@@ -39,4 +39,3 @@ $_CONF_FRM['gl_version']        = '1.7.9';
 $_CONF_FRM['pi_url']            = 'http://www.leegarner.com';
 $_CONF_FRM['pi_display_name']   = 'Forms';
 
-?>
