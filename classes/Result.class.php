@@ -728,6 +728,11 @@ class Result
                 'field' => 'ip',
                 'sort' => true,
             );
+            $header_arr[] = array(
+                'text' => $LANG_ADMIN['delete'],
+                'field' => 'delete',
+                'align' => 'center',
+            );
         }
 
         $defsort_arr = array(
@@ -753,7 +758,7 @@ class Result
         $options_arr = array(
             'chkdelete' => true,
             'chkname' => 'delresmulti',
-            'chkfield' => 'frm_id',
+            'chkfield' => 'res_id',
         );
         $extras = array(
             'isAdmin' => $isAdmin,
@@ -818,6 +823,16 @@ class Result
 
         case 'uid':
             $retval = COM_getDisplayName($fieldvalue);
+            break;
+
+        case 'delete':
+            $retval = COM_createLink(
+                '<i class="uk-icon uk-icon-remove uk-text-danger"></i>',
+                FRM_ADMIN_URL . '/index.php?delresult=' . $A['res_id'] . '&frm_id=' . $A['frm_id'],
+                array(
+                    'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}');",
+                )
+            );
             break;
 
         default:

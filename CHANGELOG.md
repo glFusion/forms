@@ -1,5 +1,9 @@
 # Changelog - Forms plugin for glFusion
 
+## v0.5.1
+Release 2022-01-02
+- Fix result deletion, add individual deletion icon for results list.
+
 ## v0.5.0
 Release 2022-01-01
 - Export checkbox values to CSV as 1/0 instead of yes/no.

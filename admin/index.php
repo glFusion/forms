@@ -6,9 +6,9 @@
  * access to this file.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2022 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.5.0
+ * @version     0.5.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
@@ -29,7 +29,7 @@ $action = 'listforms';      // Default view
 $expected = array(
     'edit','updateform','editfield', 'updatefield',
     'save', 'print', 'editresult', 'updateresult', 'reorder',
-    'editform', 'copyform', 'delbutton_x', 'showhtml',
+    'editform', 'copyform', 'delbutton_x', 'showhtml', 'delresult',
     'moderate', 'moderationapprove', 'moderationdelete',
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
     'results', 'preview',
@@ -130,9 +130,14 @@ case 'delbutton_x':
         foreach ($_POST['delresmulti'] as $key=>$value) {
             Forms\Result::Delete($value);
         }
-        $view = 'results';
     }
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $_GET['frm_id']);
     CTL_clearCache();   // so the autotags will pick it up.
+    break;
+
+case 'delresult':
+    Forms\Result::Delete($actionval);
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $_GET['frm_id']);
     break;
 
 case 'copyform':
