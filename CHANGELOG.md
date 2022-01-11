@@ -1,5 +1,8 @@
 # Changelog - Forms plugin for glFusion
 
+## v0.5.2
+Release TBD
+
 ## v0.5.1
 Release 2022-01-02
 - Fix result deletion, add individual deletion icon for results list.
