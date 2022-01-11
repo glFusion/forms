@@ -1542,7 +1542,10 @@ class Form
             );
         }
 
-        $text_arr = array();
+        $text_arr = array(
+            'has_limit' => true,
+            'has_paging' => true,
+        );
         $query_arr = array(
             'table' => 'forms_frmdef',
             'sql' => "SELECT *
