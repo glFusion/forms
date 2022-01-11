@@ -1542,15 +1542,27 @@ class Form
             );
         }
 
+        if (isset($_REQUEST['onlyenabled'])) {
+            $frmchk = 'checked="checked"';
+            $ena_query = 'AND enabled = 1';
+        } else {
+            $frmchk = '';
+            $ena_query = '';
+        }
+        $filter = '<input type="checkbox" name="onlyenabled" ' . $frmchk .  '>&nbsp;' .
+            'Enabled Only' . '&nbsp;&nbsp;';
+
         $text_arr = array(
             'has_limit' => true,
             'has_paging' => true,
+            'has_search' => true,
+            'form_url'  => FRM_ADMIN_URL . '/index.php?listforms',
         );
         $query_arr = array(
             'table' => 'forms_frmdef',
             'sql' => "SELECT *
                 FROM {$_TABLES['forms_frmdef']}
-                WHERE 1=1 $perm_sql",
+                WHERE 1=1 $ena_query $perm_sql",
             'query_fields' => array('frm_name'),
             'default_filter' => '',
         );
@@ -1558,13 +1570,16 @@ class Form
             'base_url' => $base_url,
             'isAdmin' => $isAdmin,
         );
-        $defsort_arr = array('field' => 'frm_name', 'direction' => 'ASC');
+        $defsort_arr = array(
+            'field' => 'frm_name',
+            'direction' => 'ASC',
+        );
         $form_arr = array();
         $retval .= ADMIN_list(
             'forms_adminlistform',
             array(__CLASS__, 'getListField'),
             $header_arr,
-            $text_arr, $query_arr, $defsort_arr, '', $extras, '', $form_arr
+            $text_arr, $query_arr, $defsort_arr, $filter, $extras, '', $form_arr
         );
         return $retval;
     }
