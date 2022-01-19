@@ -1,7 +1,8 @@
 # Changelog - Forms plugin for glFusion
 
 ## v0.5.2
-Release TBD
+Release 2022-01-19
+- Fix results autotag not using proper accessor functions.
 
 ## v0.5.1
 Release 2022-01-02

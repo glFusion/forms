@@ -74,7 +74,7 @@ class results
         $Frm = new Form($frm_id, FRM_ACCESS_VIEW);
 
         // Return nothing if the form is invalid (e.g. no access)
-        if ($Frm->isNew() == '' || !$Frm->hasAccess(FRM_ACCESS_VIEW)) {
+        if ($Frm->isNew() || !$Frm->hasAccess(FRM_ACCESS_VIEW)) {
             return $retval;
         }
 
@@ -95,7 +95,7 @@ class results
         }
 
         $T = new \Template(FRM_PI_PATH . '/templates');
-        $isAdmin = plugin_ismoderator_forms();
+        $isAdmin = plugin_isadmin_forms();
         if (is_array($fieldlist)) {
             $fieldnames = $fieldlist;
         }
@@ -150,18 +150,18 @@ class results
 
             // Admins always see the submitter & date, others only if requested
             if ($isAdmin) {
-                $T->set_var('res_id', $R->id);
+                $T->set_var('res_id', $R->getID());
             }
             if ($isAdmin || $fieldlist == 'all' || in_array('res_user', $fieldnames)) {
-                $T->set_var('res_user', COM_getDisplayName($R->uid));
+                $T->set_var('res_user', COM_getDisplayName($R->getUid()));
             }
             if ($isAdmin || $fieldlist == 'all' || in_array('res_date', $fieldnames)) {
-                $T->set_var('res_date', strftime('%Y-%m-%d %H:%M', $R->dt));
+                $T->set_var('res_date', strftime('%Y-%m-%d %H:%M', $R->getTimestamp()));
             }
 
             $T->set_block('formresults', 'Fields', 'fldData');
             foreach ($Fields as $Fld) {
-                //$Fld->GetValue($R->id);
+                //$Fld->GetValue($R->getResID());
                 //$T->set_var('fld_value', htmlspecialchars($Fld->value_text));
                 $T->set_var('fld_value', $Fld->displayValue($Frm->getFields()));
                 $T->parse('fldData', 'Fields', true);
