@@ -121,7 +121,12 @@ case 'updatefield':
     break;
 
 case 'delbutton_x':
-    if (isset($_POST['delfield']) && is_array($_POST['delfield'])) {
+    if (isset($_POST['delfrm']) && is_array($_POST['delfrm'])) {
+        foreach ($_POST['delfrm'] as $frm_id) {
+            Forms\Form::getInstance($frm_id)->DeleteDef();
+        }
+        echo COM_refresh(FRM_ADMIN_URL . '/index.php');
+    }elseif (isset($_POST['delfield']) && is_array($_POST['delfield'])) {
         // Deleting one or more fields
         foreach ($_POST['delfield'] as $key=>$value) {
             Forms\Field::Delete($value);
@@ -149,7 +154,7 @@ case 'copyform':
         );
         exit;
     } else {
-        $view = 'listforms';
+        echo COM_refresh(FRM_ADMIN_URL . '/index.php');
     }
     break;
 
@@ -163,7 +168,7 @@ case 'updateform':
         COM_setMsg($LANG_FORMS['now_add_fields']);
         echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $Form->getID() . '#frm_fldlist');
     } else {
-        $view = 'listforms';
+        echo COM_refresh(FRM_ADMIN_URL . '/index.php');
     }
     break;
 
@@ -171,7 +176,7 @@ case 'deleteFrmDef':
     // Delete a form definition.  Also deletes user values.
     $id = $_REQUEST['frm_id'];
     $msg = Forms\Form::getInstance($id)->DeleteDef();
-    $view = 'listforms';
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php');
     break;
 
 case 'deleteFldDef':

@@ -1318,7 +1318,7 @@ class Form
      * @uses    Field::Duplicate()
      * @return  string      Error message, empty if successful
      */
-    public function Duplicate()
+    public function Duplicate() : string
     {
         $this->frm_name .= ' -Copy';
         $this->frm_id = COM_makeSid();
@@ -1574,12 +1574,17 @@ class Form
             'field' => 'frm_name',
             'direction' => 'ASC',
         );
+        $options = array(
+            'chkdelete' => 'true',
+            'chkfield' => 'frm_id',
+            'chkname' => 'delfrm',
+        );
         $form_arr = array();
         $retval .= ADMIN_list(
             'forms_adminlistform',
             array(__CLASS__, 'getListField'),
             $header_arr,
-            $text_arr, $query_arr, $defsort_arr, $filter, $extras, '', $form_arr
+            $text_arr, $query_arr, $defsort_arr, $filter, $extras, $options, $form_arr
         );
         return $retval;
     }
@@ -1602,40 +1607,34 @@ class Form
         $retval = '';
         switch($fieldname) {
         case 'edit':
-            $url = $extras['base_url'] . "/index.php?editform=x&amp;frm_id={$A['frm_id']}";
-            $retval = COM_createLink(
-                Icon::getHTML('edit'),
-                $url
-            );
+            $retval = FieldList::edit(array(
+                'url' => $extras['base_url'] . "/index.php?editform=x&amp;frm_id={$A['frm_id']}",
+            ));
             break;
 
         case 'copy':
-            $url = $extras['base_url'] . "/index.php?copyform=x&amp;frm_id={$A['frm_id']}";
-            $retval = COM_createLink(
-                Icon::getHtml('copy'),
-                $url
-            );
+            $retval = FieldList::copy(array(
+                'url' => $extras['base_url'] . "/index.php?copyform=x&amp;frm_id={$A['frm_id']}",
+            ));
             break;
 
         case 'view_html':
             $url = $extras['base_url'] . "/index.php?showhtml=x&amp;frm_id={$A['frm_id']}";
-            $retval = COM_createLink(
-                Icon::getHTML('code'),
-                '#',
-                array(
+            $retval = FieldList::codeview(array(
+                'url' => '#',
+                'attr' => array(
                     'onclick' => "popupWindow('$url', '', 640, 480, 1); return false;",
-                )
-            );
+                ),
+            ));
             break;
 
         case 'delete':
-            $retval = COM_createLink(
-                Icon::getHTML('delete'),
-                $extras['base_url'] . "/index.php?deleteFrmDef=x&frm_id={$A['frm_id']}",
-                array(
+            $retval = FieldList::delete(array(
+                'delete_url' => $extras['base_url'] . "/index.php?deleteFrmDef=x&frm_id={$A['frm_id']}",
+                'attr' => array(
                     'onclick' => "return confirm('{$LANG_FORMS['confirm_form_delete']}?');",
-                )
-            );
+                ),
+            ));
             break;
 
         case 'reset':
