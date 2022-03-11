@@ -1,5 +1,11 @@
 # Changelog - Forms plugin for glFusion
 
+## v0.5.3
+Release 2022-03-10
+- glFusion 2+ support only.
+- Update admin list, add multi-item form deletion checkboxes.
+- Fix fields not copying when copying a form
+
 ## v0.5.2
 Release 2022-01-19
 - Fix results autotag not using proper accessor functions.
