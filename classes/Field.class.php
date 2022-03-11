@@ -709,7 +709,7 @@ class Field
 
         $sql = "INSERT INTO {$_TABLES['forms_flddef']} SET
                 frm_id = '" . DB_escapeString($this->frm_id) . "',
-                name = '" . DB_escapeString($this->fld_name) . "',
+                fld_name = '" . DB_escapeString($this->fld_name) . "',
                 type = '" . DB_escapeString($this->type) . "',
                 enabled = {$this->enabled},
                 access = {$this->access},
