@@ -727,22 +727,16 @@ class Form
 
         // Emailing or displaying results
         $emails = array();
+        $email_uids = array();  // collect user IDs to email
 
         // Sending to the form owner
         if ($onsubmit & FRM_ACTION_MAILOWNER) {
-            $email = DB_getItem($_TABLES['users'], 'email',
-                        "uid='".$this->owner_id."'");
-            if (COM_isEmail($email)) {
-                $emails[$email] = COM_getDisplayName($this->owner_id);
-            }
+            $email_uids[] = $this->owner_id;
         }
 
         // Sending to the site admin
         if ($onsubmit & FRM_ACTION_MAILADMIN) {
-            $email = DB_getItem($_TABLES['users'], 'email', "uid='2'");
-            if (COM_isEmail($email)) {
-                $emails[$email] = COM_getDisplayName(2);
-            }
+            $email_uids[] = 2;
         }
 
         // Sending to the admin group. Need to get all users in the group,
@@ -750,36 +744,40 @@ class Form
         if ($onsubmit & FRM_ACTION_MAILGROUP) {
             USES_lib_user();
             $groups = implode(',', USER_getChildGroups($this->group_id));
-            $sql = "SELECT DISTINCT uid, username, fullname, email
-                    FROM {$_TABLES['users']}, {$_TABLES['group_assignments']}
+            $sql = "SELECT DISTINCT u.uid
+                    FROM {$_TABLES['users']} u
+                    LEFT JOIN {$_TABLES['group_assignments']} ga
+                    ON ga.ug_uid = u.uid
                     WHERE uid > 1
-                    AND {$_TABLES['users']}.status = 3
-                    AND email is not null
-                    AND email != ''
-                    AND {$_TABLES['users']}.uid = ug_uid
-                    AND ug_main_grp_id IN ({$groups})
-                    AND ug_main_grp_id <> 1";
+                    AND u.status = 3
+                    AND u.email is not null
+                    AND u.email != ''
+                    AND ga.ug_main_grp_id IN ({$groups})
+                    AND ga.ug_main_grp_id <> 1";
             $result = DB_query($sql, 1);
             while ($A = DB_fetchArray($result, false)) {
-                if (COM_isEmail($A['email'])) {
-                    $emails[$A['email']] = COM_getDisplayName($A['uid']);
-                }
+                $email_uids[] = $A['uid'];
             }
         }
 
         // Email the submitting user their own results.
         // Only works for logged-in users.
         if ($onsubmit & FRM_ACTION_MAILUSER) {
-            $uid = (int)$this->Result->getUid();
-            if ($uid > 1) {
-                $email = DB_getItem(
-                    $_TABLES['users'],
-                    'email',
-                    "uid='$uid'"
+            $email_uids[] = $this->Result->getUid();
+        }
+
+        // Look up all the names and addresses for email recipients
+        if (!empty($email_uids)) {
+            $uids = implode(',', $email_uids);
+            $sql = "SELECT uid, username, fullname, email
+                    FROM {$_TABLES['users']}
+                    WHERE uid IN ($uids)";
+            $result = DB_query($sql, 1);
+            while ($A = DB_fetchArray($result, false)) {
+                $emails[$A['email']] = array(
+                    'name' => COM_getDisplayName($A['uid'], $A['username'], $A['fullname']),
+                    'email' => $A['email'],
                 );
-                if (COM_isEmail($email)) {
-                    $emails[$email] = COM_getDisplayName($uid);
-                }
             }
         }
 
@@ -789,22 +787,25 @@ class Form
             $addrs = explode(';', $this->email);
             if (is_array($addrs) && !empty($addrs)) {
                 foreach ($addrs as $addr) {
+                    $addr = trim($addr);
                     if (COM_isEmail($addr) && !isset($emails[$addr])) {
-                        $emails[$addr] = $addr;
+                        $emails[$addr] = array(
+                            'name' => '',
+                            'email' => $addr,
+                        );
                     }
                 }
             }
         }
 
         if (!empty($emails)) {
-            $dt = new \Date('now', $_CONF['timezone']);
             $subject = sprintf($LANG_FORMS['formsubmission'], $this->frm_name);
 
             $T = new \Template(FRM_PI_PATH . '/templates/admin');
             $T->set_file('mailresults', 'mailresults.thtml');
             $T->set_var(array(
                 'site_name' => $_CONF['site_name'],
-                'sub_date'   => $dt->format($_CONF['date'], true),
+                'sub_date'   => $_CONF['_now']->format($_CONF['date'], true),
                 'username'  => COM_getDisplayName($this->uid),
                 //'recipient' => COM_getDisplayName($this->owner_id),
                 //'recipient' => $recip_name,
@@ -829,15 +830,17 @@ class Form
             $T->parse('output', 'mailresults');
             $message = $T->finish($T->get_var('output'));
 
-            foreach ($emails as $recip_email=>$recip_name) {
-                COM_mail(
-                    $recip_email,
-                    $subject,
-                    $message,
-                    "{$_CONF['site_name']} <{$_CONF['site_mail']}>",
-                    true
-                );
-            }
+            $msgData = array(
+                'to' => $emails,
+                'from' => array(
+                    'name' => $_CONF['site_name'],
+                    'email' => $_CONF['noreply_mail'],
+                ),
+                'subject' => $subject,
+                'htmlmessage' => $message,
+            );
+
+            COM_emailNotification($msgData);
         }
 
         if (isset($vals['post_save']) && function_exists($vals['post_save'])) {

@@ -1,5 +1,9 @@
 # Changelog - Forms plugin for glFusion
 
+## v0.5.4
+Release TBD
+- Use `COM_emailNotification` instead of `COM_mail`.
+
 ## v0.5.3
 Release 2022-03-10
 - glFusion 2+ support only.
