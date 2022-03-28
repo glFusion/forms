@@ -102,8 +102,8 @@ class results
 
         $T->set_file('formresults', 'results.thtml');
         $T->set_var(array(
-            'frm_id'    => $Frm->id,
-            'frm_name'  => $Frm->name,
+            'frm_id'    => $Frm->getID(),
+            'frm_name'  => $Frm->getName(),
             'isAdmin'   => $isAdmin,
         ) );
 
