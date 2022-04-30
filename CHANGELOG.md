@@ -1,9 +1,10 @@
 # Changelog - Forms plugin for glFusion
 
-## v0.5.4
+## v0.6.0
 Release TBD
 - Use `COM_emailNotification` instead of `COM_mail`.
 - Leverage glFusion 2.0+ Database and Log functions.
+- Fix case and respect the order of requested fields in results autotag. (#13)
 
 ## v0.5.3
 Release 2022-03-10

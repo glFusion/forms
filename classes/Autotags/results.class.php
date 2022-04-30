@@ -44,7 +44,6 @@ class results
         $sortdir = 'ASC';
 
         foreach ($opts as $key=>$val) {
-            $val = strtolower($val);
             switch ($key) {
             case 'form':
             case 'id':
@@ -54,6 +53,7 @@ class results
                 $fieldlist = explode(',', $val);
                 break;
             case 'sortby':
+                $val = strtolower($val);
                 if (in_array($val, $sortfields)) {
                     $sortby = $val;
                 }
@@ -121,10 +121,30 @@ class results
         // Create the table headers
         $T->set_block('formresults', 'Headers', 'header');
 
-        // Go through the fields and unset any that shouldn't be shown in the
-        // results table, based on type and permissions
         $Fields = array();      // store fields to be shown
-        foreach ($Frm->getFields() as $fldname=>$Fld) {
+        $AllFields = $Frm->getFields(); // store all possible fields
+
+
+        // If a list of fields was specified, run this loop to show
+        // them in the requested order. Otherwise they're all shown in the
+        // order they appear on the form.
+        if (!empty($fieldnames)) {
+            foreach ($fieldnames as $fldname) {
+                if (array_key_exists($fldname, $AllFields)) {
+                    $Fields[$fldname] = $AllFields[$fldname];
+                } else {
+                    continue;
+                }
+            }
+        } else {
+            // No fields specified in the autotag, so show them all.
+            $Fields = $AllFields;
+        }
+        unset($AllFields);
+
+        // Now go through the fields and unset any that shouldn't be shown in the
+        // results table, based on type and permissions.
+        foreach ($Fields as $fldname=>$Fld) {
             $show_field = true;     // assume it will be shown
 
             if (!$Fld->isEnabled() || $Fld->getType() == 'static') {
@@ -144,12 +164,13 @@ class results
             // If field is ok to show, then set it's header.  Otherwise, unset it
             // which will also remove it from the loop that follows.
             if ($show_field) {
-                $Fields[$Fld->getID()] = $Fld;
                 $T->set_var(
                     'fld_name',
                     $Fld->getPrompt() == '' ? $Fld->getName() : $Fld->getPrompt()
                 );
                 $T->parse('header', 'Headers', true);
+            } else {
+                unset($Fields[$fldname]);
             }
         }
 
@@ -172,8 +193,6 @@ class results
 
             $T->set_block('formresults', 'Fields', 'fldData');
             foreach ($Fields as $Fld) {
-                //$Fld->GetValue($R->getResID());
-                //$T->set_var('fld_value', htmlspecialchars($Fld->value_text));
                 $T->set_var('fld_value', $Fld->displayValue($Frm->getFields()));
                 $T->parse('fldData', 'Fields', true);
             }
