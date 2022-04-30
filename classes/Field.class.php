@@ -235,7 +235,7 @@ class Field
         }
         if (is_array($data)) {
             foreach ($data as $A) {
-                $retval[$A['fld_name']] = self::getInstance($A);
+                $retval[strtolower($A['fld_name'])] = self::getInstance($A);
             }
         }
         return $retval;

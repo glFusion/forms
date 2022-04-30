@@ -44,6 +44,7 @@ class results
         $sortdir = 'ASC';
 
         foreach ($opts as $key=>$val) {
+            $val = strtolower($val);
             switch ($key) {
             case 'form':
             case 'id':
@@ -53,7 +54,6 @@ class results
                 $fieldlist = explode(',', $val);
                 break;
             case 'sortby':
-                $val = strtolower($val);
                 if (in_array($val, $sortfields)) {
                     $sortby = $val;
                 }
@@ -124,7 +124,6 @@ class results
         $Fields = array();      // store fields to be shown
         $AllFields = $Frm->getFields(); // store all possible fields
 
-
         // If a list of fields was specified, run this loop to show
         // them in the requested order. Otherwise they're all shown in the
         // order they appear on the form.
@@ -148,9 +147,6 @@ class results
             $show_field = true;     // assume it will be shown
 
             if (!$Fld->isEnabled() || $Fld->getType() == 'static') {
-                $show_field = false;
-            } elseif (!empty($fieldnames) && !in_array($Fld->getName(), $fieldnames)) {
-                // If we have a field list, and this isn't in it, block it.
                 $show_field = false;
             } elseif (
                 $Fld->getResultsGid() != $Frm->getResultsGid() &&
