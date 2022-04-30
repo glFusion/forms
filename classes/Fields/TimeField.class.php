@@ -100,7 +100,7 @@ class TimeField extends \Forms\Field
         $msg = '';
         if (
             !$this->isEnabled() ||
-            !$this->checkAccess(FRM_FIELD_REQUIRED)
+            !$this->checkAccess(self::ACCESS_REQUIRED)
         ) {
             return $msg;        // not required
         }

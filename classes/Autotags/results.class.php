@@ -3,9 +3,9 @@
  * Class to show a results table via autotag.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2020 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2020-2022 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.5.0
+ * @version     v0.6.0
  * @since       v0.5.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
@@ -14,6 +14,8 @@
 namespace Forms\Autotags;
 use Forms\Form;
 use Forms\Result;
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 
 /**
@@ -30,7 +32,7 @@ class results
      * @param   string  $fulltag    Full autotag string
      * @return  string      Replacement HTML, if applicable.
      */
-    public function parse($p1, $opts=array(), $fulltag='')
+    public function parse(string $p1, array $opts=array(), string $fulltag='') : string
     {
         global $_CONF, $_TABLES, $_USER, $_GROUPS;
 
@@ -80,18 +82,27 @@ class results
 
         // Get the form results. We've already verified this user's access to
         // the form by instantiating it.
-        $sql = "SELECT r.*, u.username, u.fullname
-            FROM {$_TABLES['forms_results']} r
-            LEFT JOIN {$_TABLES['users']} u ON u.uid = r.uid
-            WHERE r.frm_id='$frm_id' AND r.approved = 1";
+        $db = Database::getInstance();
+        $qb = $db->conn->createQueryBuilder();
+        $qb->select('r.*', 'u.username', 'u.fullname')
+           ->from($_TABLES['forms_results'], 'r')
+           ->leftJoin('r', $_TABLES['users'], 'u', 'u.uid = r.uid')
+           ->where('r.frm_id = :frm_id')
+           ->andWhere('r.approved = 1')
+           ->orderBy($sortby, $sortdir)
+           ->setParameter('frm_id', $frm_id, Database::STRING);
         if (!empty($instance_id)) {
-            $sql .= " AND r.instance_id = '" . DB_escapeString($instance_id) . "'";
+            $qb->andWhere('r.instance_id = :instance_id')
+               ->setParameter('instance_id', $instance_id, Database::STRING);
         }
-        $sql .= " ORDER BY `$sortby` $sortdir";
-        //echo $sql;die;
-        $res = DB_query($sql, 1);
-        if (DB_numRows($res) < 1) {
-            return $retval;          // Nothing to show
+        try {
+            $data = $qb->execute()->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (empty($data)) {
+            return '';
         }
 
         $T = new \Template(FRM_PI_PATH . '/templates');
@@ -122,7 +133,7 @@ class results
                 // If we have a field list, and this isn't in it, block it.
                 $show_field = false;
             } elseif (
-                $Fld->getResultsGid() != $Frm->getResultsGid()&&
+                $Fld->getResultsGid() != $Frm->getResultsGid() &&
                 !in_array($Fld->getResultsGid() , $_GROUPS)
             ) {
                 // If the user doesn't have permission to see this result, block it.
@@ -144,7 +155,7 @@ class results
 
         // Create each data row
         $T->set_block('formresults', 'DataRows', 'dataRow');
-        while ($A = DB_fetchArray($res, false)) {
+        foreach ($data as $A) {
             $R = new Result($A);
             $R->GetValues($Frm->getFields());
 
@@ -176,4 +187,3 @@ class results
 
 }
 
-?>

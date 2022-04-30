@@ -204,4 +204,6 @@ $_FRM_UPGRADE_SQL = array(
         "ALTER TABLE {$_TABLES['forms_values']} CHANGE `id` `val_id` int(11) unsigned NOT NULL AUTO_INCREMENT",
         "ALTER TABLE {$_TABLES['forms_values']} CHANGE `value` `value` text",
     ),
+    '0.6.0' => array(
+        "UPDATE {$_TABLES['forms_flddef']} SET 
 );

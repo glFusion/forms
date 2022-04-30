@@ -14,13 +14,17 @@
 /** Include required glFusion common functions */
 require_once '../lib-common.php';
 
+// Make sure this is called via Ajax
+if (!COM_isAjax()) {
+    COM_404();
+}
+
 switch ($_POST['action']) {
 case 'toggleEnabled':
     // Regular users and admins can toggle the enabled flag of their forms.
     $oldval = $_POST['oldval'] == 0 ? 0 : 1;
     $newval = 99;
     $var = trim($_POST['var']);  // sanitized via switch below
-    $id = DB_escapeString($_POST['id']);
     if (isset($_POST['type'])) {
         switch ($_POST['type']) {
         case 'form':

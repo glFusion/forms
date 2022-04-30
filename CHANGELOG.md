@@ -3,6 +3,7 @@
 ## v0.5.4
 Release TBD
 - Use `COM_emailNotification` instead of `COM_mail`.
+- Leverage glFusion 2.0+ Database and Log functions.
 
 ## v0.5.3
 Release 2022-03-10

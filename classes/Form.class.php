@@ -11,7 +11,8 @@
  * @filesource
  */
 namespace Forms;
-//use glFusion\FieldList;
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 
 /**
@@ -36,8 +37,8 @@ class Form
     private $allow_submit = true;
 
     /** Instance of this form, for tying to a plugin entry.
-     * @var integer */
-    private $instance_id = 0;
+     * @var string */
+    private $instance_id = '';
 
     /** Indicate that this is a new record.
      * @var boolean */
@@ -164,14 +165,17 @@ class Form
         if ($this->uid == 0) {
             $this->uid = 1;    // Anonymous
         }
-        $def_group = (int)DB_getItem(
-            $_TABLES['groups'],
-            'grp_id',
-            "grp_name='forms Admin'"
-        );
+        $this->owner_id = $this->uid;
+
+        $db = Database::getInstance();
+        try {
+            $def_group = (int)$db->getItem($_TABLES['groups'], 'grp_id', array('grp_name' => 'forms Admin'));
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $def_group = 1;
+        }
         if ($def_group < 1) $def_group = 1;     // default to Root
         $this->instance_id = '';
-        $this->Result = NULL;
 
         if (!empty($id)) {
             $this->frm_id = COM_sanitizeID($id);
@@ -283,14 +287,18 @@ class Form
      *
      * @param   mixed   $vals   ID string, or array of values
      */
-    public function setInstance($vals, $pi_name='unknown')
+    public function setInstance($vals, ?string $pi_name=NULL) : self
     {
-        if (is_array($vals)) {
-            $val = implode(':', $vals);
-        } else {
-            $val = $vals;
+        var_dump(debug_backtrace(0));die;
+        if (!empty($pi_name)) {
+            if (is_array($vals)) {
+                $val = implode(':', $vals);
+            } else {
+                $val = $vals;
+            }
+            $this->instance_id = $pi_name . '|' . $val;
         }
-        $this->instance_id = $pi_name . '|' . $val;
+        return $this;
     }
 
 
@@ -428,22 +436,27 @@ class Form
 
         // Clear out any existing items, in case we're reusing this instance.
         $this->fields = array();
-
-        $sql = "SELECT fd.* FROM {$_TABLES['forms_frmdef']} fd
-            WHERE fd.frm_id = '" . $this->frm_id . "'";
-        //echo $sql;die;
-        $res1 = DB_query($sql, 1);
-        if (!$res1 || DB_numRows($res1) < 1) {
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT * FROM {$_TABLES['forms_frmdef']}
+                WHERE frm_id = ?",
+                array($this->frm_id),
+                array(Database::STRING)
+            )->fetchAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (is_array($data)) {
+            $this->SetVars($data, true);
+            $this->access = $this->hasAccess($access);
+            $this->fields = Field::getByForm($this);
+            return true;
+        } else {
             $this->access = false;
             return false;
         }
-
-        $A = DB_fetchArray($res1, false);
-        $this->SetVars($A, true);
-        $this->access = $this->hasAccess($access);
-
-        $this->fields = Field::getByForm($this);
-        return true;
     }
 
 
@@ -739,24 +752,35 @@ class Form
             $email_uids[] = 2;
         }
 
+        $db = Database::getInstance();
+        $qb = $db->conn->createQueryBuilder();
+
         // Sending to the admin group. Need to get all users in the group,
         // excluding Root since it is in every group.
         if ($onsubmit & FRM_ACTION_MAILGROUP) {
             USES_lib_user();
-            $groups = implode(',', USER_getChildGroups($this->group_id));
-            $sql = "SELECT DISTINCT u.uid
-                    FROM {$_TABLES['users']} u
-                    LEFT JOIN {$_TABLES['group_assignments']} ga
-                    ON ga.ug_uid = u.uid
-                    WHERE uid > 1
-                    AND u.status = 3
-                    AND u.email is not null
-                    AND u.email != ''
-                    AND ga.ug_main_grp_id IN ({$groups})
-                    AND ga.ug_main_grp_id <> 1";
-            $result = DB_query($sql, 1);
-            while ($A = DB_fetchArray($result, false)) {
-                $email_uids[] = $A['uid'];
+            $groups = USER_getChildGroups($this->group_id);
+            try {
+                $data = $qb->select('DISTINCT u.uid')
+                   ->from($_TABLES['users'], 'u')
+                   ->leftJoin('u', $_TABLES['group_assignments'], 'ga', 'ga.ug_uid = u.uid')
+                   ->where('uid > 1')
+                   ->andWhere('u.status = 3')
+                   ->andWhere('u.email IS NOT NULL')
+                   ->andWhere("u.email <> ''")
+                   ->andWhere('ga.ug_main_grp_id IN (:groups)')
+                   ->andWhere('ga.ug_main_grp_id <> 1')
+                   ->setParameter('groups', $groups, Database::PARAM_INT_ARRAY)
+                   ->execute()
+                   ->fetchAllAssociative();
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+                $data = NULL;
+            }
+            if (is_array($data)) {
+                foreach ($data as $A) {
+                    $email_uids[] = $A['uid'];
+                }
             }
         }
 
@@ -769,15 +793,25 @@ class Form
         // Look up all the names and addresses for email recipients
         if (!empty($email_uids)) {
             $uids = implode(',', $email_uids);
-            $sql = "SELECT uid, username, fullname, email
+            try {
+                $data = $db->conn->executeQuery(
+                    "SELECT uid, username, fullname, email
                     FROM {$_TABLES['users']}
-                    WHERE uid IN ($uids)";
-            $result = DB_query($sql, 1);
-            while ($A = DB_fetchArray($result, false)) {
-                $emails[$A['email']] = array(
-                    'name' => COM_getDisplayName($A['uid'], $A['username'], $A['fullname']),
-                    'email' => $A['email'],
-                );
+                    WHERE uid IN (?)",
+                    array($email_uids),
+                    array(Database::PARAM_INT_ARRAY)
+                )->fetchAllAssociative();
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+                $data = NULL;
+            }
+            if (is_array($data)) {
+                foreach ($data as $A) {
+                    $emails[$A['email']] = array(
+                        'name' => COM_getDisplayName($A['uid'], $A['username'], $A['fullname']),
+                        'email' => $A['email'],
+                    );
+                }
             }
         }
 
@@ -868,6 +902,8 @@ class Form
             return $LANG_FORMS['err_name_required'];
         }
 
+        $db = Database::getInstance();
+        $qb = $db->conn->createQueryBuilder();
         $changingID = false;
         if (
             $this->isNew ||
@@ -878,69 +914,137 @@ class Form
             }
             // Saving a new record or changing the ID of an existing one.
             // Make sure the new frm ID doesn't already exist.
-            $x = DB_count($_TABLES['forms_frmdef'], 'frm_id', $this->frm_id);
+            try {
+                $x = $db->getCount($_TABLES['forms_frmdef'], 'frm_id', $this->frm_id, Database::STRING);
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+                $x = 0;
+            }
             if ($x > 0) {
                 $this->frm_id = COM_makeSid();
             }
         }
 
         if (!$this->isNew && $this->old_id != '') {
-            $sql1 = "UPDATE {$_TABLES['forms_frmdef']} ";
-            $sql3 = " WHERE frm_id = '{$this->old_id}'";
+            $qb->update($_TABLES['forms_frmdef'])
+               ->set('frm_id', ':frm_id')
+               ->set('frm_name', ':frm_name')
+               ->set('introtext', ':introtext')
+               ->set('submit_msg', ':submit_msg')
+               ->set('noaccess_msg', ':noaccess_msg')
+               ->set('noedit_msg', ':noedit_msg')
+               ->set('max_submit_msg', ':max_submit_msg')
+               ->set('enabled', ':enabled')
+               ->set('req_approval', ':req_approval')
+               ->set('onsubmit', ':onsubmit')
+               ->set('owner_id', ':owner_id')
+               ->set('group_id', ':group_id')
+               ->set('fill_gid', ':fill_gid')
+               ->set('results_gid', ':results_gid')
+               ->set('redirect', ':redirect')
+               ->set('captcha', ':captcha')
+               ->set('inblock', ':inblock')
+               ->set('max_submit', ':max_submit')
+               ->set('email', ':email')
+               ->set('onetime', ':onetime')
+               ->set('use_spamx', ':use_spamx')
+               ->set('sub_type', ':sub_type')
+               ->where('frm_id = :old_id');
         } else {
-            $sql1 = "INSERT INTO {$_TABLES['forms_frmdef']} ";
-            $sql3 = '';
+            $qb->insert($_TABLES['forms_frmdef'])
+               ->setValue('frm_id', ':frm_id')
+               ->setValue('frm_name', ':frm_name')
+               ->setValue('introtext', ':introtext')
+               ->setValue('submit_msg', ':submit_msg')
+               ->setValue('noaccess_msg', ':noaccess_msg')
+               ->setValue('noedit_msg', ':noedit_msg')
+               ->setValue('max_submit_msg', ':max_submit_msg')
+               ->setValue('enabled', ':enabled')
+               ->setValue('req_approval', ':req_approval')
+               ->setValue('onsubmit', ':onsubmit')
+               ->setValue('owner_id', ':owner_id')
+               ->setValue('group_id', ':group_id')
+               ->setValue('fill_gid', ':fill_gid')
+               ->setValue('results_gid', ':results_gid')
+               ->setValue('redirect', ':redirect')
+               ->setValue('captcha', ':captcha')
+               ->setValue('inblock', ':inblock')
+               ->setValue('max_submit', ':max_submit')
+               ->setValue('email', ':email')
+               ->setValue('onetime', ':onetime')
+               ->setValue('use_spamx', ':use_spamx')
+               ->setValue('sub_type', ':sub_type');
         }
-        $sql2 = "SET frm_id = '{$this->frm_id}',
-            frm_name = '" . DB_escapeString($this->frm_name) . "',
-            introtext = '" . DB_escapeString($this->introtext) . "',
-            submit_msg = '" . DB_escapeString($this->submit_msg) . "',
-            noaccess_msg = '" . DB_escapeString($this->noaccess_msg) . "',
-            noedit_msg = '" . DB_escapeString($this->noedit_msg) . "',
-            max_submit_msg = '" . DB_escapeString($this->max_submit_msg) . "',
-            enabled = '{$this->enabled}',
-            req_approval = '{$this->req_approval}',
-            onsubmit= '" . DB_escapeString($this->onsubmit) . "',
-            owner_id = '{$this->owner_id}',
-            group_id = '{$this->group_id}',
-            fill_gid = '{$this->fill_gid}',
-            results_gid = '{$this->results_gid}',
-            redirect = '" . DB_escapeString($this->redirect) . "',
-            captcha = '{$this->captcha}',
-            inblock = '{$this->inblock}',
-            max_submit = '{$this->max_submit}',
-            email = '" . DB_escapeString($this->email) . "',
-            onetime = '{$this->onetime}',
-            use_spamx = '{$this->use_spamx}',
-            sub_type = '{$this->sub_type}'";
-        $sql = $sql1 . $sql2 . $sql3;
-        //echo $sql;die;
-        DB_query($sql, 1);
-        if (!DB_error()) {
-            // Now, if the ID was changed, update the field & results tables
-            if ($changingID) {
-                DB_query("UPDATE {$_TABLES['forms_results']}
-                        SET frm_id = '{$this->frm_id}'
-                        WHERE frm_id = '{$this->old_id}'", 1);
-                DB_query("UPDATE {$_TABLES['forms_flddef']}
-                        SET frm_id = '{$this->frm_id}'
-                        WHERE frm_id = '{$this->old_id}'", 1);
-                Cache::delete('form_' . $this->old_id);  // Clear old form cache
-            }
-            CTL_clearCache();       // so autotags pick up changes
-            Cache::delete('form_' . $this->frm_id);      // Clear plugin cache
-            $msg = 0;              // no error message if successful
-        } else {
+        $qb->setParameter('frm_id', $this->frm_id, Database::STRING)
+           ->setParameter('old_id', $this->old_id, Database::STRING)
+           ->setParameter('frm_name', $this->frm_name, Database::STRING)
+           ->setParameter('introtext', $this->introtext, Database::STRING)
+           ->setParameter('submit_msg', $this->submit_msg, Database::STRING)
+           ->setParameter('noaccess_msg', $this->noaccess_msg, Database::STRING)
+           ->setParameter('noedit_msg', $this->noedit_msg, Database::STRING)
+           ->setParameter('max_submit_msg', $this->max_submit_msg, Database::STRING)
+           ->setParameter('enabled', $this->enabled, Database::INTEGER)
+           ->setParameter('req_approval', $this->req_approval, Database::INTEGER)
+           ->setParameter('onsubmit', $this->onsubmit, Database::INTEGER)
+           ->setParameter('owner_id', $this->owner_id, Database::INTEGER)
+           ->setParameter('group_id', $this->group_id, Database::INTEGER)
+           ->setParameter('fill_gid', $this->fill_gid, Database::INTEGER)
+           ->setParameter('results_gid', $this->results_gid, Database::INTEGER)
+           ->setParameter('redirect', $this->redirect, Database::STRING)
+           ->setParameter('captcha', $this->captcha, Database::INTEGER)
+           ->setParameter('inblock', $this->inblock, Database::INTEGER)
+           ->setParameter('max_submit', $this->inblock, Database::INTEGER)
+           ->setParameter('redirect', $this->redirect, Database::STRING)
+           ->setParameter('captcha', $this->captcha, Database::INTEGER)
+           ->setParameter('inblock', $this->inblock, Database::INTEGER)
+           ->setParameter('max_submit', $this->max_submit, Database::INTEGER)
+           ->setParameter('email', $this->email, Database::STRING)
+           ->setParameter('onetime', $this->onetime, Database::INTEGER)
+           ->setParameter('use_spamx', $this->use_spamx, Database::INTEGER)
+           ->setParameter('sub_type', $this->sub_type, Database::STRING);
+        try {
+            $qb->execute();
+            $msg = 0;
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
             $msg = 5;
+
         }
+
+        if ($msg == 0 && $changingID) {
+            // Now, if the ID was changed, update the field & results tables
+            $qb = $db->conn->createQueryBuilder();
+            $qb->set('frm_id', ':frm_id')
+               ->where('frm_id = :old_id')
+               ->setParameter('frm_id', $this->frm_id)
+               ->setParameter('old_id', $this->old_id);
+            foreach (array('forms_results', 'forms_flddef') as $tbl) {
+                try {
+                    $qb->update($_TABLES[$tbl])->execute();
+                } catch (\Exception $e) {
+                    Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+                }
+            }
+            Cache::delete('form_' . $this->old_id);  // Clear old form cache
+        }
+        CTL_clearCache();       // so autotags pick up changes
+        Cache::delete('form_' . $this->frm_id);      // Clear plugin cache
 
         // Finally, if the option is selected, update each field's permission
         // with the form's.
         if (isset($A['reset_fld_perm'])) {
-            DB_query("UPDATE {$_TABLES['forms_flddef']} SET
-                    fill_gid = '{$this->fill_gid}',
-                    results_gid = '{$this->results_gid}'
-                WHERE frm_id = '{$this->frm_id}'", 1);
+            try {
+                $db->conn->executeUpdate(
+                    "UPDATE {$_TABLES['forms_flddef']} SET
+                    fill_gid = ?,
+                    results_gid = ?
+                    WHERE frm_id = ?",
+                    array($this->fill_gid, $this->results_gid, $this->frm_id),
+                    array(Database::INTEGER, Database::INTEGER, Database::STRING)
+                );
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            }
         }
         return $msg;
     }
@@ -1141,7 +1245,7 @@ class Form
                     'field'     => $rendered,
                     'help_msg'  => self::_stripHtml($Field->getHelpMsg()),
                     'spancols'  => $Field->hasOption('spancols'),
-                    'is_required' => $Field->getAccess() == FRM_FIELD_REQUIRED ? 'true' : '',
+                    'is_required' => $Field->getAccess() == Field::ACCESS_REQUIRED ? 'true' : '',
                 ), '', false, true);
                 $T->parse('qrow', 'QueueRow', true);
             }
@@ -1257,27 +1361,31 @@ class Form
      * Deletes a form, removes the field associations, and deletes
      * user data
      *
-     * @uses    Result::Delete()
-     * @param   integer $frm_id     Optional form ID, current object if empty
+     * @uses    Field::deleteByForm()
+     * @uses    Result::deleteByForm()
      */
-    public function DeleteDef()
+    public function DeleteDef() : void
     {
         global $_TABLES;
 
-        // If still no valid ID, do nothing
-        if ($this->frm_id == '') return;
+        // No valid ID, do nothing.
+        if (empty($this->frm_id)) return;
 
-        $frm_id = DB_escapeString($this->frm_id);
-        DB_delete($_TABLES['forms_frmdef'], 'frm_id', $frm_id);
-        Field::deleteByForm($frm_id);
-        Result::deleteByForm($frm_id);
+        $db = Database::getInstance();
+        try {
+            $db->conn->delete($_TABLES['forms_frmdef'], array('frm_id' => $this->frm_id));
+            Field::deleteByForm($this->frm_id);
+            Result::deleteByForm($this->frm_id);
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+        }
     }
 
 
     /**
      * Reset a form by deleting all related results.
      */
-    public function Reset()
+    public function Reset() : void
     {
         Result::deleteByForm($this->frm_id);
     }
@@ -1347,7 +1455,8 @@ class Form
     private function countResponses()
     {
         global $_TABLES;
-        return DB_count($_TABLES['forms_results'], 'frm_id', $this->frm_id);
+        $db = Database::getInstance();
+        return $db->getCount($_TABLES['forms_results'], 'frm_id', $this->frm_id, Database::STRING);
     }
 
 
@@ -1393,20 +1502,22 @@ class Form
     {
         global $_TABLES;
 
-        $id = DB_escapeString($id);
-        $fld = DB_escapeString($fld);
+        $db = Database::getInstance();
         $oldval = $oldval == 0 ? 0 : 1;
         $newval = $oldval == 0 ? 1 : 0;
-        $sql = "UPDATE {$_TABLES['forms_frmdef']}
-                SET $fld = $newval
-                WHERE frm_id = '$id'";
-        $res = DB_query($sql, 1);
-        if (DB_error($res)) {
-            COM_errorLog(__CLASS__ . '\\' . __FUNCTION__ . ':: ' . $sql);
-            return $oldval;
-        } else {
-            return $newval;
+        try {
+            $db->conn->executeUpdate(
+                "UPDATE {$_TABLES['forms_frmdef']}
+                SET $fld = ?
+                WHERE frm_id = ?",
+                array($newval, $id),
+                array(Database::INTEGER, Database::STRING)
+            );
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $newval = $oldval;
         }
+        return $newval;
     }
 
 

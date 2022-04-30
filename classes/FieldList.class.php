@@ -141,4 +141,35 @@ class FieldList extends \glFusion\FieldList
         return $t->finish($t->get_var('output'));
     }
 
+
+    /**
+     * Create a reset link field.
+     *
+     * @param   array   $args   Argument array
+     * @return  string      HTML for field
+     */
+    public static function print($args)
+    {
+        $t = self::init();
+        $t->set_block('field','field-print');
+        if (isset($args['url'])) {
+            $t->set_var('url', $args['url']);
+        } else {
+            $t->set_var('url','#');
+        }
+
+        if (isset($args['attr']) && is_array($args['attr'])) {
+            $t->set_block('field','attr','attributes');
+            foreach($args['attr'] AS $name => $value) {
+                $t->set_var(array(
+                    'name' => $name,
+                    'value' => $value)
+                );
+                $t->parse('attributes','attr',true);
+            }
+        }
+        $t->parse('output','field-print');
+        return $t->finish($t->get_var('output'));
+    }
+
 }

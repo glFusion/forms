@@ -1,20 +1,25 @@
 <?php
 /**
- *  Common AJAX functions
+ * AJAX functions for the Forms plugin administration.
  *
- *  @author     Lee Garner <lee@leegarner.com>
- *  @copyright  Copyright (c) 2010 Lee Garner <lee@leegarner.com>
- *  @package    forms
- *  @version    0.0.1
- *  @license    http://opensource.org/licenses/gpl-2.0.php
+ * @author      Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2022 Lee Garner <lee@leegarner.com>
+ * @package     forms
+ * @version     v0.6.0
+ * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
- *  @filesource
+ * @filesource
  */
 
 /**
  *  Include required glFusion common functions
  */
 require_once '../../../lib-common.php';
+
+// Make sure this is called via Ajax
+if (!COM_isAjax()) {
+    COM_404();
+}
 
 // This is for administrators only
 if (!plugin_isadmin_forms()) {
@@ -29,7 +34,6 @@ case 'toggleEnabled':
     $oldval = $_POST['oldval'] == 0 ? 0 : 1;
     $newval = 99;
     $var = trim($_POST['var']);  // sanitized via switch below
-    $id = DB_escapeString($_POST['id']);
     if (isset($_POST['type'])) {
         switch ($_POST['type']) {
         case 'form':
@@ -73,32 +77,7 @@ case 'toggleEnabled':
     echo json_encode($result);
     break;
 
-/*case 'toggleFormEnabled':
-    $newval = $_REQUEST['newval'] == 1 ? 1 : 0;
-    $id = (int)$_REQUEST['id'];
-    $type = 'enabled';
-
-    // Toggle the flag between 0 and 1
-    DB_query("UPDATE {$_TABLES['forms_frmdef']}
-            SET $type = '$newval'
-            WHERE id='$id'");
-
-    header('Content-Type: text/xml');
-    header("Cache-Control: no-cache, must-revalidate");
-    //A date in the past
-    header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-
-    echo '<?xml version="1.0" encoding="ISO-8859-1"?>
-    <info>'. "\n";
-    echo "<newval>$newval</newval>\n";
-    echo "<id>{$id}</id>\n";
-    echo "<type>{$type}</type>\n";
-    echo "<baseurl>{$base_url}</baseurl>\n";
-    echo "</info>\n";
-    break;
-*/
 default:
     exit;
 }
 
-?>

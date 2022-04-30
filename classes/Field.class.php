@@ -11,6 +11,8 @@
  * @filesource
  */
 namespace Forms;
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 
 /**
@@ -18,6 +20,11 @@ namespace Forms;
  */
 class Field
 {
+    const ACCESS_NORMAL = 0;
+    const ACCESS_REQUIRED = 1;
+    const ACCESS_HIDDEN = 2;
+    const ACCESS_READONLY = 4;
+
     /** Indicate that this is a new record vs one read from the DB.
      * @var boolean */
     protected $isNew = true;
@@ -148,7 +155,7 @@ class Field
             $fld = Cache::get($key);
             if ($fld === NULL) {
                 $fld = self::_readFromDB($fld_id);
-                if (DB_error() || empty($fld)) return NULL;
+                if (empty($fld)) return NULL;
                 Cache::set($key, $fld);
             }
         }
@@ -180,36 +187,56 @@ class Field
      * @param   integer $id     Field ID
      * @return  mixed       Array of fields or False on error
      */
-    private static function _readFromDB($id)
+    private static function _readFromDB(int $id) : ?array
     {
         global $_TABLES;
 
-        $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
-                WHERE fld_id='" . (int)$id . "'";
-        $res = DB_query($sql, 1);
-        if (DB_error() || !$res) return false;
-        return DB_fetchArray($res, false);
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT * FROM {$_TABLES['forms_flddef']} WHERE fld_id = ?",
+                array($id),
+                array(Database::INTEGER)
+            )->fetchAssociative();
+            if (!$data) {
+                $data = NULL;
+            }
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        return $data;
     }
 
 
     /**
      * Get all the field objects associated with a form.
      *
-     * @param   string  $frm_id     Form ID
+     * @param   object  $Form   Form object
      * @return  array       Array of Field objects
      */
-    public static function getByForm($Form)
+    public static function getByForm(Form $Form) : array
     {
         global $_TABLES;
 
         $retval = array();
-        $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id = '" . DB_escapeString($Form->getID()) . "'
-                ORDER BY orderby ASC";
-        //echo $sql;die;
-        $res2 = DB_query($sql, 1);
-        while ($A = DB_fetchArray($res2, false)) {
-            $retval[$A['fld_name']] = self::getInstance($A);
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT * FROM {$_TABLES['forms_flddef']}
+                WHERE frm_id = ?
+                ORDER BY orderby ASC",
+                array($Form->getID()),
+                array(Database::STRING)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (is_array($data)) {
+            foreach ($data as $A) {
+                $retval[$A['fld_name']] = self::getInstance($A);
+            }
         }
         return $retval;
     }
@@ -221,11 +248,19 @@ class Field
      *
      * @param   string  $frm_id     Form ID
      */
-    public static function deleteByForm($frm_id)
+    public static function deleteByForm(string $frm_id) : void
     {
         global $_TABLES;
 
-        DB_delete($_TABLES['forms_flddef'], 'frm_id', $frm_id);
+        try {
+            Database::getInstance()->conn->delete(
+                $_TABLES['forms_flddef'],
+                array('frm_id' => $frm_id),
+                array(Database::STRING)
+            );
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+        }
     }
 
 
@@ -439,33 +474,45 @@ class Field
         $format_str = $this->getOption('format', $_CONF_FRM['def_calc_format']);
         // Create the selection list for the "Position After" dropdown.
         // Include all options *except* the current one
-        $sql = "SELECT orderby, fld_name
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT orderby, fld_name
                 FROM {$_TABLES['forms_flddef']}
-                WHERE fld_id <> '{$this->fld_id}'
-                AND frm_id = '{$this->frm_id}'
-                ORDER BY orderby ASC";
-        $res1 = DB_query($sql, 1);
+                WHERE fld_id <> ?
+                AND frm_id = ?
+                ORDER BY orderby ASC",
+                array($this->fld_id, $this->frm_id),
+                array(Database::INTEGER, Database::STRING)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+
         $orderby_list = '';
-        $count = DB_numRows($res1);
-        for ($i = 0; $i < $count; $i++) {
-            $B = DB_fetchArray($res1, false);
-            if (!$B) break;
-            $orderby = (int)$B['orderby'] + 1;
-            if ($this->isNew && $i == ($count - 1)) {
-                $sel =  'selected="selected"';
-            } else {
-                $sel = '';
+        if (is_array($data)) {
+            $count = count($data);
+            for ($i = 0; $i < $count; $i++) {
+                $B = $data[$i];
+                if (!$B) break;
+                $orderby = (int)$B['orderby'] + 1;
+                if ($this->isNew && $i == ($count - 1)) {
+                    $sel =  'selected="selected"';
+                } else {
+                    $sel = '';
+                }
+                $orderby_list .= "<option value=\"$orderby\" $sel>{$B['fld_name']}</option>\n";
             }
-            $orderby_list .= "<option value=\"$orderby\" $sel>{$B['fld_name']}</option>\n";
         }
 
         $autogen_opt = $this->getOption('autogen', 0);
         $T->set_var(array(
             //'admin_url' => FRM_ADMIN_URL,
-            'frm_name'  => DB_getItem(
+            'frm_name'  => $db->getItem(
                 $_TABLES['forms_frmdef'],
                 'frm_name',
-                "frm_id='" . DB_escapeString($this->frm_id) . "'"
+                array('frm_id' => $this->frm_id)
             ),
 //            'frm_id'    => $this->Form->id,
             'frm_id'    => $this->frm_id,
@@ -532,38 +579,60 @@ class Field
         $this->fill_gid = (int)$A['fill_gid'];
         $this->results_gid = (int)$A['results_gid'];
 
+        $db = Database::getInstance();
+        $qb = $db->conn->createQueryBuilder();
         if ($fld_id > 0) {
             // Existing record, perform update
-            $sql1 = "UPDATE {$_TABLES['forms_flddef']} SET ";
-            $sql3 = " WHERE fld_id = $fld_id";
+            $qb->update($_TABLES['forms_flddef'])
+               ->set('frm_id', ':frm_id')
+               ->set('fld_name', ':fld_name')
+               ->set('type', ':type')
+               ->set('enabled', ':enabled')
+               ->set('access', ':access')
+               ->set('prompt', ':prompt')
+               ->set('options', ':options')
+               ->set('orderby', ':orderby')
+               ->set('help_msg', ':help_msg')
+               ->set('fill_gid', ':fill_gid')
+               ->set('results_gid', ':results_gid')
+               ->set('encrypt', ':encrypt')
+               ->where('fld_id = :fld_id');
         } else {
-            $sql1 = "INSERT INTO {$_TABLES['forms_flddef']} SET ";
-            $sql3 = '';
+            $qb->insert($_TABLES['forms_flddef'])
+               ->setValue('frm_id', ':frm_id')
+               ->setValue('fld_name', ':fld_name')
+               ->setValue('type', ':type')
+               ->setValue('enabled', ':enabled')
+               ->setValue('access', ':access')
+               ->setValue('prompt', ':prompt')
+               ->setValue('options', ':options')
+               ->setValue('orderby', ':orderby')
+               ->setValue('help_msg', ':help_msg')
+               ->setValue('fill_gid', ':fill_gid')
+               ->setValue('results_gid', ':results_gid')
+               ->setValue('encrypt', ':encrypt');
         }
-
-        $sql2 = "frm_id = '" . DB_escapeString($this->frm_id) . "',
-                fld_name = '" . DB_escapeString($this->fld_name) . "',
-                type = '" . DB_escapeString($this->type) . "',
-                enabled = '{$this->enabled}',
-                access = '{$this->access}',
-                prompt = '" . DB_escapeString($this->prompt) . "',
-                options = '" . DB_escapeString(@serialize($this->options)) . "',
-                orderby = '{$this->orderby}',
-                help_msg = '" . DB_escapeString($this->help_msg) . "',
-                fill_gid = '{$this->fill_gid}',
-                results_gid = '{$this->results_gid}',
-                encrypt = {$this->encrypt}";
-        $sql = $sql1 . $sql2 . $sql3;
-        DB_query($sql);
-
-        if (!DB_error()) {
-            // After saving, reorder the fields
-            $this->Reorder($A['frm_id']);
-            $msg = '';
-        } else {
-            $msg = 5;
+        $qb->setParameter('frm_id', $this->frm_id, Database::STRING)
+           ->setParameter('fld_name', $this->fld_name, Database::STRING)
+           ->setParameter('type', $this->type, Database::STRING)
+           ->setParameter('enabled', $this->enabled, Database::INTEGER)
+           ->setParameter('access', $this->access, Database::INTEGER)
+           ->setParameter('prompt', $this->prompt, Database::STRING)
+           ->setParameter('options', @serialize($this->options), Database::STRING)
+           ->setParameter('orderby', $this->orderby, Database::INTEGER)
+           ->setParameter('help_msg', $this->hlp_msg, Database::STRING)
+           ->setParameter('fill_gid', $this->fill_gid, Database::INTEGER)
+           ->setParameter('results_gid', $this->results_gid, Database::INTEGER)
+           ->setParameter('encrypt', $this->encrypt, Database::INTEGER)
+           ->setParameter('fld_id', $this->fld_id, Database::INTEGER);
+        try {
+            $qb->execute();
+            $this->Reorder($this->frm_id);
+            return '';
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return 5;
         }
-        return $msg;
     }
 
 
@@ -572,12 +641,24 @@ class Field
      *
      * @param   integer $fld_id     ID number of the field
      */
-    public static function Delete($fld_id=0)
+    public static function Delete(int $fld_id) : bool
     {
         global $_TABLES;
 
-        DB_delete($_TABLES['forms_values'], 'fld_id', $fld_id);
-        DB_delete($_TABLES['forms_flddef'], 'fld_id', $fld_id);
+        $db = Database::getInstance();
+        try {
+            $db->conn->delete($_TABLES['forms_values'], array('fld_id' => $fld_id));
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return false;
+        }
+        try {
+            $db->conn->delete($_TABLES['forms_flddef'], array('fld_id' => $fld_id));
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return false;
+        }
+        return true;
     }
 
 
@@ -589,7 +670,7 @@ class Field
      * @param   integer $res_id Result ID associated with this field
      * @return  boolean     True on success, False on failure
      */
-    public function SaveData($newval, $res_id=0)
+    public function SaveData($newval, int $res_id) : bool
     {
         global $_TABLES;
 
@@ -601,25 +682,36 @@ class Field
         if ($this->getOption('autogen') == FRM_AUTOGEN_SAVE) {
             $newval = $this->AutoGen('save');
         }
+        $status = true;
 
         // Put the new value back into the array after sanitizing
         $this->value = $newval;
         $db_value = $this->prepareForDB($newval);
 
-        //$this->fld_name = $name;
-        $sql = "INSERT INTO {$_TABLES['forms_values']}
-                    (results_id, fld_id, value)
-                VALUES (
-                    '$res_id',
-                    '{$this->fld_id}',
-                    '$db_value'
-                )
-                ON DUPLICATE KEY
-                    UPDATE value = '$db_value'";
-        //COM_errorLog($sql);
-        DB_query($sql, 1);
-        $status = DB_error();
-        return $status ? false : true;
+        $db = Database::getInstance();
+        $qb = $db->conn->createQueryBuilder();
+        $qb->setParameter('res_id', $res_id, Database::INTEGER)
+           ->setParameter('fld_id', $this->fld_id, Database::INTEGER)
+           ->setParameter('value', $db_value, Database::STRING);
+        try {
+            $qb->insert($_TABLES['forms_values'])
+               ->setValue('results_id', ':res_id')
+               ->setValue('fld_id', ':fld_id')
+               ->setValue('value', ':value')
+               ->execute();
+        } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $k) {
+            try {
+                $qb->update($_TABLES['forms_values'])
+                   ->set('value', ':value')
+                   ->where('results_id = :res_id')
+                   ->andWhere('fld_id = :fld_id')
+                   ->execute();
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+                $status = false;
+            }
+        }
+        return $status;
     }
 
 
@@ -658,8 +750,9 @@ class Field
 
         $msg = '';
         if (!$this->enabled) return $msg;   // not enabled
-        if (($this->access & FRM_FIELD_REQUIRED) != FRM_FIELD_REQUIRED)
+        if (($this->access & self::ACCESS_REQUIRED) != self::ACCESS_REQUIRED) {
             return $msg;        // not required
+        }
 
         switch ($this->type) {
         case 'date':
@@ -707,22 +800,56 @@ class Field
             $options = $this->options;
         }
 
-        $sql = "INSERT INTO {$_TABLES['forms_flddef']} SET
-                frm_id = '" . DB_escapeString($this->frm_id) . "',
-                fld_name = '" . DB_escapeString($this->fld_name) . "',
-                type = '" . DB_escapeString($this->type) . "',
-                enabled = {$this->enabled},
-                access = {$this->access},
-                prompt = '" . DB_escapeString($this->prompt) . "',
-                options = '" . DB_escapeString($options) . "',
-                help_msg = '" . DB_escapeString($this->help_msg) . "',
-                fill_gid = {$this->fill_gid},
-                results_gid = {$this->results_gid},
-                orderby = '" . (int)$this->orderby . "',
-                encrypt = {$this->encrypt}";
-        DB_query($sql, 1);
-        $msg = DB_error() ? 5 : '';
-        return $msg;
+        $db = Database::getInstance();
+        try {
+            $db->conn->executeUpdate(
+                "INSERT INTO {$_TABLES['forms_flddef']} SET
+                frm_id = ?,
+                fld_name = ?,
+                type = ?,
+                enabled = ?,
+                access = ?,
+                prompt = ?,
+                options = ?,
+                help_msg = ?,
+                fill_gid = ?,
+                results_gid = ?,
+                orderby = ?,
+                encrypt = ?",
+                array(
+                    $this->frm_id,
+                    $this->fld_name,
+                    $this->type,
+                    $this->enabled,
+                    $this->access,
+                    $this->prompt,
+                    $options,
+                    $this->help_msg,
+                    $this->fill_gid,
+                    $this->results_gid,
+                    $this->orderby,
+                    $this->encrypt,
+                ),
+                array(
+                    Database::STRING,
+                    Database::STRING,
+                    Database::STRING,
+                    Database::INTEGER,
+                    Database::INTEGER,
+                    Database::STRING,
+                    Database::STRING,
+                    Database::STRING,
+                    Database::INTEGER,
+                    Database::INTEGER,
+                    Database::INTEGER,
+                    Database::INTEGER,
+                )
+            );
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return 5;
+        }
+        return '';
     }
 
 
@@ -740,7 +867,6 @@ class Field
         $retval = '';
         $frm_id = COM_sanitizeID($frm_id);
         $fld_id = (int)$fld_id;
-
         switch ($where) {
         case 'up':
             $sign = '-';
@@ -754,21 +880,22 @@ class Field
             return '';
             break;
         }
-        $sql = "UPDATE {$_TABLES['forms_flddef']}
+        $db = Database::getInstance();
+        try {
+            $db->conn->executeUpdate(
+                "UPDATE {$_TABLES['forms_flddef']}
                 SET orderby = orderby $sign 11
-                WHERE frm_id = '$frm_id'
-                AND fld_id = '$fld_id'";
-        //echo $sql;die;
-        DB_query($sql, 1);
-
-        if (!DB_error()) {
-            // Reorder fields to get them separated by 10
+                WHERE frm_id = ?
+                AND fld_id = ?",
+                array($frm_id, $fld_id),
+                array(Database::STRING, Database::INTEGER)
+            );
             self::Reorder($frm_id);
-            $msg = '';
-        } else {
-            $msg = 5;
+            return '';
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return 5;
         }
-        return $msg;
     }
 
 
@@ -785,29 +912,43 @@ class Field
         $frm_id = COM_sanitizeID($frm_id);
         if ($frm_id == '') return;
 
-        $sql = "SELECT fld_id, orderby FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id='$frm_id'
-                ORDER BY orderby ASC";
-        $result = DB_query($sql);
-
-        $order = 10;
-        $stepNumber = 10;
-
-        while ($A = DB_fetchArray($result, false)) {
-
-            if ($A['orderby'] != $order) {  // only update incorrect ones
-                $sql = "UPDATE {$_TABLES['forms_flddef']}
-                    SET orderby = '$order'
-                    WHERE frm_id = '$frm_id'
-                    AND fld_id = '{$A['fld_id']}'";
-                DB_query($sql, 1);
-                if (DB_error()) {
-                    return 5;
-                }
-            }
-            $order += $stepNumber;
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT fld_id, orderby FROM {$_TABLES['forms_flddef']}
+                WHERE frm_id = ?
+                ORDER BY orderby ASC",
+                array($frm_id),
+                array(Database::STRING)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return 5;
         }
-        return '';
+
+        if (is_array($data)) {
+            $order = 10;
+            $stepNumber = 10;
+            foreach ($data as $A) {
+                if ($A['orderby'] != $order) {  // only update incorrect ones
+                    try {
+                        $db->conn->executeUpdate(
+                            "UPDATE {$_TABLES['forms_flddef']}
+                            SET orderby = ?
+                            WHERE frm_id = ?
+                            AND fld_id = ?",
+                            array($order, $frm_id, $A['fld_id']),
+                            array(Database::INTEGER, Database::STRING, Database::INTEGER)
+                        );
+                    } catch (\Exception $e) {
+                        Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+                        return 5;
+                    }
+                }
+                $order += $stepNumber;
+            }
+            return '';
+        }
     }
 
 
@@ -992,20 +1133,22 @@ class Field
     {
         global $_TABLES;
 
-        $id = DB_escapeString($id);
-        $fld = DB_escapeString($fld);
         $oldval = $oldval == 0 ? 0 : 1;
         $newval = $oldval == 0 ? 1 : 0;
-        $sql = "UPDATE {$_TABLES['forms_flddef']}
-                SET $fld = $newval
-                WHERE fld_id = '$id'";
-        $res = DB_query($sql, 1);
-        if (DB_error($res)) {
-            COM_errorLog(__CLASS__ . '\\' . __FUNCTION__ . ':: ' . $sql);
-            return $oldval;
-        } else {
-            return $newval;
+        $db = Database::getInstance();
+        try {
+            $db->conn->executeUpdate(
+                "UPDATE {$_TABLES['forms_flddef']}
+                SET $fld = ?
+                WHERE fld_id = ?",
+                array($newval, $id),
+                array(Database::INTEGER, Database::INTEGER)
+            );
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $newval = $oldval;
         }
+        return $newval;
     }
 
 
@@ -1370,10 +1513,10 @@ class Field
     {
         $access = array();
         switch ($this->access) {
-        case FRM_FIELD_READONLY:
+        case self::ACCESS_READONLY:
             $access['disabled'] = 'disabled';
             break;
-        case FRM_FIELD_REQUIRED:
+        case self::ACCESS_REQUIRED:
             $access['required'] = 'required';
             break;
         default:
@@ -1411,7 +1554,7 @@ class Field
      * First calls _prepareForDB() for field-specific preparation.
      *
      * @param   mixed   $newval     New data to save
-     * @return  mixed       Data formatted for the DB
+     * @return  mixed       Raw data to be added to the DB
      */
     private function prepareForDB($newval)
     {
@@ -1419,7 +1562,7 @@ class Field
         if ($this->encrypt) {
             $newval = $this->encrypt($newval);
         }
-        return DB_escapeString($newval);
+        return $newval;
     }
 
 
@@ -1631,7 +1774,9 @@ class Field
         if ($frm_id != '') {
             $query_arr['sql'] .= " WHERE frm_id='" . DB_escapeString($frm_id) . "'";
         }
-        $form_arr = array();
+        $form_arr = array(
+
+        );
         $T = new \Template(FRM_PI_PATH . '/templates/admin');
         $T->set_file('formfields', 'formfields.thtml');
         $T->set_var(array(
@@ -1668,36 +1813,34 @@ class Field
 
         switch($fieldname) {
         case 'edit':
-            $retval = COM_createLink(
-                Icon::getHTML('edit'),
-                FRM_ADMIN_URL . "/index.php?editfield=x&amp;fld_id={$A['fld_id']}"
-            );
+            $retval = FieldList::edit(array(
+                'url' => FRM_ADMIN_URL . "/index.php?editfield=x&amp;fld_id={$A['fld_id']}",
+            ) );
             break;
 
         case 'delete':
-            $retval = COM_createLink(
-                Icon::getHTML('delete'),
-                FRM_ADMIN_URL . '/index.php?deleteFldDef=x&fld_id=' .
+            $retval = FieldList::delete(array(
+                'delete_url' => FRM_ADMIN_URL . '/index.php?deleteFldDef=x&fld_id=' .
                     $A['fld_id'] . '&frm_id=' . $A['frm_id'],
                 array(
                     'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}');",
-                )
-            );
+                ),
+            ) );
             break;
 
         case 'access':
             $retval = 'Unknown';
-            switch ($fieldvalue) {
-            case FRM_FIELD_NORMAL:
+            switch ((int)$fieldvalue) {
+            case self::ACCESS_NORMAL:
                 $retval = $LANG_FORMS['normal'];
                 break;
-            case FRM_FIELD_READONLY:
+            case self::ACCESS_READONLY:
                 $retval = $LANG_FORMS['readonly'];
                 break;
-            case FRM_FIELD_HIDDEN:
+            case self::ACCESS_HIDDEN:
                 $retval = $LANG_FORMS['hidden'];
                 break;
-            case FRM_FIELD_REQUIRED:
+            case self::ACCESS_REQUIRED:
                 $retval = $LANG_FORMS['required'];
                 break;
             }
@@ -1705,17 +1848,11 @@ class Field
 
         case 'enabled':
         case 'required':
-            if ($A[$fieldname] == 1) {
-                $chk = ' checked ';
-                $enabled = 1;
-            } else {
-                $chk = '';
-                $enabled = 0;
-            }
-            $retval = "<input name=\"{$fieldname}_{$A['fld_id']}\" " .
-                "type=\"checkbox\" $chk " .
-                "onclick='FRMtoggleEnabled(this, \"{$A['fld_id']}\", \"field\", \"{$fieldname}\", \"" . FRM_ADMIN_URL . "\");' ".
-                "/>\n";
+            $retval = FieldList::checkbox(array(
+                'name' => $fieldname . '_' . $A['fld_id'],
+                'checked' => (int)$fieldvalue == 1,
+                'onclick' => "FRMtoggleEnabled(this, '{$A['fld_id']}', 'field', '{$fieldname}', '" . FRM_ADMIN_URL . "');",
+            ) );
             break;
 
         case 'fld_id':
@@ -1723,14 +1860,12 @@ class Field
             break;
 
         case 'move':
-            $retval = COM_createLink(
-                Icon::getHTML('arrow-up'),
-                FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}"
-            ) . '&nbsp;';
-            $retval .= COM_createLink(
-                Icon::getHTML('arrow-down'),
-                FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}"
-            );
+            $retval = FieldList::up(array(
+                'url' => FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=up&fld_id={$A['fld_id']}"
+            ) ) . '&nbsp;';
+            $retval .= FieldList::down(array(
+                'url' => FRM_ADMIN_URL . "/index.php?frm_id={$A['frm_id']}&reorder=x&where=down&fld_id={$A['fld_id']}"
+            ) );
             break;
 
         default:

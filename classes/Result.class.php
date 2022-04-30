@@ -3,14 +3,16 @@
  * Class to handle the form results.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2010-2021 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2010-2022 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     v0.5.0
+ * @version     v0.6.0
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms;
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 
 /**
@@ -96,22 +98,25 @@ class Result
             $this->res_id = (int)$id;
         }
 
-        $sql = "SELECT r.*
-            FROM {$_TABLES['forms_results']} r
-            WHERE r.res_id = " . $this->res_id;
-        //echo $sql;die;
-        $res1 = DB_query($sql);
-        if (!$res1) {
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT * FROM {$_TABLES['forms_results']}
+                WHERE res_id = ?",
+                array($this->res_id),
+                array(Database::INTEGER)
+            )->fetchAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (is_array($data)) {
+            $this->setVars($data);
+            return true;
+        } else {
             $this->res_id = 0;
             return false;
         }
-        $A = DB_fetchArray($res1, false);
-        if (empty($A)) {
-            $this->res_id = 0;
-            return false;
-        }
-        $this->setVars($A);
-        return true;
     }
 
 
@@ -178,37 +183,54 @@ class Result
      * @param   string  $token      Resultset token, if provided
      * @return  integer             Result set ID
      */
-    public static function FindResult($frm_id, $uid=0, $token='')
+    public static function findResult($frm_id, $uid=0, $token='')
     {
         global $_TABLES, $_USER;
 
-        $frm_id = COM_sanitizeID($frm_id);
+        $db = Database::getInstance();
         $uid = $uid == 0 ? $_USER['uid'] : (int)$uid;
-        $query = "frm_id='$frm_id' AND uid='$uid'";
+        $criteria = array('uid' => $uid, 'frm_id' => $frm_id);
         if (!empty($token)) {
-            $query .= " AND token = '" . DB_escapeString($token) . "'";
+            $criteria['token'] = $token;
         }
-        $id = (int)DB_getItem($_TABLES['forms_results'], 'res_id', $query);
-        return $id;
+
+        try {
+            $res_id = $db->getItem($_TABLES['forms_results'], 'id', $criteria);
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+            $res_id = 0;
+        }
+        return $res_id;
     }
 
 
     /**
      * Get all the results submitted for a given form.
      *
-     * @param   string  $frm_id     Form ID
+     * @param   object  $Form   Form object
      * @return  array       Array of Result objects
      */
-    public static function getByForm($Form)
+    public static function getByForm(Form $Form) : array
     {
         global $_TABLES;
 
         $retval = array();
-        $sql = "SELECT * FROM {$_TABLES['forms_results']}
-            WHERE frm_id = '" . DB_escapeString($Form->getID()) . "'";
-        $res = DB_query($sql);
-        while ($A = DB_fetchArray($res, false)) {
-            $retval[$A['res_id']] = new self($A);
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT * FROM {$_TABLES['forms_results']}
+                WHERE frm_id = ?",
+                array($Form->getID()),
+                array(Database::STRING)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (is_array($data)) {
+            foreach ($data as $A) {
+                $retval[$A['res_id']] = new self($A);
+            }
         }
         return $retval;
     }
@@ -286,20 +308,31 @@ class Result
      * @param   array   $fields     Array of Field objects
      * @return  array       Array of field name=>value pairs
      */
-    public function getValues($fields)
+    public function getValues(array $fields) : array
     {
         global $_TABLES, $_CONF_FRM;
 
         $retval = array();
-        $sql = "SELECT * from {$_TABLES['forms_values']}
-                WHERE results_id = '{$this->res_id}'";
-        //echo $sql;die;
-        $res = DB_query($sql);
-        $vals = array();
-        // First get the values into an array indexed by field ID
-        while($A = DB_fetchArray($res, false)) {
-            $vals[$A['fld_id']] = $A;
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT * from {$_TABLES['forms_values']} WHERE results_id = ?",
+                array($this->res_id),
+                array(Database::INTEGER)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
         }
+
+        $vals = array();
+        if (is_array($data)) {
+            // First get the values into an array indexed by field ID
+            foreach ($data as $A) {
+                $vals[$A['fld_id']] = $A;
+            }
+        }
+
         // Then they can be pushed into the field array
         foreach ($fields as $field) {
             if ($field->isEnabled() && isset($vals[$field->getID()])) {
@@ -381,26 +414,33 @@ class Result
     {
         global $_TABLES, $_USER;
 
+        $db = Database::getInstance();
+        $qb = $db->conn->createQueryBuilder();
         $this->uid = $uid == 0 ? $_USER['uid'] : (int)$uid;
-        $this->frm_id = COM_sanitizeID($frm_id);
         $this->dt = time();
         $this->setIP();
-        $ip = DB_escapeString($this->ip);
         $this->token = md5(time() . rand(1,100));
         $approved = $this->moderate ? 0 : 1;
-        $sql = "INSERT INTO {$_TABLES['forms_results']} SET
-                frm_id='{$this->frm_id}',
-                instance_id='" . DB_escapeString($this->instance_id) . "',
-                uid='{$this->uid}',
-                dt='{$this->dt}',
-                ip = '$ip',
-                token = '{$this->token}',
-                approved = {$approved}";
-        //echo $sql;die;
-        DB_query($sql, 1);
-        if (!DB_error()) {
-            $this->res_id = DB_insertID();
-        } else {
+        try {
+            $qb->insert($_TABLES['forms_results'])
+               ->setValue('frm_id', ':frm_id')
+               ->setValue('instance_id', ':instance_id')
+               ->setValue('uid', ':uid')
+               ->setValue('dt', ':dt')
+               ->setValue('ip', ':ip')
+               ->setValue('token', ':token')
+               ->setValue('approved', ':approved')
+               ->setParameter('frm_id', $this->frm_id, Database::STRING)
+               ->setParameter('instance_id', $this->instance_id, Database::STRING)
+               ->setParameter('uid', $this->uid, Database::INTEGER)
+               ->setParameter('dt', $this->dt, Database::STRING)
+               ->setParameter('ip', $this->getIP(), Database::STRING)
+               ->setParameter('token', $this->token, Database::STRING)
+               ->setParameter('approved', $approved, Database::INTEGER)
+               ->execute();
+            $this->res_id = $db->conn->lastInsertId();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
             $this->res_id = 0;
         }
         return $this->res_id;
@@ -455,35 +495,43 @@ class Result
         if ($this->res_id < 1) {
             return false;
         }
-        $sql = "UPDATE {$_TABLES['forms_results']}
-            SET approved = 1
-            WHERE res_id = {$this->res_id}";
-        DB_query($sql);
-        if (!DB_error()) {
-            // Give plugins a chance to act on the submission
-            if (!empty($this->instance_id)) {
-                $Form = Form::getInstance($this->frm_id);
-                $values = $this->getValues($Form->getFields());
-                list($pi_name, $pi_data) = explode('|', $this->instance_id);
-                if ($pi_name != 'forms') {  // avoid recursion
-                    $status = LGLIB_invokeService(
-                        $pi_name,
-                        'approvesubmission',
-                        array(
-                            'source' => 'forms',
-                            'source_id' => $this->frm_id,
-                            'moderated' => $is_moderated,
-                            'uid' => $this->getUid(),
-                            'pi_info' => $pi_data,
-                            'data' => $values,
-                        ),
-                        $output,
-                        $svc_msg
-                    );
-                }
+        $db = Database::getInstance();
+        try {
+            $db->conn->executeUpdate(
+                "UPDATE {$_TABLES['forms_results']}
+                SET approved = 1
+                WHERE res_id = ?",
+                array($this->res_id),
+                array(Database::INTEGER)
+            );
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return false;
+        }
+
+        // Give plugins a chance to act on the submission
+        if (!empty($this->instance_id)) {
+            $Form = Form::getInstance($this->frm_id);
+            $values = $this->getValues($Form->getFields());
+            list($pi_name, $pi_data) = explode('|', $this->instance_id);
+            if ($pi_name != 'forms') {  // avoid recursion
+                $status = LGLIB_invokeService(
+                    $pi_name,
+                    'approvesubmission',
+                    array(
+                        'source' => 'forms',
+                        'source_id' => $this->frm_id,
+                        'moderated' => $is_moderated,
+                        'uid' => $this->getUid(),
+                        'pi_info' => $pi_data,
+                        'data' => $values,
+                    ),
+                    $output,
+                    $svc_msg
+                );
             }
         }
-        return DB_error() ? false : true;
+        return true;
     }
 
 
@@ -493,14 +541,20 @@ class Result
      * @param   integer $res_id     Database ID of result to delete
      * @return  boolean     True on success, false on failure
      */
-    public static function Delete($res_id=0)
+    public static function Delete(int $res_id) : bool
     {
         global $_TABLES;
 
         $res_id = (int)$res_id;
         if ($res_id == 0) return false;
-        self::DeleteValues($res_id);
-        DB_delete($_TABLES['forms_results'], 'res_id', $res_id);
+        self::deleteValues($res_id);
+        $db = Database::getInstance();
+        try {
+            $db->conn->delete($_TABLES['forms_results'], array('res_id' => $res_id));
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return false;
+        }
         return true;
     }
 
@@ -511,21 +565,25 @@ class Result
      * @param   integer $res_id Required result ID
      * @param   integer $uid    Optional user ID
      */
-    public static function DeleteValues($res_id, $uid=0)
+    public static function deleteValues(int $res_id, ?int $uid=NULL) : void
     {
         global $_TABLES;
 
         $res_id = (int)$res_id;
-        if ($res_id == 0) return false;
+        if ($res_id == 0) return;
         $uid = (int)$uid;
 
-        $keys = array('results_id');
-        $vals = array($res_id);
+        $keys = array('results_id' => $res_id);
         if ($uid > 0) {
-            $keys[] = 'uid';
-            $vals[] = $uid;
+            $keys['uid'] = $uid;
         }
-        DB_delete($_TABLES['forms_values'], $keys, $vals);
+        $db = Database::getInstance();
+        try {
+            $db->conn->delete($_TABLES['forms_values'], $keys);
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            return;
+        }
     }
 
 
@@ -535,17 +593,27 @@ class Result
      * @see plugin_user_deleted_forms()
      * @param   integer $uid    User ID
      */
-    public static function deleteByUser($uid)
+    public static function deleteByUser(int $uid) : void
     {
         global $_TABLES;
 
         $uid = (int)$uid;
-        $sql = "SELECT res_id FROM {$_TABLES['forms_results']}
-            WHERE uid = '$uid'";
-        $res = DB_query($sql);
-        $A = DB_fetchAll($res, false);
-        foreach ($A as $id=>$res) {
-            self::Delete($res['res_id']);
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT res_id FROM {$_TABLES['forms_results']}
+                WHERE uid = ?",
+                array($uid),
+                array(Database::INTEGER)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (!empty($data)) {
+            foreach ($data as $id=>$res) {
+                self::Delete($res['res_id']);
+            }
         }
     }
 
@@ -555,17 +623,26 @@ class Result
      *
      * @param   string  $frm_id     Form ID
      */
-    public static function deleteByForm($frm_id)
+    public static function deleteByForm(string $frm_id) : void
     {
         global $_TABLES;
 
-        $frm_id = DB_escapeString($frm_id);
-        $sql = "SELECT res_id FROM {$_TABLES['forms_results']}
-            WHERE frm_id = '$frm_id'";
-        $res = DB_query($sql);
-        $A = DB_fetchAll($res, false);
-        foreach ($A as $id=>$res) {
-            self::Delete($res['res_id']);
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT res_id FROM {$_TABLES['forms_results']}
+                WHERE frm_id = ?",
+                array($frm_id),
+                array(Database::STRING)
+            )->fetchAllAssociative();
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+            $data = NULL;
+        }
+        if (!empty($data)) {
+            foreach ($data as $id=>$res) {
+                self::Delete($res['res_id']);
+            }
         }
     }
 
@@ -577,17 +654,24 @@ class Result
      * @param   integer $origUID    Original user ID
      * @param   integer $destUID    New user ID
      */
-    public static function changeUID($origUID, $destUID)
+    public static function changeUID(int $origUID, int $destUID) : void
     {
         global $_TABLES;
 
         $origUID = (int)$origUID;
         $destUID = (int)$destUID;
 
-        DB_query("UPDATE {$_TABLES['forms_results']}
-            SET uid = $destUID WHERE uid = $origUID",
-            1
-        );
+        $db = Database::getInstance();
+        try {
+            $db->conn->executeUpdate(
+                "UPDATE {$_TABLES['forms_results']}
+                SET uid = ? WHERE uid = ?",
+                array($destUID, $origUID),
+                array(Database::INTEGER, Database::INTEGER)
+            );
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+        }
     }
 
 
@@ -797,22 +881,22 @@ class Result
         case 'action':
             $url = FRM_ADMIN_URL . '/index.php?print=x&frm_id=' . $A['frm_id'] .
                 '&res_id=' . $A['res_id'];
-            $retval = COM_createLink(
-                Icon::getHTML('print', 'tooltip', array(
+            $retval = FieldList::print(array(
+                'url' => '#!',
+                'attr' => array(
                     'title' => $LANG_FORMS['print'],
-                ) ),
-                '#',
-                array(
+                    'class' => 'tooltip',
                     'onclick' => "popupWindow('$url', '', 640, 480, 1); return false;",
-                )
-            );
+                ),
+            ) );
             if ($extras['isAdmin']) {
-                $retval .= '&nbsp;' . COM_createLink(
-                    Icon::getHTML('edit', 'tooltip', array(
+                $retval .= '&nbsp;' . FieldList::edit(array(
+                    'url' => FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' . $A['res_id'],
+                    'attr' => array(
+                        'class' => 'tooltip',
                         'title' => $LANG_ADMIN['edit'],
-                    ) ),
-                    FRM_ADMIN_URL . '/index.php?editresult=x&res_id=' . $A['res_id']
-                );
+                    ),
+                ) );
             }
             break;
 
@@ -826,13 +910,12 @@ class Result
             break;
 
         case 'delete':
-            $retval = COM_createLink(
-                '<i class="uk-icon uk-icon-remove uk-text-danger"></i>',
-                FRM_ADMIN_URL . '/index.php?delresult=' . $A['res_id'] . '&frm_id=' . $A['frm_id'],
+            $retval = FieldList::delete(array(
+                'delete_url' => FRM_ADMIN_URL . '/index.php?delresult=' . $A['res_id'] . '&frm_id=' . $A['frm_id'],
                 array(
                     'onclick' => "return confirm('{$LANG_FORMS['confirm_delete']}');",
-                )
-            );
+                ),
+            ) );
             break;
 
         default:

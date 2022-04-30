@@ -15,6 +15,8 @@
 if (!defined ('GVERSION')) {
     die ('This file can not be used on its own.');
 }
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 
 /**
@@ -37,7 +39,7 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
     if (isset($args['res_id']) && $args['res_id'] > 0) {
         $res_id = (int)$args['res_id'];
     } elseif (isset($args['uid']) && $args['uid'] > 0) {
-        $res_id = Forms\Result::FindResult($args['frm_id'], $args['uid']);
+        $res_id = Forms\Result::findResult($args['frm_id'], $args['uid']);
     }
     if (isset($args['instance_id'])) {
         if (!isset($args['pi_name'])) {
@@ -114,12 +116,11 @@ function service_printForm_forms($args, &$output, &$svc_msg)
     } elseif (isset($args['uid'])) {
         // If no result ID given, then use the user ID.  Just have to grab
         // the last form updated by the user.
-        $res_id = (int)DB_getItem($_TABLES['forms_results'], 'id',
-                "uid = '" . (int)$args['uid'] .
-                "' AND frm_id = '" . DB_escapeString($args['frm_id']) .
-                "' ORDER BY dt DESC LIMIT 1");
+        $res_id = \Forms\Result::findResult($args['frm_id'], $args['uid']);
     }
-    if ($res_id < 1) return PLG_RET_ERROR;
+    if ($res_id < 1) {
+        return PLG_RET_ERROR;
+    }
 
     $content = '';
     $F = new \Forms\Form($args['frm_id']);
@@ -172,11 +173,7 @@ function service_getValues_forms($args, &$output, &$svc_msg)
     } elseif (isset($args['uid'])) {
         // If no result ID given, then use the user ID.  Just have to grab
         // the last form updated by the user.
-        $res_id = \Forms\Result::FindResult($args['frm_id'], $args['uid']);
-        /*$res_id = (int)DB_getItem($_TABLES['forms_results'], 'id',
-                "uid = '" . (int)$args['uid'] .
-                "' AND frm_id = '" . DB_escapeString($args['frm_id']) .
-                "' ORDER BY dt DESC LIMIT 1");*/
+        $res_id = \Forms\Result::findResult($args['frm_id'], $args['uid']);
     }
     if ($res_id < 1) {
         return PLG_RET_ERROR;
@@ -222,22 +219,34 @@ function service_resultId_forms($args, &$output, &$svc_msg)
     if (isset($args['res_id'])) {
         $res_id = (int)$args['res_id'];
     } else {
+        $res_id = 0;
         // If no result ID given, then use the user ID.  Just have to grab
         // the last form updated by the user. Assume the current user if none.
         if (!isset($args['uid'])) {
             $args['uid'] = $_USER['uid'];
         }
-        $res_id = (int)DB_getItem(
-            $_TABLES['forms_results'],
-            'res_id',
-            "uid = '" . (int)$args['uid'] .
-                "' AND frm_id = '" . DB_escapeString($args['frm_id']) .
-                "' ORDER BY dt DESC LIMIT 1"
-        );
+        $db = Database::getInstance();
+        try {
+            $data = $db->conn->executeQuery(
+                "SELECT res_id FROM {$_TABLES['forms_results']}
+                WHERE uid = ? AND frm_id = ?
+                ORDER BY dt DESC LIMIT 1",
+                array($args['uid'], $args['frm_id']),
+                array(Database::INTEGER, Database::STRING)
+            )->fetchAssociative();
+            if (is_array($data)) {
+                $res_id = (int)$data['res_id'];
+            }
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        }
     }
     $output = (int)$res_id;
-    if ($output < 1) return PLG_RET_ERROR;
-    else return PLG_RET_OK;
+    if ($output < 1) {
+        return PLG_RET_ERROR;
+    } else {
+        return PLG_RET_OK;
+    }
 }
 
 
@@ -253,17 +262,27 @@ function service_getFormInfo_forms($args, &$output, &$svc_msg)
 {
     global $_TABLES;
 
-    $sql = "SELECT * FROM {$_TABLES['forms_frmdef']} WHERE 1=1";
+    $db = Database::getInstance();
+    $qb = $db->conn->createQueryBuilder();
+    $qb->select('*')
+       ->from($_TABLES['forms_frmdef'])
+       ->where('1 = 1');
     if (array_key_exists('frm_id', $args)) {
-        $sql .= " AND frm_id = '" . DB_escapeString($args['frm_id']) . "'";
+        $qb->andWhere('frm_id = :frm_id')
+           ->setParameter('frm_id', $args['frm_id'], Database::STRING);
     }
     if (isset($args['perm']) && (int)$args['perm'] > 0) {
-        $sql .= SEC_buildAccessSql('AND', 'fill_gid');
+        $qb->andWhere(SEC_buildAccessSql('', 'fill_gid'));
     }
-    $res = DB_query($sql);
+    try {
+        $data = $qb->execute()->fetchAllAssociative();
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        $data = NULL;
+    }
     $output = array();
-    while ($A = DB_fetchArray($res, false)) {
-        $output[] = $A;
+    if (is_array($data)) {
+        $output = $data;
     }
     return PLG_RET_OK;
 }
@@ -288,13 +307,23 @@ function service_getMyForms_forms($args, &$output, &$svc_msg)
         return PLG_RET_ERROR;
     }
 
-    $key = DB_escapeString($args['basename']) . '%';
-    $sql = "SELECT frm_id, frm_name FROM {$_TABLES['forms_frmdef']}
-            WHERE frm_id like '$key'";
-    $res = DB_query($sql, 1);
-    if (!$res) return PLG_RET_ERROR;
-    while ($A = DB_fetchArray($res, true)) {
-        $output[$A['frm_id']] = $A['frm_name'];
+    $key = $args['basename'] . '%';
+    $db = Database::getInstance();
+    try {
+        $data = $db->conn->executeQuery(
+            "SELECT frm_id, frm_name FROM {$_TABLES['forms_frmdef']}
+            WHERE frm_id like ?",
+            array($key),
+            array(Database::STRING)
+        )->fetchAllAssociative();
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        return PLG_RET_ERROR;
+    }
+    if (is_array($data)) {
+        foreach ($data as $A) {
+            $output[$A['frm_id']] = $A['frm_name'];
+        }
     }
     return PLG_RET_OK;
 }
@@ -357,4 +386,3 @@ function service_validate_forms($args, &$output, &$svc_msg)
     return empty($output) ? PLG_RET_OK : PLG_RET_ERROR;
 }
 
-?>

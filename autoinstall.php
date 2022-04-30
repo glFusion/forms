@@ -14,6 +14,8 @@
 if (!defined ('GVERSION')) {
     die ('This file can not be used on its own.');
 }
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 /** @global string $_DB_dbms */
 global $_DB_dbms;
@@ -32,54 +34,54 @@ require_once "$pi_dir/sql/{$_DB_dbms}_install.php";
 $INSTALL_plugin['forms'] = array(
     'installer' => array(
         'type' => 'installer',
-        'version' => '1', 
+        'version' => '1',
         'mode' => 'install',
     ),
     'plugin' => array(
-        'type'      => 'plugin', 
+        'type'      => 'plugin',
         'name'      => $_CONF_FRM['pi_name'],
-        'ver'       => $_CONF_FRM['pi_version'], 
+        'ver'       => $_CONF_FRM['pi_version'],
         'gl_ver'    => $_CONF_FRM['gl_version'],
-        'url'       => $_CONF_FRM['pi_url'], 
+        'url'       => $_CONF_FRM['pi_url'],
         'display'   => $_CONF_FRM['pi_display_name'],
     ),
     array(
-        'type'  => 'table', 
-        'table' => $_TABLES['forms_frmdef'], 
+        'type'  => 'table',
+        'table' => $_TABLES['forms_frmdef'],
         'sql'   => $_SQL['forms_frmdef'],
     ),
     array(
-        'type'  => 'table', 
-        'table' => $_TABLES['forms_flddef'], 
+        'type'  => 'table',
+        'table' => $_TABLES['forms_flddef'],
         'sql'   => $_SQL['forms_flddef'],
     ),
     array(
-        'type'  => 'table', 
-        'table' => $_TABLES['forms_results'], 
+        'type'  => 'table',
+        'table' => $_TABLES['forms_results'],
         'sql'   => $_SQL['forms_results'],
     ),
     array(
-        'type'  => 'table', 
-        'table' => $_TABLES['forms_values'], 
+        'type'  => 'table',
+        'table' => $_TABLES['forms_values'],
         'sql'   => $_SQL['forms_values'],
     ),
     array(
-        'type'  => 'group', 
-        'group' => 'forms Admin', 
+        'type'  => 'group',
+        'group' => 'forms Admin',
         'desc'  => 'Users in this group can administer the Forms plugin',
-        'variable' => 'admin_group_id', 
+        'variable' => 'admin_group_id',
         'admin' => true,
         'addroot' => true,
     ),
     array(
-        'type'  => 'feature', 
-        'feature' => 'forms.admin', 
+        'type'  => 'feature',
+        'feature' => 'forms.admin',
         'desc'  => 'Forms Administration access',
         'variable' => 'admin_feature_id',
     ),
     array(
-        'type'  => 'mapping', 
-        'group' => 'admin_group_id', 
+        'type'  => 'mapping',
+        'group' => 'admin_group_id',
         'feature' => 'admin_feature_id',
         'log'   => 'Adding Admin feature to the admin group',
     ),
@@ -116,16 +118,31 @@ function plugin_postinstall_forms()
 
     // Install sample data
     if (is_array($FRM_sampledata)) {
+        $db = Database::getInstance();
         foreach ($FRM_sampledata as $sql) {
-            DB_query($sql);
+            try {
+                $db->conn->executeUpdate($sql);
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+            }
         }
 
         // Set the correct default Group ID
-        $gid = (int)DB_getItem($_TABLES['groups'], 'grp_id', 
-                "grp_name='{$_CONF_FRM['pi_name']} Admin'");
+        $gid = (int)$db->getItem(
+            $_TABLES['groups'],
+            'grp_id',
+            array('grp_name' => "{$_CONF_FRM['pi_name']} Admin'")
+        );
         if ($gid > 0) {
-            DB_query("UPDATE {$_TABLES['forms_frmdef']}
-                SET group_id=$gid");
+            try {
+                $db->conn->executeUpdate(
+                    "UPDATE {$_TABLES['forms_frmdef']} SET group_id = ?",
+                    array($gid),
+                    array(Database::INTEGER)
+                );
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+            }
         }
     }
 
@@ -144,10 +161,11 @@ function plugin_load_configuration_forms()
     require_once __DIR__ . '/install_defaults.php';
 
     // Get the admin group ID that was saved previously.
-    $group_id = (int)DB_getItem($_TABLES['groups'], 'grp_id', 
-            "grp_name='{$_CONF_FRM['pi_name']} Admin'");
-
+    $group_id = (int)$db->getItem(
+        $_TABLES['groups'],
+        'grp_id',
+        array('grp_name' => "{$_CONF_FRM['pi_name']} Admin'")
+    );
     return plugin_initconfig_forms($group_id);
 }
 
-?>

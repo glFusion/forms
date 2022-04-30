@@ -220,7 +220,7 @@ class DateField extends \Forms\Field
         // If not enabled or not required, consider any value as OK
         if (
             !$this->enabled ||
-            !$this->checkAccess(FRM_FIELD_REQUIRED)
+            !$this->checkAccess(self::ACCESS_REQUIRED)
         ) {
             return $msg;
         }

@@ -127,6 +127,7 @@ case 'delbutton_x':
         }
         echo COM_refresh(FRM_ADMIN_URL . '/index.php');
     }elseif (isset($_POST['delfield']) && is_array($_POST['delfield'])) {
+        var_dump($_POST);die;
         // Deleting one or more fields
         foreach ($_POST['delfield'] as $key=>$value) {
             Forms\Field::Delete($value);

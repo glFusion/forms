@@ -16,6 +16,9 @@ global $_CONF, $_CONF_FRM;
 
 /** Include SQL definitions */
 require_once __DIR__ . "/sql/mysql_install.php";
+use glFusion\Database\Database;
+use glFusion\Log\Log;
+
 
 /**
  * Perform the upgrade starting at the current version.
@@ -128,6 +131,13 @@ function FRM_do_upgrade($dvlp=false)
         if (!FRM_do_set_version($current_ver)) return false;
     }
 
+    if (!COM_checkVersion($current_ver, '0.6.0')) {
+        $current_ver = '0.6.0';
+        COM_errorLog("Updating Plugin to $current_ver");
+        if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
+        if (!FRM_do_set_version($current_ver)) return false;
+    }
+
     // Final version setting and cleanup
     if (!COM_checkVersion($current_ver, $code_ver)) {
         if (!FRM_do_set_version($code_ver)) return false;
@@ -167,14 +177,14 @@ function FRM_do_upgrade_sql($version, $dvlp=false)
     }
 
     // Execute SQL now to perform the upgrade
-    COM_errorLOG("--Updating Forms to version $version");
-    $errmsg = 'SQL Error during Forms plugin update';
-    if ($dvlp) $errmsg .= ' - ignored';
+    Log::write('system', Log::INFO, "--Updating Forms to version $version");
+    $db = Database::getInstance();
     foreach ($_FRM_UPGRADE_SQL[$version] as $sql) {
-        COM_errorLOG("Forms Plugin $version update: Executing SQL => $sql");
-        DB_query($sql, '1');
-        if (DB_error()) {
-            COM_errorLog($errmsg, 1);
+        Log::write('system', Log::DEBUG, "Forms Plugin $version update: Executing SQL => $sql");
+        try {
+            $db->conn->executeUpdate($sql);
+        } catch (\Exception $e) {
+            Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
             if (!$dvlp) return false;
         }
     }
@@ -194,19 +204,31 @@ function FRM_do_set_version($ver)
 {
     global $_TABLES, $_CONF_FRM;
 
-    // now update the current version number.
-    $sql = "UPDATE {$_TABLES['plugins']} SET
-            pi_version = '{$_CONF_FRM['pi_version']}',
-            pi_gl_version = '{$_CONF_FRM['gl_version']}',
-            pi_homepage = '{$_CONF_FRM['pi_url']}'
-        WHERE pi_name = '{$_CONF_FRM['pi_name']}'";
-
-    $res = DB_query($sql, 1);
-    if (DB_error()) {
-        COM_errorLog("Error updating the {$_CONF_FRM['pi_display_name']} Plugin version",1);
-        return false;
-    } else {
+    $db = Database::getInstance();
+    try {
+        $db->conn->executeUpdate(
+            "UPDATE {$_TABLES['plugins']} SET
+            pi_version = ?,
+            pi_gl_version = ?,
+            pi_homepage = ?
+            WHERE pi_name = ?",
+            array(
+                $_CONF_FRM['pi_version'],
+                $_CONF_FRM['gl_version'],
+                $_CONF_FRM['pi_url'],
+                $_CONF_FRM['pi_name'],
+            ),
+            array(
+                Database::STRING,
+                Database::STRING,
+                Database::STRING,
+                Database::STRING,
+            )
+        );
         return true;
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        return false;
     }
 }
 
@@ -221,28 +243,52 @@ function FRM_upgrade_0_1_0()
 {
     global $_TABLES, $_FRM_DEFAULT, $_CONF_FRM;
 
+    $db = Database::getInstance();
+
     // Switch method of storing values
-    $sql = "SELECT * FROM {$_TABLES['forms_flddef']}
-                WHERE type in ('multicheck', 'radio', 'select')";
-    $res = DB_query($sql);
-    while ($F = DB_fetchArray($res, false)) {
-        COM_errorLog("Processing field {$F['name']}");
-        $options = unserialize($F['options']);
-        if (!$options) {
-            $options = array();
-        } else {
-            if (is_array($options['values'])) {
-                // Update existing values with new text value
-                $sql1 = "SELECT * FROM {$_TABLES['forms_values']}
-                        WHERE fld_id = '{$F['fld_id']}'";
-                $res1 = DB_query($sql1);
-                while ($V = DB_fetchArray($res1, false)) {
-                    $value = isset($options['values'][$V['value']]) ?
-                        $options['values'][$V['value']] : '';
-                    $upd_sql = "UPDATE {$_TABLES['forms_values']}
-                            SET value='" . DB_escapeString($value) . "'
-                            WHERE id='{$V['id']}'";
-                    DB_query($upd_sql);
+    try {
+        $data = $db->conn->executeQuery(
+            "SELECT * FROM {$_TABLES['forms_flddef']}
+            WHERE type in ('multicheck', 'radio', 'select')"
+        )->fetchAllAssociative();
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        $data = NULL;
+    }
+
+    if (is_array($data)) {
+        foreach ($data as $F) {
+            Log::write('system', Log::INFO, "Processing field {$F['name']}");
+            $options = unserialize($F['options']);
+            if (!$options) {
+                $options = array();
+            } else {
+                if (is_array($options['values'])) {
+                    // Update existing values with new text value
+                    try {
+                        $vals = $db->conn->executeQuery(
+                            "SELECT * FROM {$_TABLES['forms_values']}
+                            WHERE fld_id = '{$F['fld_id']}'"
+                        )->fetchAllAssociative();
+                    } catch (\Exception $e) {
+                        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+                        $vals = NULL;
+                    }
+                    if (is_array($vals)) {
+                        foreach ($vals as $V) {
+                            $value = isset($options['values'][$V['value']]) ?
+                                $options['values'][$V['value']] : '';
+                            try {
+                                $db->conn->executeUpdate(
+                                    "UPDATE {$_TABLES['forms_values']} SET value = ? WHERE id = ?",
+                                    array($value, $V['id']),
+                                    array(Database::STRING, Database::INTEGER)
+                                );
+                            } catch (\Exception $e) {
+                                Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+                            }
+                        }
+                    }
                 }
 
                 // Now update the field definitions with the new value format
@@ -259,10 +305,15 @@ function FRM_upgrade_0_1_0()
                 $options['default'] = $default;
                 $options['values'] = $new_values;
                 $new_opts = serialize($options);
-                $upd_sql = "UPDATE {$_TABLES['forms_flddef']}
-                        SET options = '" . DB_escapeString($new_opts) . "'
-                        WHERE fld_id='{$F['fld_id']}'";
-                DB_query($upd_sql);
+                try {
+                    $db->conn->executeUpdate(
+                        "UPDATE {$_TABLES['forms_flddef']} SET options = ? WHERE fld_id = ?",
+                        array(@serialize($new_opts), $F['fld_id']),
+                        array(Database::STRING, Database::INTEGER)
+                    );
+                } catch (\Exception $e) {
+                    Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+                }
             }
         }
     }
@@ -284,15 +335,34 @@ function FRM_upgrade_0_1_7()
 
     if (!FRM_do_upgrade_sql('0.1.7')) return false;
 
+    $db = Database::getInstance();
+
     // Update the new field group ID's to match the forms
-    $sql = "SELECT id, fill_gid, results_gid FROM {$_TABLES['forms_frmdef']}";
-    $res = DB_query($sql, 1);
-    while ($A = DB_fetchArray($res, false)) {
-        DB_query("UPDATE {$_TABLES['forms_flddef']} SET
-                fill_gid = {$A['fill_gid']},
-                results_gid = {$A['results_gid']}
-            WHERE frm_id = '{$A['id']}'", 1);
-        if (DB_error()) return false;
+    try {
+        $data = $db->conn->executeQuery(
+            "SELECT id, fill_gid, results_gid FROM {$_TABLES['forms_frmdef']}"
+        )->fetchAllAssociative();
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        $data = NULL;
+    }
+
+    if (is_array($data)) {
+        foreach ($data as $A) {
+            try {
+                $db->conn->executeUpdate(
+                    "UPDATE {$_TABLES['forms_flddef']} SET
+                        fill_gid = {$A['fill_gid']},
+                        results_gid = {$A['results_gid']}
+                    WHERE frm_id = '{$A['id']}'",
+                    array($A['fill_gid'], $A['results_gid'], $A['id']),
+                    array(Database::INTEGER, Database::INTEGER, Database::INTEGER)
+                );
+            } catch (\Exception $e) {
+                Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+                return false;
+            }
+        }
     }
     return FRM_do_set_version('0.1.7');
 }

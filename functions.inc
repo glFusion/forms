@@ -46,13 +46,6 @@ define('FRM_AUTOGEN_NONE', 0);
 define('FRM_AUTOGEN_FILL', 1);
 define('FRM_AUTOGEN_SAVE', 2);
 
-// Though it's probably never necessary, these values allow access attributes
-// to be combined.
-define('FRM_FIELD_NORMAL', 0);
-define('FRM_FIELD_REQUIRED', 1);
-define('FRM_FIELD_HIDDEN', 2);
-define('FRM_FIELD_READONLY', 4);
-
 // Define flags for multiple-entry, onetime and onetime-edit forms
 define('FRM_LIMIT_MULTI', 0);
 define('FRM_LIMIT_EDIT', 1);
@@ -105,6 +98,8 @@ spl_autoload_register(function ($class)
         require $file;
     }
 });
+use glFusion\Database\Database;
+use glFusion\Log\Log;
 
 /** Include service functions */
 require_once __DIR__ . '/services.inc.php';
@@ -191,12 +186,23 @@ function plugin_getuseroption_forms()
     $uid = (int)$_USER['uid'];
     if ($uid < 2) return '';
     $groups = implode(',', $_GROUPS);
+    $form_cnt = 0;
 
-    $form_cnt = (int)DB_getItem(
-        $_TABLES['forms_frmdef'],
-        'COUNT(*)',
-        "owner_id='{$uid}' OR group_id IN ({$groups})"
-    );
+    $db = Database::getInstance();
+    try {
+        $data = $db->conn->executeQuery(
+            "SELECT COUNT(*) AS cnt FROM {$_TABLES['forms_frmdef']}
+            WHERE owner_id = ? OR group_id IN (?)",
+            array($_USER['uid'], $_GROUPS),
+            array(Database::INTEGER, Database::PARAM_INT_ARRAY)
+        );
+        if (is_array($data)) {
+            $form_cnt = (int)$data['cnt'];
+        }
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+    }
+
     if ($form_cnt < 1) return '';
 
     $menu = array(
@@ -373,6 +379,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
     if ($op == 'tagname' ) {
         return array('forms', 'formlink');
     } else if ($op == 'parse') {
+        $db = Database::getInstance();
         $retval = $content;
         $HTML = '';
         $frm_id = '';
@@ -471,7 +478,9 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     $Form = new Forms\Form($frm_id, FRM_ACCESS_FILL);
                     if (!$Form->isNew() && $Form->isEnabled()) {
                         // Make sure it's a valid form
-                        $Form->setInstance($instance_id);
+                        if (!empty($instance_id)) {
+                            $Form->setInstance($instance_id);
+                        }
                         $HTML = $Form->Render($template);
                     }
                 }
@@ -491,11 +500,16 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!empty($instance_id))
                         $url .= '&instance_id=' . urlencode($instance_id);
                     if (empty($caption)) {
-                        $caption = DB_getItem(
-                            $_TABLES['forms_frmdef'],
-                            'frm_name',
-                            "id='$frm_id'"
-                        );
+                        try {
+                            $caption = $db->getItem(
+                                $_TABLES['forms_frmdef'],
+                                'frm_name',
+                                array('id' => $frm_id)
+                            );
+                        } catch (\Exception $e) {
+                            Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+                            $caption = '';
+                        }
                     }
                     $opts = array(
                         'title' => $caption,
@@ -538,7 +552,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
             break;
 
         case 'formlink':    // DEPRECATED
-            $frm_id = COM_sanitizeID($autotag['parm1']);
+            /*$frm_id = COM_sanitizeID($autotag['parm1']);
             if (!empty($frm_id)) {  // contains the form ID
                 // Create a link to the form's page using either the form's
                 // title or a user-supplied string
@@ -559,7 +573,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                         array('title'=>$caption)
                     );
                 }
-            }
+            }*/
             break;
 
         }   // switch($autotag['tag'])
@@ -777,22 +791,33 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
     global $_TABLES, $_USER, $_CONF_FRM;
 
     $retval = "<{$_CONF_FRM['pi_name']}>\n";
-    $sql = "SELECT res_id FROM {$_TABLES['forms_results']} WHERE uid = '$uid'";
-    $res = DB_query($sql);
-    $A = DB_fetchAll($res, false);
-    foreach ($A as $id=>$res_id) {
-        $R = new Forms\Result($res_id['id']);
-        $F = Forms\Form::getInstance($R->getFormID());
-        $R->GetValues($F->getFields);
-        $form_name = str_replace(' ', '_', $F->getName());
-        $retval .= "<$form_name>\n";
-        $dt = new Date($R->getTimestamp(), $_USER['tzid']);
-        $retval .= '<date>' . $dt->format($dt->getUserFormat(),true) . "</date>\n";
-        $retval .= "<ip>{$R->getIP()}</ip>\n";
-        foreach ($F->getFields() as $fld) {
-            $retval .= $fld->XML();
+    $db = Database::getInstance();
+    try {
+        $data = $db->conn->executeQuery(
+            "SELECT res_id FROM {$_TABLES['forms_results']} WHERE uid = ?",
+            array($uid),
+            array(Database::INTEGER)
+        )->fetchAllAssociative();
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        $data = NULL;
+    }
+
+    if (is_array($data)) {
+        foreach ($data as $id=>$res_id) {
+            $R = new Forms\Result($res_id['id']);
+            $F = Forms\Form::getInstance($R->getFormID());
+            $R->GetValues($F->getFields);
+            $form_name = str_replace(' ', '_', $F->getName());
+            $retval .= "<$form_name>\n";
+            $dt = new Date($R->getTimestamp(), $_USER['tzid']);
+            $retval .= '<date>' . $dt->format($dt->getUserFormat(),true) . "</date>\n";
+            $retval .= "<ip>{$R->getIP()}</ip>\n";
+            foreach ($F->getFields() as $fld) {
+                $retval .= $fld->XML();
+            }
+            $retval .= "</$form_name>\n";
         }
-        $retval .= "</$form_name>\n";
     }
     if (!empty($retval)) {
         $retval = "<{$_CONF_FRM['pi_name']}>\n$retval</{$_CONF_FRM['pi_name']}>\n";
@@ -815,11 +840,16 @@ function FRM_GetGroups($selected=0)
     global $_TABLES;
 
     $A = array();
+    $db = Database::getInstance();
+    try {
+        $data = $db->conn->executeQuery("SELECT grp_id, grp_name FROM {$_TABLES['groups']}");
+    } catch (\Exception $e) {
+        Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
+        $data = NULL;
+    }
 
-    $query = "SELECT grp_id, grp_name FROM {$_TABLES['groups']}";
-    $result = DB_query($query, 1);
-    if ($result && DB_numRows($result) > 0) {
-        while ($row = DB_fetchArray($result)) {
+    if (is_array($data)) {
+        foreach ($data as $row) {
             $row['grp_name'] = htmlspecialchars($row['grp_name']);
             $A[$row['grp_name']] = $row['grp_id'];
         }
@@ -827,4 +857,3 @@ function FRM_GetGroups($selected=0)
     return $A;
 }
 
-?>
