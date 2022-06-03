@@ -83,7 +83,7 @@ class StaticField extends \Forms\Field
      * @param   integer $res_id Result ID associated with this field
      * @return  boolean     True on success, False on failure
      */
-    public function SaveData($newval, int $res_id) : bool
+    public function SaveData($newval, ?int $res_id=NULL) : bool
     {
         return true;
     }

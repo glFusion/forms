@@ -88,7 +88,7 @@ class autotag
      * @param   integer $res_id Result ID associated with this field
      * @return  boolean     True on success, False on failure
      */
-    public function SaveData($newval, int $res_id) : bool
+    public function SaveData($newval, ?int $res_id=NULL) : bool
     {
         switch ($this->type) {
         // Set the $newval for special cases
@@ -97,6 +97,7 @@ class autotag
             break;
         }
         SESS_setVar($this->_elemID(), $newval);
+        return true;
     }
 
 
