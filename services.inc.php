@@ -272,17 +272,16 @@ function service_getFormInfo_forms($args, &$output, &$svc_msg)
            ->setParameter('frm_id', $args['frm_id'], Database::STRING);
     }
     if (isset($args['perm']) && (int)$args['perm'] > 0) {
-        $qb->andWhere(SEC_buildAccessSql('', 'fill_gid'));
+        $qb->andWhere($db->getAccessSql('', 'fill_gid'));
     }
     try {
-        $data = $qb->execute()->fetchAllAssociative();
+        $output = $qb->execute()->fetchAllAssociative();
     } catch (\Exception $e) {
         Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
-        $data = NULL;
+        $output = false;
     }
-    $output = array();
-    if (is_array($data)) {
-        $output = $data;
+    if (!is_array($output)) {
+        $output = array();
     }
     return PLG_RET_OK;
 }
