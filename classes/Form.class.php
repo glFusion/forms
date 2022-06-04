@@ -289,7 +289,6 @@ class Form
      */
     public function setInstance($vals, ?string $pi_name=NULL) : self
     {
-        var_dump(debug_backtrace(0));die;
         if (!empty($pi_name)) {
             if (is_array($vals)) {
                 $val = implode(':', $vals);
