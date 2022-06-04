@@ -1,5 +1,5 @@
 {# begin {templatelocation} #}
-<select class="uk-select uk-form-width-medium uk-form-small"
+<select class="uk-select"
 <!-- BEGIN Attr -->
 	{name}="{value}"
 <!-- END Attr -->

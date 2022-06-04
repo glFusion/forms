@@ -1,5 +1,5 @@
 {# begin {templatelocation} #}
-<input type="text" class="uk-input uk-form-small uk-form-width-medium"
+<input type="text" class="uk-input"
 <!-- BEGIN Attr -->
 	{name}="{value}"
 <!-- END Attr -->
