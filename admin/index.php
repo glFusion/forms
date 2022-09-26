@@ -27,12 +27,12 @@ if (
 
 $action = 'listforms';      // Default view
 $expected = array(
-    'edit','updateform','editfield', 'updatefield',
+    'edit','updateform','editfield', 'updatefield', 'savecat', 'deletecat',
     'save', 'print', 'editresult', 'updateresult', 'reorder',
-    'editform', 'copyform', 'delbutton_x', 'showhtml', 'delresult',
+    'editform', 'editcat', 'copyform', 'delbutton_x', 'showhtml', 'delresult',
     'moderate', 'moderationapprove', 'moderationdelete',
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
-    'results', 'preview',
+    'results', 'preview', 'listcats',
 );
 foreach($expected as $provided) {
     if (isset($_POST[$provided])) {
@@ -159,6 +159,24 @@ case 'copyform':
     }
     break;
 
+case 'deletecat':
+    $Cat = Forms\Category::getInstance((int)$actionval);
+    if ($Cat->getId() > 1) {
+        $Cat->Delete();
+    }
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?listcats');
+    break;
+
+case 'savecat':
+    $Cat = Forms\Category::getInstance($_POST['cat_id']);
+    $status = $Cat->save($_POST);
+    if (!$status) {                   // save operation failed
+        $view = 'editcat';
+    } else {
+        echo COM_refresh(FRM_ADMIN_URL . '/index.php?listcats');
+    }
+    break;
+
 case 'updateform':
     $Form = new Forms\Form($_POST['old_id']);
     $msg = $Form->SaveDef($_POST);
@@ -271,6 +289,12 @@ case 'moderate':
     }
     break;
 
+case 'editcat':
+    $Cat = Forms\Category::getInstance((int)$actionval);
+    $content .= Forms\Menu::Admin($view, 'hlp_edit_form');
+    $content .= $Cat->edit();
+    break;
+
 case 'editform':
     // Edit a single definition
     $Form = new Forms\Form($frm_id);
@@ -308,6 +332,11 @@ case 'none':
 case 'fields':
     $content .= Forms\Menu::Admin($view, 'hdr_field_list');
     $content .= Forms\Field::adminList();
+    break;
+
+case 'listcats':
+    $content .= Forms\Menu::Admin('listcats', 'hdr_form_list');
+    $content .= Forms\Category::adminList();
     break;
 
 case 'listforms':
