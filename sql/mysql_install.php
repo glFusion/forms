@@ -209,6 +209,8 @@ $_FRM_UPGRADE_SQL = array(
         "CREATE TABLE `gl_forms_categories` (
           `cat_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
           `cat_name` varchar(255) NOT NULL DEFAULT '',
+          `cat_email_uid` int(11) unsigned NOT NULL DEFAULT 0,
+          `cat_email_gid` int(11) unsigned NOT NULL DEFAULT 0,
           PRIMARY KEY (`cat_id`)
         ) ENGINE=MyISAM",
         "ALTER TABLE {$_TABLES['forms_frmdef']} ADD cat_id int(11) unsigned NOT NULL DEFAULT 1 AFTER frm_id",
