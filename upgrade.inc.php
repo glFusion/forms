@@ -12,7 +12,7 @@
  */
 
 /** Required to get the config values */
-global $_CONF, $_CONF_FRM;
+global $_CONF, $_CONF_FRM, $_FRM_UPGRADE_SQL;
 
 /** Include SQL definitions */
 require_once __DIR__ . "/sql/mysql_install.php";
@@ -28,7 +28,7 @@ use glFusion\Log\Log;
  */
 function FRM_do_upgrade($dvlp=false)
 {
-    global $_CONF_FRM, $_PLUGIN_INFO;
+    global $_CONF_FRM, $_PLUGIN_INFO, $_FRM_UPGRADE_SQL, $_TABLES;
 
     if (isset($_PLUGIN_INFO[$_CONF_FRM['pi_name']])) {
         if (is_array($_PLUGIN_INFO[$_CONF_FRM['pi_name']])) {
@@ -134,12 +134,16 @@ function FRM_do_upgrade($dvlp=false)
     if (!COM_checkVersion($current_ver, '0.6.0')) {
         $current_ver = '0.6.0';
         COM_errorLog("Updating Plugin to $current_ver");
+        if (!FRM_tableExists('forms_cats')) {
+            $_FRM_UPGRADE_SQL[$current_ver][] =
+                "INSERT INTO {$_TABLES['forms_cats']} SET cat_name = 'Default'";
+        }
         if (!FRM_do_upgrade_sql($current_ver, $dvlp)) return false;
         if (!FRM_do_set_version($current_ver)) return false;
     }
 
     // Final version setting and cleanup
-    if (!COM_checkVersion($current_ver, $code_ver)) {
+    if ($current_ver != $code_ver) {
         if (!FRM_do_set_version($code_ver)) return false;
     }
 
@@ -429,4 +433,35 @@ function FRM_remove_old_files()
         }
     }
 }
+
+/**
+ * Check if a column exists in a table
+ *
+ * @param   string  $table      Table Key, defined in shop.php
+ * @param   string  $col_name   Column name to check
+ * @return  boolean     True if the column exists, False if not
+ */
+function FRM_tableHasColumn(string $table, string $col_name) : bool
+{
+    global $_TABLES;
+
+    $col_name = DB_escapeString($col_name);
+    $res = DB_query("SHOW COLUMNS FROM {$_TABLES[$table]} LIKE '$col_name'");
+    return DB_numRows($res) == 0 ? false : true;
+}
+
+/**
+ * Check if a table already exists.
+ *
+ * @param   string  $tablekey   Key into the $_TABLES array
+ * @return  boolean     True if exist, False if not
+ */
+function FRM_tableExists(string $tablekey) : bool
+{
+    global $_TABLES;
+
+    $schemaManager = Database::getInstance()->conn->getSchemaManager();
+    return ($schemaManager->tablesExist(array($_TABLES[$tablekey])) == true);
+}
+
 

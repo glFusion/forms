@@ -60,6 +60,10 @@ class Form
      * @var string */
     private $frm_id = '';
 
+    /** Category ID.
+     * @var integer */
+    private $cat_id = 1;
+
     /** Form owner ID.
      * @var integer */
     private $owner_id = 0;
@@ -495,6 +499,7 @@ class Form
         }
 
         $this->frm_id = $A['frm_id'];
+        $this->cat_id = (int)$A['cat_id'];
         $this->frm_name = $A['frm_name'];
         $this->introtext = $A['introtext'];
         $this->email = $A['email'];
@@ -601,6 +606,7 @@ class Form
             'one_chk_' . $this->onetime => 'selected="selected"',
             'chk_' . $this->sub_type => 'checked="checked"',
             'sub_type' => $this->sub_type,
+            'cat_options' => Category::optionList($this->cat_id),
         ) );
         if (!$this->isNew) {
             $T->set_var('candelete', 'true');
@@ -927,6 +933,7 @@ class Form
         if (!$this->isNew && $this->old_id != '') {
             $qb->update($_TABLES['forms_frmdef'])
                ->set('frm_id', ':frm_id')
+               ->set('cat_id', ':cat_id')
                ->set('frm_name', ':frm_name')
                ->set('introtext', ':introtext')
                ->set('submit_msg', ':submit_msg')
@@ -952,6 +959,7 @@ class Form
         } else {
             $qb->insert($_TABLES['forms_frmdef'])
                ->setValue('frm_id', ':frm_id')
+               ->setValue('cat_id', ':cat_id')
                ->setValue('frm_name', ':frm_name')
                ->setValue('introtext', ':introtext')
                ->setValue('submit_msg', ':submit_msg')
@@ -976,6 +984,7 @@ class Form
         }
         $qb->setParameter('frm_id', $this->frm_id, Database::STRING)
            ->setParameter('old_id', $this->old_id, Database::STRING)
+           ->setParameter('cat_id', $this->cat_id, Database::INTEGER)
            ->setParameter('frm_name', $this->frm_name, Database::STRING)
            ->setParameter('introtext', $this->introtext, Database::STRING)
            ->setParameter('submit_msg', $this->submit_msg, Database::STRING)
@@ -1033,12 +1042,10 @@ class Form
         // with the form's.
         if (isset($A['reset_fld_perm'])) {
             try {
-                $db->conn->executeUpdate(
-                    "UPDATE {$_TABLES['forms_flddef']} SET
-                    fill_gid = ?,
-                    results_gid = ?
-                    WHERE frm_id = ?",
-                    array($this->fill_gid, $this->results_gid, $this->frm_id),
+                $db->conn->update(
+                    $_TABLES['forms_flddef'],
+                    array('fill_gid' => $this->fill_gid, 'results_gid' => $this->results_gid),
+                    array('frm_id' => $this->frm_id),
                     array(Database::INTEGER, Database::INTEGER, Database::STRING)
                 );
             } catch (\Exception $e) {
@@ -1505,11 +1512,10 @@ class Form
         $oldval = $oldval == 0 ? 0 : 1;
         $newval = $oldval == 0 ? 1 : 0;
         try {
-            $db->conn->executeUpdate(
-                "UPDATE {$_TABLES['forms_frmdef']}
-                SET $fld = ?
-                WHERE frm_id = ?",
-                array($newval, $id),
+            $db->conn->update(
+                $_TABLES['forms_frmdef'],
+                array($fld => $newval),
+                array('frm_id' => $id),
                 array(Database::INTEGER, Database::STRING)
             );
         } catch (\Exception $e) {
@@ -1607,6 +1613,11 @@ class Form
             array(
                 'text' => $LANG_FORMS['name'],
                 'field' => 'frm_name',
+                'sort' => true,
+            ),
+            array(
+                'text' => $LANG_FORMS['category'],
+                'field' => 'cat_id',
                 'sort' => true,
             ),
             array(
@@ -1717,6 +1728,8 @@ class Form
     {
         global $_CONF, $LANG_ACCESS, $LANG_FORMS, $_TABLES, $_CONF_FRM, $_LANG_ADMIN;
 
+        static $cat_names = array();
+
         $retval = '';
         switch($fieldname) {
         case 'edit':
@@ -1794,6 +1807,17 @@ class Form
                     'title' => $LANG_FORMS['preview'],
                 )
             );
+            break;
+
+        case 'cat_id':
+            $fieldvalue = (int)$fieldvalue;
+            if (!isset($cat_names[$fieldvalue])) {
+                $Cats[$fieldvalue] = Category::getInstance($fieldvalue);
+                if ($Cats[$fieldvalue]->getId() < 1) {
+                    $Cats[$fieldvalue]->withName('Undefined');
+                }
+            }
+            $retval = $Cats[$fieldvalue]->getName();
             break;
 
         case 'submissions':

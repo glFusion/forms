@@ -58,25 +58,27 @@ class Menu
 
         USES_lib_admin();
 
-        $menu_arr = array ();
         if ($help_text == '') {
             $help_text = 'admin_text';
         }
 
-        if ($view == 'listforms') {
-            $menu_arr[] = array(
+        $menu_arr = array (
+            /*array(
                 'url' => FRM_ADMIN_URL . '/index.php?action=editform',
                 'text' => $LANG_FORMS['add_form'],
-            );
-        } else {
-            $menu_arr[] = array(
+            ),*/
+            array(
                 'url' => FRM_ADMIN_URL . '/index.php?view=listforms',
                 'text' => $LANG_FORMS['list_forms'],
-            );
-        }
-        $menu_arr[] = array(
-            'url' => $_CONF['site_admin_url'],
-            'text' => $LANG01[53],
+            ),
+            array(
+                'url' => FRM_ADMIN_URL . '/index.php?view=listcats',
+                'text' => $LANG_FORMS['list_cats'],
+            ),
+            array(
+                'url' => $_CONF['site_admin_url'],
+                'text' => $LANG01[53],
+            ),
         );
 
         $text = isset($LANG_FORMS[$help_text]) ? $LANG_FORMS[$help_text] : '';

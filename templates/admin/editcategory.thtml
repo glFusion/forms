@@ -1,0 +1,57 @@
+{# begin {templatelocation} #}
+<form action="{site_url}/admin/plugins/forms/index.php"
+	class="uk-form uk-form-horizontal" method="post">
+	<input type="hidden" name="cat_id" value="{cat_id}" />
+	<fieldset>
+		<div class="uk-form-row">
+			<label for="f_name" class="uk-form-label">{$LANG_FORMS['cat_name']}:
+				<span id="hlp_cat_name" class="tooltip_cfg tooltipstered"></span>
+			</label>
+			<div class="uk-form-controls">
+				<input required id="f_name" type="text" name="cat_name" value="{cat_name}" />
+				<i class="uk-icon uk-icon-warning frm-icon-danger tooltip" title="{$LANG_FORMS['required']}"></i>
+			</div>
+		</div>
+
+		<div class="uk-form-row">
+			<label for="f_email_uid" class="uk-form-label">{$LANG_FORMS['email_uid']}
+				<span id="hlp_email_uid" class="tooltip_cfg tooltipstered"></span>
+			</label>
+			<div class="uk-form-controls">
+				<select class="uk-select" name="cat_email_uid">
+					<option value="0">--{$LANG_FORMS['none']}--</option>
+					{email_uid_options}
+				</select>
+			</div>
+		</div>
+
+		<div class="uk-form-row">
+			<label for="f_email_gid" class="uk-form-label">{$LANG_FORMS['email_gid']}
+				<span id="hlp_email_gid" class="tooltip_cfg tooltipstered"></span>
+			</label>
+			<div class="uk-form-controls">
+				<select class="uk-select" name="cat_email_gid">
+					<option value="0">--{$LANG_FORMS['none']}--</option>
+					{email_gid_options}
+				</select>
+			</div>
+		</div>
+	</fieldset>
+
+	<div class="uk-form-row">
+		<label class="uk-form-label"></label>
+		<div class="uk-form-controls">
+			<button name="savecat" type="submit" class="uk-button uk-button-success">{$LANG_ADMIN['submit']}</button>
+			<button name="btnReset" type="reset" class="uk-button uk-button-primary">{$LANG_FORMS['reset']}</button>
+			<a class="uk-button" href="{site_admin_url}/plugins/forms/index.php?listcats">{$LANG_ADMIN['cancel']}</a>
+{!if candelete}
+			<div style="float:right;">
+				<button name="deleteFrmDef" type="submit" class="uk-button uk-button-danger"
+					onclick="return confirm({lang_confirm_delete});">{$LANG_ADMIN['delete']}</button>
+			</div>
+{!endif}
+		</div>
+	</div>
+</form>
+{tooltipster}
+{# end {templatelocation} #}

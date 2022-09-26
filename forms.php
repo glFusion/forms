@@ -27,6 +27,7 @@ $_TABLES['forms_frmdef']    = $_DB_table_prefix . 'forms_frmdef';
 $_TABLES['forms_flddef']    = $_DB_table_prefix . 'forms_flddef';
 $_TABLES['forms_results']   = $_DB_table_prefix . 'forms_results';
 $_TABLES['forms_values']    = $_DB_table_prefix . 'forms_values';
+$_TABLES['forms_cats']      = $_DB_table_prefix . 'forms_categories';
 
 /**
  * Global configuration array.

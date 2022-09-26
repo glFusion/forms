@@ -44,6 +44,17 @@ function isAjax(status)
 		</div>
 
 		<div class="uk-form-row">
+			<label for="f_cat_id" class="uk-form-label">{$LANG_FORMS['category']}:
+				<span id="hlp_cat_id" class="tooltip_cfg tooltipstered"></span>
+			</label>
+			<div class="uk-form-controls">
+				<select class="uk-select" name="cat_id">
+					{cat_options}
+				</select>
+			</div>
+		</div>
+
+		<div class="uk-form-row">
 			<label for="f_name" class="uk-form-label">{$LANG_FORMS['name']}:
 				<span id="hlp_frm_name" class="tooltip_cfg tooltipstered"></span>
 			</label>

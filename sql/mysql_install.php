@@ -117,6 +117,7 @@ $FRM_sampledata = array(
     "$insert 7, 'testform', 'birthdate', 'date', 1, 1,
         'BirthDate',
         'a:5:{s:7:\"default\";s:0:\"\";s:8:\"showtime\";i:0;s:10:\"timeformat\";s:2:\"12\";s:6:\"format\";N;s:12:\"input_format\";i:1;}', 70, '', 1, 1)",
+    "INSERT INTO {$_TABLES['forms_cats']} SET cat_name = 'Default'",
     );
 
 global $_FRM_UPGRADE_SQL;
@@ -205,5 +206,15 @@ $_FRM_UPGRADE_SQL = array(
         "ALTER TABLE {$_TABLES['forms_values']} CHANGE `value` `value` text",
     ),
     '0.6.0' => array(
-        "UPDATE {$_TABLES['forms_flddef']} SET 
+        "CREATE TABLE `gl_forms_categories` (
+          `cat_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+          `cat_name` varchar(255) NOT NULL DEFAULT '',
+          PRIMARY KEY (`cat_id`)
+        ) ENGINE=MyISAM",
+        "ALTER TABLE {$_TABLES['forms_frmdef']} ADD cat_id int(11) unsigned NOT NULL DEFAULT 1 AFTER frm_id",
+    ),
+
 );
+
+$_SQL['forms_cats'] = $_FRM_UPGRADE_SQL['0.6.0'][0];
+
