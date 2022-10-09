@@ -13,6 +13,8 @@
 namespace Forms;
 use glFusion\Database\Database;
 use glFusion\Log\Log;
+use Forms\Models\Value;
+use Forms\Collections\FieldCollection;
 
 
 /**
@@ -108,25 +110,34 @@ class Field
      * @param   integer $id     ID of the existing field, empty if new
      * @param   string  $frm_id ID of related form, if any
      */
-    public function __construct($id = 0, $frm_id=NULL)
+    public function X__construct()
     {
         global $_USER, $_CONF_FRM;
 
-        if ($id == 0) {
-            // Creating a new, empty object
-            $this->frm_id = $frm_id;
-            $this->fill_gid = $_CONF_FRM['fill_gid'];
-            $this->results_gid = $_CONF_FRM['results_gid'];
-        } elseif (is_array($id)) {
+        if (is_array($id)) {
             // Already have the object data, just set up the variables
             $this->setVars($id, true);
             $this->isNew = false;
-        } else {
-            // Read an item from the database
-            if ($this->Read($id)) {
-                $this->isNew = false;
-            }
         }
+    }
+
+
+    /**
+     * Create a Field object from an array such as a DB record or form.
+     *
+     * @param   array   $A          Array of field data
+     * @param   boolean $from_db    Flag to indicate if array is a DB record
+     * @return  object      Field object
+     */
+    public static function fromArray(array $A, bool $from_db=true) : self
+    {
+        if (!isset($A['type']) || !isset($A['fld_id'])) {
+            return NULL;
+        }
+        $cls = __NAMESPACE__ . '\\Fields\\' . ucfirst($A['type']) . 'Field';
+        $retval = new $cls;
+        $retval->setVars($A, $from_db);
+        return $retval;
     }
 
 
@@ -138,26 +149,17 @@ class Field
      * @param   mixed   $fld    Field ID or record
      * @return  object          Field object
      */
-    public static function getInstance($fld)
+    public static function getById(int $fld_id) : self
     {
         global $_TABLES;
 
-        if (is_array($fld)) {
-            // Received a field record, make sure required parameters
-            // are present
-            if (!isset($fld['type']) || !isset($fld['fld_id'])) {
-                return NULL;
-            }
-        } elseif (is_numeric($fld)) {
-            // Received a field ID, have to look up the record to get the type
-            $fld_id = (int)$fld;
-            $key = 'field_' . $fld_id;
-            $fld = Cache::get($key);
-            if ($fld === NULL) {
-                $fld = self::_readFromDB($fld_id);
-                if (empty($fld)) return NULL;
-                Cache::set($key, $fld);
-            }
+        $fld_id = (int)$fld;
+        $key = 'field_' . $fld_id;
+        $fld = Cache::get($key);
+        if ($fld === NULL) {
+            $fld = self::_readFromDB($fld_id);
+            if (empty($fld)) return NULL;
+            Cache::set($key, $fld);
         }
 
         $cls = __NAMESPACE__ . '\\Fields\\' . ucfirst($fld['type']) . 'Field';
@@ -217,26 +219,11 @@ class Field
      */
     public static function getByForm(Form $Form) : array
     {
-        global $_TABLES;
-
         $retval = array();
-        $db = Database::getInstance();
-        try {
-            $data = $db->conn->executeQuery(
-                "SELECT * FROM {$_TABLES['forms_flddef']}
-                WHERE frm_id = ?
-                ORDER BY orderby ASC",
-                array($Form->getID()),
-                array(Database::STRING)
-            )->fetchAllAssociative();
-        } catch (\Exception $e) {
-            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            $data = NULL;
-        }
-        if (is_array($data)) {
-            foreach ($data as $A) {
-                $retval[strtolower($A['fld_name'])] = self::getInstance($A);
-            }
+        $Coll = new FieldCollection;
+        $rows = $Coll->withFormId($Form->getID())->getRows();
+        foreach ($rows as $row) {
+            $retval[strtolower($row['fld_name'])] = self::fromArray($row);
         }
         return $retval;
     }
@@ -557,81 +544,67 @@ class Field
      * Save the field definition to the database.
      *
      * @param   array   $A      Array of elements, e.g. `$_POST`
-     * @return  string          Error message, or empty string for success
+     * @return  boolean     True on success, False on error
      */
-    public function SaveDef($A = '')
+    public function SaveDef(?array $A = NULL) : bool
     {
         global $_TABLES, $_CONF_FRM;
 
-        $fld_id = isset($A['fld_id']) ? (int)$A['fld_id'] : 0;
-        $frm_id = isset($A['frm_id']) ? COM_sanitizeID($A['frm_id']) : '';
-        if ($frm_id == '') {
-            return 'Invalid form ID';
+        if (is_array($A)) {
+            $this->setVars($A, false);
         }
-
-        // Sanitize the name, especially make sure there are no spaces
-        $A['fld_name'] = COM_sanitizeID($A['fld_name'], false);
-        if (empty($A['fld_name']) || empty($A['type'])) {
-            return;
-        }
-
-        $this->setVars($A, false);
-        $this->fill_gid = (int)$A['fill_gid'];
-        $this->results_gid = (int)$A['results_gid'];
 
         $db = Database::getInstance();
-        $qb = $db->conn->createQueryBuilder();
-        if ($fld_id > 0) {
-            // Existing record, perform update
-            $qb->update($_TABLES['forms_flddef'])
-               ->set('frm_id', ':frm_id')
-               ->set('fld_name', ':fld_name')
-               ->set('type', ':type')
-               ->set('enabled', ':enabled')
-               ->set('access', ':access')
-               ->set('prompt', ':prompt')
-               ->set('options', ':options')
-               ->set('orderby', ':orderby')
-               ->set('help_msg', ':help_msg')
-               ->set('fill_gid', ':fill_gid')
-               ->set('results_gid', ':results_gid')
-               ->set('encrypt', ':encrypt')
-               ->where('fld_id = :fld_id');
-        } else {
-            $qb->insert($_TABLES['forms_flddef'])
-               ->setValue('frm_id', ':frm_id')
-               ->setValue('fld_name', ':fld_name')
-               ->setValue('type', ':type')
-               ->setValue('enabled', ':enabled')
-               ->setValue('access', ':access')
-               ->setValue('prompt', ':prompt')
-               ->setValue('options', ':options')
-               ->setValue('orderby', ':orderby')
-               ->setValue('help_msg', ':help_msg')
-               ->setValue('fill_gid', ':fill_gid')
-               ->setValue('results_gid', ':results_gid')
-               ->setValue('encrypt', ':encrypt');
-        }
-        $qb->setParameter('frm_id', $this->frm_id, Database::STRING)
-           ->setParameter('fld_name', $this->fld_name, Database::STRING)
-           ->setParameter('type', $this->type, Database::STRING)
-           ->setParameter('enabled', $this->enabled, Database::INTEGER)
-           ->setParameter('access', $this->access, Database::INTEGER)
-           ->setParameter('prompt', $this->prompt, Database::STRING)
-           ->setParameter('options', @serialize($this->options), Database::STRING)
-           ->setParameter('orderby', $this->orderby, Database::INTEGER)
-           ->setParameter('help_msg', $this->hlp_msg, Database::STRING)
-           ->setParameter('fill_gid', $this->fill_gid, Database::INTEGER)
-           ->setParameter('results_gid', $this->results_gid, Database::INTEGER)
-           ->setParameter('encrypt', $this->encrypt, Database::INTEGER)
-           ->setParameter('fld_id', $this->fld_id, Database::INTEGER);
+        //$qb = $db->conn->createQueryBuilder();
+        $values = array(
+            'frm_id' => $this->frm_id,
+            'fld_name' => $this->fld_name,
+            'type' => $this->type,
+            'enabled' => $this->enabled,
+            'access' => $this->access,
+            'prompt' => $this->prompt,
+            'options' => @serialize($this->options),
+            'orderby' => $this->orderby,
+            'help_msg' => $this->hlp_msg,
+            'fill_gid' => $this->fill_gid,
+            'results_gid' => $this->results_gid,
+            'encrypt' => $this->encrypt,
+        );
+        $types = array(
+            Database::STRING,
+            Database::STRING,
+            Database::STRING,
+            Database::INTEGER,
+            Database::INTEGER,
+            Database::STRING,
+            Database::STRING,
+            Database::INTEGER,
+            Database::STRING,
+            Database::INTEGER,
+            Database::INTEGER,
+            Database::INTEGER,
+            Database::INTEGER,
+        );
+
         try {
-            $qb->execute();
+            if ($this->fld_id > 0) {
+                // Existing record, perform update
+                $types[] = Database::INTEGER;
+                $db->conn->update(
+                    $_TABLES['forms_flddef'],
+                    $values,
+                    array('fld_id' => $fld_id),
+                    $types
+                );
+            } else {
+                $db->conn->insert($_TABLES['forms_flddef'], $values, $types);
+                $this->fld_id = $db->conn->lastInsertId();
+            }
             $this->Reorder($this->frm_id);
-            return '';
+            return true;
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            return 5;
+            return false;
         }
     }
 
@@ -688,30 +661,12 @@ class Field
         $this->value = $newval;
         $db_value = $this->prepareForDB($newval);
 
-        $db = Database::getInstance();
-        $qb = $db->conn->createQueryBuilder();
-        $qb->setParameter('res_id', $res_id, Database::INTEGER)
-           ->setParameter('fld_id', $this->fld_id, Database::INTEGER)
-           ->setParameter('value', $db_value, Database::STRING);
-        try {
-            $qb->insert($_TABLES['forms_values'])
-               ->setValue('results_id', ':res_id')
-               ->setValue('fld_id', ':fld_id')
-               ->setValue('value', ':value')
-               ->execute();
-        } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $k) {
-            try {
-                $qb->update($_TABLES['forms_values'])
-                   ->set('value', ':value')
-                   ->where('results_id = :res_id')
-                   ->andWhere('fld_id = :fld_id')
-                   ->execute();
-            } catch (\Exception $e) {
-                Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-                $status = false;
-            }
-        }
-        return $status;
+        $Value = new Value(array(
+            'res_id' => $res_id,
+            'fld_id' => $this->fld_id,
+            'value' => $db_value,
+        ) );
+        return $Value->save();        
     }
 
 
@@ -1899,10 +1854,10 @@ class Field
     /**
      * Encrypt the field contents if this is an encrypted field.
      *
-     * @param   mixed   $val    Value to be encrypted
+     * @param   string  $val    Value to be encrypted
      * @return  string      Encrypted value
      */
-    protected function encrypt($val)
+    protected function encrypt(string $val) : string
     {
         return COM_encrypt($val);
     }
@@ -1912,9 +1867,9 @@ class Field
      * Decrypt the field contents of an encrypted field.
      *
      * @param   string  $val    Encrypted value
-     * @return  mixed       Decrypted value
+     * @return  string      Decrypted value
      */
-    public function decrypt($val)
+    public function decrypt(string $val) : string
     {
         return COM_decrypt($val);
     }

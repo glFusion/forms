@@ -28,6 +28,7 @@ if (!plugin_isadmin_forms()) {
 }
 
 $base_url = FRM_ADMIN_URL;
+$result = array();
 
 switch ($_POST['action']) {
 case 'toggleEnabled':
@@ -69,15 +70,29 @@ case 'toggleEnabled':
                 $LANG_FORMS['toggle_success'],
         'newval' => $newval,
     );
-    
-    header('Content-Type: text/xml');
-    header("Cache-Control: no-cache, must-revalidate");
-    //A date in the past
-    header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-    echo json_encode($result);
+    break;
+
+case 'chgcategory':
+    $cat_id = (int)$_POST['cat_id'];
+    $result = array(
+        'catuid_name' => '',
+        'catgid_name' => '',
+    );
+    if ($cat_id > 0) {
+        $Cat = Forms\Category::getInstance($cat_id);
+        if (!$Cat->isNew()) {
+            $result = $Cat->getEmailNames();
+        }
+    }
     break;
 
 default:
     exit;
 }
+
+header('Content-Type: text/xml');
+header("Cache-Control: no-cache, must-revalidate");
+//A date in the past
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+echo json_encode($result);
 

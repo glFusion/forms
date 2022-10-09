@@ -13,6 +13,8 @@
 namespace Forms;
 use glFusion\Database\Database;
 use glFusion\Log\Log;
+use Forms\Collections\ResultCollection;
+use Forms\Models\Value;
 
 
 /**
@@ -20,23 +22,23 @@ use glFusion\Log\Log;
  */
 class Result
 {
-    /** Form fields, array of Field objects
+    /** Form fields, array of Field objects.
      * @var array */
     private $fields = array();
 
-    /** Result record ID
+    /** Result record ID.
      * @var integer */
     private $res_id = 0;
 
-    /** Form ID
+    /** Form ID.
      * @var string */
     private $frm_id = '';
 
-    /** Submitting user ID
+    /** Submitting user ID.
      * @var integer */
     private $uid = 0;
 
-    /** Submission date
+    /** Submission date.
      * @var string */
     private $dt = '';
 
@@ -48,15 +50,15 @@ class Result
      * @var boolean */
     private $moderate = false;
 
-    /** IP address of submitter
+    /** IP address of submitter.
      * @var string */
     private $ip = '';
 
-    /** Unique token for this submission
+    /** Unique token for this submission.
      * @var string */
     private $token = '';
 
-    /** Instance ID for the form. Used for stock forms loaded by plugins
+    /** Instance ID for the form. Used for stock forms loaded by plugins.
      * @var string */
     private $instance_id = '';
 
@@ -81,6 +83,14 @@ class Result
     }
 
 
+    public static function fromArray(array $A) : self
+    {
+        $retval = new self;
+        $retval->setVars($A);
+        return $retval;
+    }
+
+
     /**
      * Read all forms variables into the $items array.
      * Set the $uid paramater to read another user's forms into
@@ -101,8 +111,7 @@ class Result
         $db = Database::getInstance();
         try {
             $data = $db->conn->executeQuery(
-                "SELECT * FROM {$_TABLES['forms_results']}
-                WHERE res_id = ?",
+                "SELECT * FROM {$_TABLES['forms_results']} WHERE res_id = ?",
                 array($this->res_id),
                 array(Database::INTEGER)
             )->fetchAssociative();
@@ -156,7 +165,7 @@ class Result
      * @param   string  $id     Instance ID, may be empty
      * @return  object  $this
      */
-    public function setInstance($id)
+    public function setInstanceId(string $id) : self
     {
         $this->instance_id = $id;
         return $this;
@@ -168,7 +177,7 @@ class Result
      *
      * @return  string      Instance ID
      */
-    public function getInstance()
+    public function getInstanceId() : string
     {
         return $this->instance_id;
     }
@@ -183,24 +192,25 @@ class Result
      * @param   string  $token      Resultset token, if provided
      * @return  integer             Result set ID
      */
-    public static function findResult($frm_id, $uid=0, $token='')
+    public static function findResult(string $frm_id, int $uid=0, ?string $token=NULL) : int
     {
         global $_TABLES, $_USER;
 
-        $db = Database::getInstance();
+        //$db = Database::getInstance();
         $uid = $uid == 0 ? $_USER['uid'] : (int)$uid;
-        $criteria = array('uid' => $uid, 'frm_id' => $frm_id);
+        $Coll = new ResultCollection;
+        $Coll->withFormId($frm_id)
+             ->withUserId($uid)
+             ->withLimit(1);
         if (!empty($token)) {
-            $criteria['token'] = $token;
+            $Coll->withToken($token);
         }
-
-        try {
-            $res_id = $db->getItem($_TABLES['forms_results'], 'id', $criteria);
-        } catch (\Exception $e) {
-            Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
-            $res_id = 0;
+        $Results = $Coll->getRows();
+        if (!empty($Results)) {
+            return current($Results)['res_id'];
+        } else {
+            return 0;
         }
-        return $res_id;
     }
 
 
@@ -212,27 +222,9 @@ class Result
      */
     public static function getByForm(Form $Form) : array
     {
-        global $_TABLES;
-
-        $retval = array();
-        $db = Database::getInstance();
-        try {
-            $data = $db->conn->executeQuery(
-                "SELECT * FROM {$_TABLES['forms_results']}
-                WHERE frm_id = ?",
-                array($Form->getID()),
-                array(Database::STRING)
-            )->fetchAllAssociative();
-        } catch (\Exception $e) {
-            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            $data = NULL;
-        }
-        if (is_array($data)) {
-            foreach ($data as $A) {
-                $retval[$A['res_id']] = new self($A);
-            }
-        }
-        return $retval;
+        $Coll = new ResultCollection;
+        return $Coll->withFormId($Form->getId())
+                        ->getObjects();
     }
 
 
@@ -241,7 +233,7 @@ class Result
      *
      * @return  integer     Submission timestamp
      */
-    public function getTimestamp()
+    public function getTimestamp() : int
     {
         return (int)$this->dt;
     }
@@ -252,7 +244,7 @@ class Result
      *
      * @return  integer     User ID
      */
-    public function getUid()
+    public function getUid() : int
     {
         return (int)$this->uid;
     }
@@ -263,20 +255,9 @@ class Result
      *
      * @return  string      IP address
      */
-    public function getIP()
+    public function getIP() : string
     {
         return $this->ip;
-    }
-
-
-    /**
-     * Get the token for the result.
-     *
-     * @return  string      Token value
-     */
-    public function getToken()
-    {
-        return $this->token;
     }
 
 
@@ -285,7 +266,7 @@ class Result
      *
      * @return  integer     Result ID
      */
-    public function getID()
+    public function getID() : int
     {
         return (int)$this->res_id;
     }
@@ -296,7 +277,7 @@ class Result
      *
      * @return  string      Form ID
      */
-    public function getFormID()
+    public function getFormID() : string
     {
         return $this->frm_id;
     }
@@ -329,7 +310,8 @@ class Result
         if (is_array($data)) {
             // First get the values into an array indexed by field ID
             foreach ($data as $A) {
-                $vals[$A['fld_id']] = $A;
+                //$vals[$A['fld_id']] = $A;
+                $vals[$A['fld_id']] = new Value($A);
             }
         }
 
@@ -346,9 +328,6 @@ class Result
                     }
                 }
                 $field->setValue($val);
-//                if ($field->getID() == 31) {
-//                    var_dump($field);die;
-                //            }
                 $retval[$field->getName()] = $field->getValue();
             }
         }
@@ -363,9 +342,9 @@ class Result
      * @param  array   $fields     Array of Field objects
      * @param  array   $vals       Array of values ($_POST)
      * @param  integer $uid        Optional user ID, default=$_USER['uid']
-     * @return mixed       False on failure/invalid, result ID on success
+     * @return mixed       NULL on failure/invalid, result ID on success
      */
-    public function SaveData($frm_id, $fields, $vals, $uid = 0)
+    public function SaveData(string $frm_id, array $fields, array $vals, int $uid = 0) : ?int
     {
         global $_USER;
 
@@ -383,7 +362,7 @@ class Result
             $isnew = false;
         }
         if (!$res_id) {     // couldn't create a result set
-            return false;
+            return NULL;
         }
 
         foreach ($fields as $field) {
@@ -410,34 +389,38 @@ class Result
      * @param   integer $uid    Optional user ID, if not the current user
      * @return  integer         New result set ID
      */
-    public function Create($frm_id, $uid = 0)
+    public function Create(string $frm_id, int $uid = 0) : int
     {
         global $_TABLES, $_USER;
 
         $db = Database::getInstance();
-        $qb = $db->conn->createQueryBuilder();
         $this->uid = $uid == 0 ? $_USER['uid'] : (int)$uid;
         $this->dt = time();
         $this->setIP();
         $this->token = md5(time() . rand(1,100));
         $approved = $this->moderate ? 0 : 1;
         try {
-            $qb->insert($_TABLES['forms_results'])
-               ->setValue('frm_id', ':frm_id')
-               ->setValue('instance_id', ':instance_id')
-               ->setValue('uid', ':uid')
-               ->setValue('dt', ':dt')
-               ->setValue('ip', ':ip')
-               ->setValue('token', ':token')
-               ->setValue('approved', ':approved')
-               ->setParameter('frm_id', $this->frm_id, Database::STRING)
-               ->setParameter('instance_id', $this->instance_id, Database::STRING)
-               ->setParameter('uid', $this->uid, Database::INTEGER)
-               ->setParameter('dt', $this->dt, Database::STRING)
-               ->setParameter('ip', $this->getIP(), Database::STRING)
-               ->setParameter('token', $this->token, Database::STRING)
-               ->setParameter('approved', $approved, Database::INTEGER)
-               ->execute();
+            $db->conn->insert(
+                $_TABLES['forms_results'],
+                array(
+                    'frm_id' => $this->frm_id,
+                    'instance_id' => $this->instance_id,
+                    'uid' => $this->uid,
+                    'dt' => $this->dt,
+                    'ip' => $this->getIP(),
+                    'token' => $this->token,
+                    'approved' => $approved,
+                ),
+                array(
+                    Database::STRING,
+                    Database::STRING,
+                    Database::INTEGER,
+                    Database::STRING,
+                    Database::STRING,
+                    Database::STRING,
+                    Database::INTEGER,
+                )
+            );
             $this->res_id = $db->conn->lastInsertId();
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
@@ -454,7 +437,7 @@ class Result
      * @param   boolean $mod    True to moderate results, False to not
      * @return  object  $this
      */
-    public function setModeration($mod = false)
+    public function setModeration(bool $mod = false) : self
     {
         $this->moderate = $mod ? true : false;
         return $this;
@@ -467,7 +450,7 @@ class Result
      * @param   string  $ip     Optional override
      * @return  object  $this
      */
-    public function setIP($ip=NULL)
+    public function setIP(?string $ip=NULL) : self
     {
         global $_CONF_FRM;
 
@@ -488,7 +471,7 @@ class Result
      * @param   boolean $is_moderated   True if result is moderated
      * @return  boolean         True if no DB error
      */
-    public function Approve($is_moderated=true)
+    public function Approve(bool $is_moderated=true) : bool
     {
         global $_TABLES;
 
@@ -510,7 +493,7 @@ class Result
         }
 
         // Give plugins a chance to act on the submission
-        if (!empty($this->instance_id)) {
+        if (!empty($this->instance_id) && strpos('|', $this->instance_id) > 0) {
             $Form = Form::getInstance($this->frm_id);
             $values = $this->getValues($Form->getFields());
             list($pi_name, $pi_data) = explode('|', $this->instance_id);
@@ -550,7 +533,11 @@ class Result
         self::deleteValues($res_id);
         $db = Database::getInstance();
         try {
-            $db->conn->delete($_TABLES['forms_results'], array('res_id' => $res_id));
+            $db->conn->delete(
+                $_TABLES['forms_results'],
+                array('res_id' => $res_id),
+                array(Database::INTEGER)
+            );
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
             return false;
@@ -595,25 +582,11 @@ class Result
      */
     public static function deleteByUser(int $uid) : void
     {
-        global $_TABLES;
-
-        $uid = (int)$uid;
-        $db = Database::getInstance();
-        try {
-            $data = $db->conn->executeQuery(
-                "SELECT res_id FROM {$_TABLES['forms_results']}
-                WHERE uid = ?",
-                array($uid),
-                array(Database::INTEGER)
-            )->fetchAllAssociative();
-        } catch (\Exception $e) {
-            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            $data = NULL;
-        }
-        if (!empty($data)) {
-            foreach ($data as $id=>$res) {
-                self::Delete($res['res_id']);
-            }
+        $Coll = new ResultCollection;
+        $Results = $Coll->withUserId($uid)->getObjects();
+        $res_ids = array_keys($Results);
+        foreach ($res_ids as $res_id) {
+            self::delete($res_id);
         }
     }
 
@@ -625,25 +598,13 @@ class Result
      */
     public static function deleteByForm(string $frm_id) : void
     {
+        $Coll = new ResultCollection;
+        $Results = $Coll->withFormId($frm_id)->getObjects();
+        $res_ids = array_keys($Results);
+        foreach ($res_ids as $res_id) {
+            self::delete($res_id);
+        }
         global $_TABLES;
-
-        $db = Database::getInstance();
-        try {
-            $data = $db->conn->executeQuery(
-                "SELECT res_id FROM {$_TABLES['forms_results']}
-                WHERE frm_id = ?",
-                array($frm_id),
-                array(Database::STRING)
-            )->fetchAllAssociative();
-        } catch (\Exception $e) {
-            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            $data = NULL;
-        }
-        if (!empty($data)) {
-            foreach ($data as $id=>$res) {
-                self::Delete($res['res_id']);
-            }
-        }
     }
 
 
@@ -753,13 +714,18 @@ class Result
      *
      * @return  string      Token saved with this result set
      */
-    public function Token()
+    public function getToken() : string
     {
         return $this->token;
     }
 
 
-    public function isNew()
+    /**
+     * Helper function to check if this is a new result.
+     *
+     * @return  boolean     True if new, False if existing
+     */
+    public function isNew() : bool
     {
         return $this->res_id == 0;
     }
@@ -847,11 +813,20 @@ class Result
         $extras = array(
             'isAdmin' => $isAdmin,
         );
-        $retval .= '<h1>' . $LANG_FORMS['form_results'] . ': ' . $frm_id;
+        $retval .= '<h1>' . $LANG_FORMS['form_results'] . ': ' .
+            COM_createLink(
+                $frm_id,
+                FRM_ADMIN_URL . '/index.php?results&frm_id=' . $frm_id,
+                array(
+                    'title' => $LANG_FORMS['view_all_instances'],
+                    'class' => 'tooltip',
+                )
+            );
         if ($instance_id != '') {
             $retval .= ', ' . $LANG_FORMS['instance'] . ': ' . $instance_id;
         }
         $retval .= '</h1>';
+
         $retval .= ADMIN_list(
             'forms_resultlist',
             array(__CLASS__, 'getListField'),

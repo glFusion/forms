@@ -17,6 +17,7 @@ if (!defined ('GVERSION')) {
 }
 use glFusion\Database\Database;
 use glFusion\Log\Log;
+use Forms\Collectoins\ResultCollection;
 
 
 /**
@@ -35,19 +36,29 @@ function service_renderForm_forms($args, &$output, &$svc_msg)
         return PLG_RET_ERROR;
     }
 
+    $Coll = new ResultCollection;
     $res_id = 0;
     if (isset($args['res_id']) && $args['res_id'] > 0) {
-        $res_id = (int)$args['res_id'];
+        $Coll->withResultId($args['res_id']);
+        //$res_id = (int)$args['res_id'];
     } elseif (isset($args['uid']) && $args['uid'] > 0) {
-        $res_id = Forms\Result::findResult($args['frm_id'], $args['uid']);
+        $Coll->withUserId($args['uid']);
+        //$res_id = Forms\Result::findResult($args['frm_id'], $args['uid']);
+    }
+    $Results = $Coll->getObjects();
+    if (!empty($Results)) {
+        $Result = current($Result);
+    } else {
+        $Result = new Forms\Result;
     }
     if (isset($args['instance_id'])) {
         if (!isset($args['pi_name'])) {
             // Make sure something is set
             $args['pi_name'] = 'unknown';
         }
-        $F->setInstance($args['instance_id'], $args['pi_name']);
+        $F->setInstanceId($args['instance_id'], $args['pi_name']);
     }
+    $F->withResult($Result);
     //if (isset($args['pi_name'])) $F->setPluginName($args['pi_name']);
     if (isset($args['mode'])) {
         $mode = $args['mode'];

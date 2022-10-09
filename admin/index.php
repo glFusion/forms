@@ -32,7 +32,7 @@ $expected = array(
     'editform', 'editcat', 'copyform', 'delbutton_x', 'showhtml', 'delresult',
     'moderate', 'moderationapprove', 'moderationdelete',
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
-    'results', 'preview', 'listcats',
+    'results', 'preview', 'listcats', 'export',
 );
 foreach($expected as $provided) {
     if (isset($_POST[$provided])) {
@@ -65,7 +65,7 @@ case 'action':      // Got "?action=something".
         case 'killfld':
             $deldata = $fldaction = 'killfld' ? true : false;
             foreach ($_POST['cb'] as $varname=>$val) {
-                $F = new Field($varname);
+                $F = Field::getByName($varname, $frm_id);
                 if (!empty($F->id)) {
                     $F->Remove($id, $deldata);
                 }
@@ -115,7 +115,7 @@ case 'moderationdelete':
 
 case 'updatefield':
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
-    $Field = Forms\Field::getInstance($_POST, $frm_id);
+    $Field = Forms\Field::getById($fld_id);
     $msg = $Field->SaveDef($_POST);
     echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $frm_id . '#frm_fldlist');
     break;

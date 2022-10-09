@@ -70,7 +70,7 @@ case 'savedata':
             } elseif ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
                 $redirect = FRM_PI_URL . '/index.php?myresult=x&res_id=' .
                     $F->getResultID();
-                $redirect .= '&token=' . $F->getResult()->Token();
+                $redirect .= '&token=' . $F->getResult()->getToken();
             } elseif (empty($redirect)) {
                 $redirect = $_CONF['site_url'];
             }
