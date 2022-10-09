@@ -1,11 +1,11 @@
 # Changelog - Forms plugin for glFusion
 
 ## v0.6.0
-Release 2022-09-26
+Release TBD
 - Use `COM_emailNotification` instead of `COM_mail`.
 - Leverage glFusion 2.0+ Database and Log functions.
 - Fix case and respect the order of requested fields in results autotag. (#13)
-- Add a category for classifying forms.
+- Add a category for classifying forms. Categories have default notification user/group.
 
 ## v0.5.3
 Release 2022-03-10
