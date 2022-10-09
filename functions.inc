@@ -37,6 +37,8 @@ define('FRM_ACTION_MAILGROUP', 4);
 define('FRM_ACTION_MAILADMIN', 8);
 define('FRM_ACTION_DISPLAY', 16);
 define('FRM_ACTION_MAILUSER', 32);
+define('FRM_ACTION_MAILCATUSER', 64);
+define('FRM_ACTION_MAILCATGROUP', 128);
 
 define('FRM_ACCESS_FILL', 1);   // access to fill out form
 define('FRM_ACCESS_VIEW', 2);   // access to view results
@@ -479,7 +481,7 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
                     if (!$Form->isNew() && $Form->isEnabled()) {
                         // Make sure it's a valid form
                         if (!empty($instance_id)) {
-                            $Form->setInstance($instance_id);
+                            $Form->setInstanceId($instance_id);
                         }
                         $HTML = $Form->Render($template);
                     }
@@ -842,7 +844,8 @@ function FRM_GetGroups($selected=0)
     $A = array();
     $db = Database::getInstance();
     try {
-        $data = $db->conn->executeQuery("SELECT grp_id, grp_name FROM {$_TABLES['groups']}");
+        $data = $db->conn->executeQuery("SELECT grp_id, grp_name FROM {$_TABLES['groups']}")
+                         ->fetchAllAssociative();
     } catch (\Exception $e) {
         Log::write('system', Log::ERROR, __FUNCTION__ . ': ' . $e->getMessage());
         $data = NULL;
