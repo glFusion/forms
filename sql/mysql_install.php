@@ -214,6 +214,7 @@ $_FRM_UPGRADE_SQL = array(
           PRIMARY KEY (`cat_id`)
         ) ENGINE=MyISAM",
         "ALTER TABLE {$_TABLES['forms_frmdef']} ADD cat_id int(11) unsigned NOT NULL DEFAULT 1 AFTER frm_id",
+        "ALTER TABLE {$_TABLES['forms_frmdef']} CHANGE onsubmit onsubmit int(4) unsigned NOT NULL DEFAULT 2",
     ),
 
 );
