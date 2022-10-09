@@ -173,7 +173,7 @@ class FieldList extends \glFusion\FieldList
     }
 
 
-    public static function buttonLink($args)
+    public static function buttonlink($args)
     {
         $def_args = array(
             'url' => '!#',

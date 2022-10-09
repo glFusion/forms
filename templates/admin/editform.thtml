@@ -27,6 +27,31 @@ function isAjax(status)
 		document.getElementById("div_noedit_msg").style.display="block";
 	}
 }
+
+function FRM_chgCategory(sel)
+{
+	var dataS = {
+		"action": "chgcategory",
+		"cat_id": sel.value,
+	};
+	data = $.param(dataS);
+
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: site_admin_url + "/plugins/forms/ajax.php",
+		data: data,
+		success: function(result) {
+			try {
+				$("#catuid_name").html(result.catuid_name);
+				$("#catgid_name").html(result.catgid_name);
+			} catch(err) {
+			}
+		}
+	});
+	return false;
+
+}
 </script>
 
 <form id="forms_frm1" action="{site_url}/admin/plugins/forms/index.php"
@@ -48,7 +73,7 @@ function isAjax(status)
 				<span id="hlp_cat_id" class="tooltip_cfg tooltipstered"></span>
 			</label>
 			<div class="uk-form-controls">
-				<select class="uk-select" name="cat_id">
+				<select class="uk-select" name="cat_id" onchange="FRM_chgCategory(this)">
 					{cat_options}
 				</select>
 			</div>
@@ -135,7 +160,9 @@ function isAjax(status)
 				<input type="checkbox" value="4" name="onsubmit[emailgroup]" {emailgroup_chk} />&nbsp;{$LANG_FORMS['email_group']}&nbsp;&nbsp;
 				<input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />&nbsp;{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
 				{$LANG_FORMS['other_emails']}:
-				<input type="text" size="40" maxlength="255" name="email" value="{email}" />
+				<input type="text" size="40" maxlength="255" name="email" value="{email}" /><br />
+				<input type="checkbox" value="64" name="onsubmit[emailcatuid]" {emailcatuid_chk} /> &nbsp;{$LANG_FORMS['email_catuid']} <span id="catuid_name">{catuid_name}</span><br />
+				<input type="checkbox" value="128" name="onsubmit[emailcatgid]" {emailcatgid_chk} />&nbsp;{$LANG_FORMS['email_catgid']} <span id="catgid_name">{catgid_name}</span>
 			</div>
 		</div>
 

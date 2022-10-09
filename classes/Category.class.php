@@ -579,4 +579,44 @@ class Category
         return COM_optionList($_TABLES['forms_cats'], 'cat_id,cat_name', $selected, 1);
     }
 
+
+    public function getEmailNames() : array
+    {
+        global $_TABLES;
+
+        $retval = array(
+            'catuid_id' => 0,
+            'catuid_name' => '',
+            'catuid_email' => '',
+            'catgid_id' => 0,
+            'catgid_name' => '',
+        );
+
+        $db = Database::getInstance();
+        try {
+            $row = $db->conn->executeQuery(
+                "SELECT username, fullname, email FROM {$_TABLES['users']} WHERE uid = ?",
+                array($this->cat_email_uid),
+                array(Database::INTEGER)
+            )->fetchAssociative();
+            $retval['catuid_id'] = $this->cat_email_uid;
+            $retval['catuid_name'] = COM_getDisplayName($this->cat_email_uid, $row['username'], $row['fullname']);
+            $retval['catuid_email'] = $row['email'];
+        } catch (\Throwable $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+        }
+        try {
+            $row = $db->conn->executeQuery(
+                "SELECT grp_name FROM {$_TABLES['groups']} WHERE grp_id = ?",
+                array($this->cat_email_gid),
+                array(Database::INTEGER)
+            )->fetchAssociative();
+            $retval['catgid_id'] = $this->cat_email_uid;
+            $retval['catgid_name'] = $row['grp_name'];
+        } catch (\Throwable $e) {
+            Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
+        }
+        return $retval;
+    }
+
 }

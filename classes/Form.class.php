@@ -291,16 +291,17 @@ class Form
      *
      * @param   mixed   $vals   ID string, or array of values
      */
-    public function setInstance($vals, ?string $pi_name=NULL) : self
+    public function setInstanceId($vals, ?string $pi_name=NULL) : self
     {
-        if (!empty($pi_name)) {
-            if (is_array($vals)) {
-                $val = implode(':', $vals);
-            } else {
-                $val = $vals;
-            }
-            $this->instance_id = $pi_name . '|' . $val;
+        if (is_array($vals)) {
+            $val = implode(':', $vals);
+        } else {
+            $val = $vals;
         }
+        if (!empty($pi_name)) {
+            $val = $pi_name . '|' . $val;
+        }
+        $this->instance_id = $val;
         return $this;
     }
 
@@ -364,6 +365,18 @@ class Form
         } else {
             return $_CONF['site_url'];
         }
+    }
+
+
+    /**
+     * Set the result object, normally to allow editing a result.
+     *
+     * @param   object  $Res    Result object
+     * @return  object  $this
+     */
+    public function withResult(Result $Res) : self
+    {
+        $this->Result = $Res;
     }
 
 
@@ -452,7 +465,7 @@ class Form
             $data = NULL;
         }
         if (is_array($data)) {
-            $this->SetVars($data, true);
+            $this->setVars($data, true);
             $this->access = $this->hasAccess($access);
             $this->fields = Field::getByForm($this);
             return true;
@@ -492,12 +505,8 @@ class Form
      * @param   array   $A          Array of values to use.
      * @param   boolean $fromdb     Indicate if $A is from the DB or a form.
      */
-    public function SetVars($A, $fromdb=false)
+    public function setVars(array $A, ?bool $fromdb=NULL) : self
     {
-        if (!is_array($A)) {
-            return false;
-        }
-
         $this->frm_id = $A['frm_id'];
         $this->cat_id = (int)$A['cat_id'];
         $this->frm_name = $A['frm_name'];
@@ -541,7 +550,7 @@ class Form
             $this->onsubmit = $onsubmit;
             $this->old_id = $A['old_id'];
         }
-
+        return $this;
     }
 
 
@@ -569,6 +578,8 @@ class Form
             'editform'  => 'editform.thtml',
             'tips'      => 'tooltipster.thtml',
         ) );
+        $Cat = Category::getInstance($this->cat_id);
+        $email_names = $Cat->getEmailNames();
         $T->set_var(array(
             'frm_id'    => $this->frm_id,
             'old_id' => $this->frm_id,
@@ -597,6 +608,10 @@ class Form
                         'checked="checked"' : '',
             'preview_chk' => $this->onsubmit & FRM_ACTION_DISPLAY ?
                         'checked="checked"' : '',
+            'emailcatuid_chk' => $this->onsubmit & FRM_ACTION_MAILCATUSER ?
+                        'checked="checked"' : '',
+            'emailcatgid_chk' => $this->onsubmit & FRM_ACTION_MAILCATGROUP ?
+                        'checked="checked"' : '',
             'doc_url'   => FRM_getDocURL('form_def.html'),
             'referrer'      => $referrer,
             'lang_confirm_delete' => $LANG_FORMS['confirm_form_delete'],
@@ -607,6 +622,8 @@ class Form
             'chk_' . $this->sub_type => 'checked="checked"',
             'sub_type' => $this->sub_type,
             'cat_options' => Category::optionList($this->cat_id),
+            'catuid_name' => $email_names['catuid_name'],
+            'catgid_name' => $email_names['catgid_name'],
         ) );
         if (!$this->isNew) {
             $T->set_var('candelete', 'true');
@@ -732,10 +749,11 @@ class Form
 
         // All fields are valid, carry on with the onsubmit actions.
         $onsubmit = $this->onsubmit;
+        $Cat = Category::getInstance($this->cat_id);
 
         // Always save data to the database.
         $this->Result = new Result($res_id);
-        $this->Result->setInstance($this->instance_id)->setModeration($this->req_approval);
+        $this->Result->setInstanceId($this->instance_id)->setModeration($this->req_approval);
         $this->res_id = $this->Result->SaveData(
             $this->frm_id,
             $this->fields,
@@ -760,11 +778,21 @@ class Form
         $db = Database::getInstance();
         $qb = $db->conn->createQueryBuilder();
 
+        $groups = array();
+
         // Sending to the admin group. Need to get all users in the group,
         // excluding Root since it is in every group.
         if ($onsubmit & FRM_ACTION_MAILGROUP) {
             USES_lib_user();
             $groups = USER_getChildGroups($this->group_id);
+        }
+        if ($onsubmit & FRM_ACTION_MAILCATGROUP) {
+            if ($Cat->getEmailGid() > 0) {
+                $groups[] = $Cat->getEmailGid();
+            }
+        }
+        $groups = array_unique($groups);
+        if (!empty($groups)) {
             try {
                 $data = $qb->select('DISTINCT u.uid')
                    ->from($_TABLES['users'], 'u')
@@ -795,9 +823,15 @@ class Form
             $email_uids[] = $this->Result->getUid();
         }
 
+        // See if we should email the category email user.
+        if ($onsubmit & FRM_ACTION_MAILCATUSER) {
+            if ($Cat->getEmailUid() > 0) {
+                $email_uids[] = $Cat->getEmailUid();
+            }
+        }
+
         // Look up all the names and addresses for email recipients
         if (!empty($email_uids)) {
-            $uids = implode(',', $email_uids);
             try {
                 $data = $db->conn->executeQuery(
                     "SELECT uid, username, fullname, email
@@ -901,7 +935,7 @@ class Form
         global $_TABLES, $LANG_FORMS;
 
         if (is_array($A)) {
-            $this->SetVars($A, false);
+            $this->setVars($A, false);
         }
         if (empty($this->frm_name)) {
             return $LANG_FORMS['err_name_required'];
@@ -1021,14 +1055,13 @@ class Form
 
         if ($msg == 0 && $changingID) {
             // Now, if the ID was changed, update the field & results tables
+            $values = array('frm_id' => $this->frm_id);
+            $where = array('frm_id' => $this->old_id);
+            $types = array(Database::STRING, Database::STRING);
             $qb = $db->conn->createQueryBuilder();
-            $qb->set('frm_id', ':frm_id')
-               ->where('frm_id = :old_id')
-               ->setParameter('frm_id', $this->frm_id)
-               ->setParameter('old_id', $this->old_id);
             foreach (array('forms_results', 'forms_flddef') as $tbl) {
                 try {
-                    $qb->update($_TABLES[$tbl])->execute();
+                    $db->conn->update($_TABLES[$tbl], $values, $where, $types);
                 } catch (\Exception $e) {
                     Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
                 }
@@ -1159,7 +1192,14 @@ class Form
                COM_getBlockTemplate('_forms_block', 'header'), $this->frm_id);
         }
 
-        if ($res_id > 0 && $this->onetime < FRM_LIMIT_ONCE) {
+        if ($this->onetime > FRM_LIMIT_MULTI && $this->Result->getId() > 0) {
+            // have an existing result
+            if ($this->onetime == FRM_LIMIT_ONCE) {         // no editing
+                return $this->noedit_msg;
+            }
+        }
+
+        /*if ($res_id > 0 && $this->onetime < FRM_LIMIT_ONCE) {
             // an existing results id was specifically requested, so display
             // the form with the fields already filled, as long as edits are
             // allowed.
@@ -1175,10 +1215,10 @@ class Form
                     $this->ReadData($res_id);
                 }
             }
-        }
+        }*/
 
         if ($res_id > 0) {
-            $this->Result = new Result($res_id);
+        $this->Result = new Result($res_id);
             $this->instance_id = $this->Result->getInstance();
         }
 
@@ -1704,6 +1744,12 @@ class Form
             'chkname' => 'delfrm',
         );
         $form_arr = array();
+        $retval .= FieldList::buttonlink(array(
+            'text' => $LANG_FORMS['new_item'],
+            'url' => FRM_ADMIN_URL . '/index.php?editform',
+            'style' => 'success',
+        ) );
+
         $retval .= ADMIN_list(
             'forms_adminlistform',
             array(__CLASS__, 'getListField'),

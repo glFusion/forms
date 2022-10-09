@@ -135,7 +135,7 @@ $LANG_FORMS = array(
 'frm_invalid' => 'The form contains missing or invalid fields.',
 'add_century'   => 'Add century if missing',
 'err_name_required' => 'Error: The form\'s name cannot be empty',
-'confirm_form_delete' => 'Are you sure you want to delete this form?  All associated fields and data will be removed.',
+'confirm_form_delete' => 'Are you sure you want to delete this form? All associated fields and data will be removed.',
 'confirm_delete' => 'Are you sure you want to delete this item?',
 'fld_access'    => 'Field Access',
 'del_item' => 'Delete',
@@ -197,6 +197,9 @@ $LANG_FORMS = array(
 'confirm_form_reset' => 'Are you sure you want to delete all submissions for this form?',
 'edit_field' => 'Editing Field',
 'now_add_fields' => 'Form has been updated, now add fields.',
+'view_all_instances' => 'View All Instances',
+'email_catuid' => 'Email Category User',
+'email_catgid' => 'Email Category Group',
 );
 
 $PLG_forms_MESSAGE1 = 'Thank you for your submission.';
