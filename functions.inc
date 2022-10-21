@@ -261,6 +261,7 @@ function plugin_autouninstall_forms()
                 'forms_flddef',
                 'forms_results',
                 'forms_values',
+                'forms_categories',
         ),
         // give the full name of the group, as in the db
         'groups' => array('forms Admin'),
