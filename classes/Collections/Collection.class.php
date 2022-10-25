@@ -19,7 +19,7 @@ use Forms\Cache;
 
 
 /**
- * Class to handle competition events.
+ * Class to handle searching and retrieving collections.
  * @package forms
  */
 abstract class Collection
@@ -242,7 +242,7 @@ abstract class Collection
     public static function json_encode(array $arr) : string
     {
         try {
-            $retval = json_decode($str, true);
+            $retval = json_encode($arr, true);
         } catch (\Exception $e) {
             // Don't care
             $retval = false;
@@ -253,8 +253,6 @@ abstract class Collection
         return $retval;
     }
 
-
-    public abstract function getObjects();
 
 }
 
