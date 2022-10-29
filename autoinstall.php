@@ -161,7 +161,7 @@ function plugin_load_configuration_forms()
     require_once __DIR__ . '/install_defaults.php';
 
     // Get the admin group ID that was saved previously.
-    $group_id = (int)$db->getItem(
+    $group_id = (int)Database::getInstance()->getItem(
         $_TABLES['groups'],
         'grp_id',
         array('grp_name' => "{$_CONF_FRM['pi_name']} Admin'")
