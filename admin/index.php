@@ -115,7 +115,11 @@ case 'moderationdelete':
 
 case 'updatefield':
     $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
-    $Field = Forms\Field::getById($fld_id);
+    if ($fld_id > 0) {
+        $Field = Forms\Field::getById($fld_id);
+    } else {
+        $Field = Forms\Field::create($_POST['type']);
+    }
     $msg = $Field->SaveDef($_POST);
     echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $frm_id . '#frm_fldlist');
     break;
@@ -309,8 +313,13 @@ case 'editform':
     break;
 
 case 'editfield':
-    $fld_id = isset($_GET['fld_id']) ? (int)$_GET['fld_id'] : 0;
-    $Field = new Forms\Field($fld_id, $frm_id);
+    $fld_id = isset($_REQUEST['fld_id']) ? (int)$_REQUEST['fld_id'] : 0;
+    $frm_id = isset($_POST['frm_id']) ? $_POST['frm_id'] : '';
+    $Field = Forms\Field::getById($fld_id);
+    if ($Field === NULL) {
+        $Field = new Forms\Field();
+        $Field->setFormId($frm_id);
+    }
     $content .= Forms\Menu::Admin($view, 'hdr_field_edit');
     $content .= $Field->EditDef();
     break;

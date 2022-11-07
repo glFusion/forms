@@ -110,13 +110,11 @@ class Field
      * @param   integer $id     ID of the existing field, empty if new
      * @param   string  $frm_id ID of related form, if any
      */
-    public function X__construct()
+    public function __construct(?array $vars=NULL)
     {
-        global $_USER, $_CONF_FRM;
-
-        if (is_array($id)) {
+        if (is_array($vars)) {
             // Already have the object data, just set up the variables
-            $this->setVars($id, true);
+            $this->setVars($vars, true);
             $this->isNew = false;
         }
     }
@@ -149,11 +147,10 @@ class Field
      * @param   mixed   $fld    Field ID or record
      * @return  object          Field object
      */
-    public static function getById(int $fld_id) : self
+    public static function getById(int $fld_id) : ?self
     {
         global $_TABLES;
 
-        $fld_id = (int)$fld;
         $key = 'field_' . $fld_id;
         $fld = Cache::get($key);
         if ($fld === NULL) {
@@ -161,9 +158,25 @@ class Field
             if (empty($fld)) return NULL;
             Cache::set($key, $fld);
         }
-
         $cls = __NAMESPACE__ . '\\Fields\\' . ucfirst($fld['type']) . 'Field';
         return new $cls($fld);
+    }
+
+
+    /**
+     * Create a new field object of the specified type.
+     *
+     * @param   string  $type   Field type, e.g. text, numeric, etc.
+     * @return  object      New Field object
+     */
+    public static function create(string $type) : ?self
+    {
+        $cls = __NAMESPACE__ . '\\Fields\\' . ucfirst($type) . 'Field';
+        if (class_exists($cls)) {
+            return new $cls;
+        } else {
+            return NULL;
+        }
     }
 
 
