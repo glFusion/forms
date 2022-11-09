@@ -35,14 +35,13 @@ class Cache
      */
     public static function set($key, $data, $tag='')
     {
-        if (version_compare(GVERSION, self::MIN_GVERSION, '<')) return NULL;
-
-        if ($tag == '')
+        if ($tag == '') {
             $tag = array(self::TAG);
-        elseif (is_array($tag))
+        } elseif (is_array($tag)) {
             $tag[] = self::TAG;
-        else
+        } else {
             $tag = array($tag, self::TAG);
+        }
         $key = self::_makeKey($key);
         return \glFusion\Cache\Cache::getInstance()->set($key, $data, $tag, 86400);
     }
