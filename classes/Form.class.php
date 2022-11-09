@@ -1098,7 +1098,7 @@ class Form
      * @param   integer $res_id     Result set ID to display data
      * @return  string  HTML for the form
      */
-    public function Render($mode='', $res_id=0, $args=array())
+    public function Render(string $mode='', int $res_id=0, array $args=array())
     {
         global $_CONF, $_TABLES, $LANG_FORMS, $_GROUPS, $_CONF_FRM, $LANG_ADMIN;
 
@@ -1192,7 +1192,11 @@ class Form
                COM_getBlockTemplate('_forms_block', 'header'), $this->frm_id);
         }
 
-        if ($this->onetime > FRM_LIMIT_MULTI && $this->Result->getId() > 0) {
+        if (
+            $this->onetime > FRM_LIMIT_MULTI &&
+            !is_null($this->Result) &&
+            $this->Result->getId() > 0
+        ) {
             // have an existing result
             if ($this->onetime == FRM_LIMIT_ONCE) {         // no editing
                 return $this->noedit_msg;
@@ -1219,7 +1223,7 @@ class Form
 
         if ($res_id > 0) {
         $this->Result = new Result($res_id);
-            $this->instance_id = $this->Result->getInstance();
+            $this->instance_id = $this->Result->getInstanceId();
         }
 
         // Get the result details for a heading when an admin is
@@ -1484,11 +1488,9 @@ class Form
 
         foreach ($this->fields as $Field) {
             $Field->setFormID($this->frm_id);
-            $msg = $Field->Duplicate();
-            if (!empty($msg)) {
-                return $msg;
-            }
+            $Field->Duplicate();
         }
+        Cache::clear('fields');
         return '';
     }
 
