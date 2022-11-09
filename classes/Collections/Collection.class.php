@@ -38,7 +38,7 @@ abstract class Collection
 
     /** Tags to add for caching.
      * @var array */
-    protected $cache_tags = array('forms');
+    protected $cache_tags = array();
 
     /** Cache key constructed from SQL query and parameters.
      * @var string */
@@ -225,7 +225,6 @@ abstract class Collection
         if (!$stmt || $stmt->rowCount() < 1) {
             return $rows;
         }
-
         $rows = $stmt->fetchAllAssociative();
         $this->setCache($rows, $this->cache_tags);
         return $rows;

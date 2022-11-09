@@ -41,6 +41,7 @@ class FieldCollection extends Collection
         if (!empty($frm_id)) {
             $this->withFormId($frm_id);
         }
+        $this->cache_tags = array('fields');
     }
 
 
@@ -68,6 +69,20 @@ class FieldCollection extends Collection
     {
         $this->_qb->andWhere('fld.frm_id = :frm_id')
                   ->setParameter('frm_id', $frm_id, Database::STRING);
+        return $this;
+    }
+
+
+    /**
+     * Get only enabled results.
+     *
+     * @param   boolean $flag   Flag to only get enabled results
+     * @return  object  $this
+     */
+    public function withEnabled(bool $flag=true) : self
+    {
+        $this->_qb->andWhere('fld.enabled = :enabled')
+           ->setParameter('enabled', $flag ? 1 : 0);
         return $this;
     }
 
