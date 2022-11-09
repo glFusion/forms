@@ -234,7 +234,7 @@ class Field
     {
         $retval = array();
         $Coll = new FieldCollection;
-        $rows = $Coll->withFormId($Form->getID())->getRows();
+        $rows = $Coll->withFormId($Form->getID())->withEnabled(true)->getRows();
         foreach ($rows as $row) {
             $retval[strtolower($row['fld_name'])] = self::fromArray($row);
         }
@@ -282,7 +282,7 @@ class Field
         $this->enabled = isset($A['enabled']) && $A['enabled'] ? 1 : 0;
         $this->access = (int)$A['access'];
         $this->prompt = $A['prompt'];
-        $this->fld_name = $A['fld_name'];
+        $this->fld_name = COM_sanitizeId($A['fld_name']);
         // Make sure 'type' is set before 'value'
         $this->type = $A['type'];
         $this->help_msg = $A['help_msg'];
@@ -606,7 +606,7 @@ class Field
                 $db->conn->update(
                     $_TABLES['forms_flddef'],
                     $values,
-                    array('fld_id' => $fld_id),
+                    array('fld_id' => $this->fld_id),
                     $types
                 );
             } else {
@@ -614,6 +614,7 @@ class Field
                 $this->fld_id = $db->conn->lastInsertId();
             }
             $this->Reorder($this->frm_id);
+            Cache::clear('fields');
             return true;
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
@@ -644,12 +645,13 @@ class Field
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
             return false;
         }
+        Cache::clear('fields');
         return true;
     }
 
 
     /**
-     * Save this field to the database.
+     * Save a submitted value for this field to the database.
      *
      * @uses    AutoGen()
      * @param   mixed   $newval Data value to save
@@ -664,7 +666,6 @@ class Field
         if ($res_id == 0) {
             return false;
         }
-
         if ($this->getOption('autogen') == FRM_AUTOGEN_SAVE) {
             $newval = $this->AutoGen('save');
         }
@@ -712,7 +713,7 @@ class Field
      * @param   array   $vals  All form values
      * @return  string      Empty string for success, or error message
      */
-    public function Validate(&$vals)
+    public function Validate(array &$vals) : string
     {
         global $LANG_FORMS;
 
@@ -758,7 +759,7 @@ class Field
      *
      * @see Form::Duplicate()
      */
-    public function Duplicate()
+    public function Duplicate() : bool
     {
         global $_TABLES;
 
@@ -770,33 +771,21 @@ class Field
 
         $db = Database::getInstance();
         try {
-            $db->conn->executeUpdate(
-                "INSERT INTO {$_TABLES['forms_flddef']} SET
-                frm_id = ?,
-                fld_name = ?,
-                type = ?,
-                enabled = ?,
-                access = ?,
-                prompt = ?,
-                options = ?,
-                help_msg = ?,
-                fill_gid = ?,
-                results_gid = ?,
-                orderby = ?,
-                encrypt = ?",
+            $db->conn->insert(
+                $_TABLES['forms_flddef'],
                 array(
-                    $this->frm_id,
-                    $this->fld_name,
-                    $this->type,
-                    $this->enabled,
-                    $this->access,
-                    $this->prompt,
-                    $options,
-                    $this->help_msg,
-                    $this->fill_gid,
-                    $this->results_gid,
-                    $this->orderby,
-                    $this->encrypt,
+                    'frm_id' => $this->frm_id,
+                    'fld_name' => $this->fld_name,
+                    'type' => $this->type,
+                    'enabled' => $this->enabled,
+                    'access' => $this->access,
+                    'prompt' => $this->prompt,
+                    'options' => $options,
+                    'help_msg' => $this->help_msg,
+                    'fill_gid' => $this->fill_gid,
+                    'results_gid' => $this->results_gid,
+                    'orderby' => $this->orderby,
+                    'encrypt' => $this->encrypt,
                 ),
                 array(
                     Database::STRING,
@@ -815,9 +804,9 @@ class Field
             );
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            return 5;
+            return false;
         }
-        return '';
+        return true;
     }
 
 
@@ -872,7 +861,7 @@ class Field
      *
      * @param   string  $frm_id     ID of form being reordered
      */
-    public static function Reorder($frm_id)
+    public static function Reorder($frm_id) : void
     {
         global $_TABLES;
 
@@ -891,7 +880,7 @@ class Field
             )->fetchAllAssociative();
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            return 5;
+            $data = false;
         }
 
         if (is_array($data)) {
@@ -900,22 +889,19 @@ class Field
             foreach ($data as $A) {
                 if ($A['orderby'] != $order) {  // only update incorrect ones
                     try {
-                        $db->conn->executeUpdate(
-                            "UPDATE {$_TABLES['forms_flddef']}
-                            SET orderby = ?
-                            WHERE frm_id = ?
-                            AND fld_id = ?",
-                            array($order, $frm_id, $A['fld_id']),
+                        $db->conn->update(
+                            $_TABLES['forms_flddef'],
+                            array('orderby' => $orderby),
+                            array('frm_id' => $frm_id, 'fld_id' => $A['fld_id']),
                             array(Database::INTEGER, Database::STRING, Database::INTEGER)
                         );
                     } catch (\Exception $e) {
                         Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-                        return 5;
                     }
                 }
                 $order += $stepNumber;
             }
-            return '';
+            Cache::clear('fields');
         }
     }
 
@@ -1112,6 +1098,7 @@ class Field
                 array($newval, $id),
                 array(Database::INTEGER, Database::INTEGER)
             );
+            Cache::clear('fields');
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
             $newval = $oldval;
@@ -1204,7 +1191,7 @@ class Field
     public function displayValue($fields, $chkaccess=true)
     {
         if (!$chkaccess || $this->canViewResults()) {
-            return htmlspecialchars($this->value);
+            return htmlspecialchars(COM_checkWords($this->value));
         } else {
             return NULL;
         }
