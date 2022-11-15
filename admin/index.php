@@ -29,7 +29,7 @@ $Request = Forms\Models\Request::getInstance();
 $action = 'listforms';      // Default view
 $expected = array(
     'edit','updateform','editfield', 'updatefield', 'savecat', 'deletecat',
-    'save', 'print', 'editresult', 'updateresult', 'reorder',
+    'save', 'print', 'editresult', 'updateresult', 'reorder', 'reset',
     'editform', 'editcat', 'copyform', 'delbutton_x', 'showhtml', 'delresult',
     'moderate', 'moderationapprove', 'moderationdelete',
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
@@ -137,7 +137,7 @@ case 'delbutton_x':
             Forms\Result::Delete($value);
         }
     }
-    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $Result->getString('frm_id'));
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $Request->getString('frm_id'));
     CTL_clearCache();   // so the autotags will pick it up.
     break;
 
