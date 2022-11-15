@@ -1,10 +1,10 @@
 /**
-*   Save a field from a defined AJAX-type form
-*
-*   @param  string  frm_id  Form ID
-*   @param  integer fld_id  Field ID
-*   @param  string  elem    Document element ID, for updating the view
-*/
+ * Save a field from a defined AJAX-type form.
+ *
+ * @param  string  frm_id  Form ID
+ * @param  integer fld_id  Field ID
+ * @param  string  elem    Document element ID, for updating the view
+ */
 var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
     var var_type = elem.type;
     var fld_value;
@@ -36,7 +36,7 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
     };
     data = $.param(dataS);
     $.ajax({
-        type: "POST",
+        type: "post",
         dataType: "json",
         url: glfusionSiteUrl + "/forms/ajax.php",
         data: data,
@@ -46,13 +46,13 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
                     if (elem_stat != "") {
                         elem_stat = elem_stat ? false : true;   // toggle checkbox
                     }
-                    $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
+                    $.UIkit.notify(result.message, {timeout: 1000,pos:'top-center'});
                 } else {
-                    $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
+                    $.UIkit.notify(result.message, {timeout: 1000,pos:'top-center'});
                 }
             }
             catch(err) {
-                $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
+                $.UIkit.notify(result.message, {timeout: 1000,pos:'top-center'});
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -65,8 +65,10 @@ var FORMS_ajaxSave = function(frm_id, fld_id, elem) {
 };
 
 /**
-*   Just display a message, don't actually save anything. Used in form preview.
-*/
+ * Just display a message, don't actually save anything. Used in form preview.
+ *
+ * @param	string	msg		Message to display
+ */
 function FORMS_ajaxDummySave(msg)
 {
     try {
@@ -78,11 +80,11 @@ function FORMS_ajaxDummySave(msg)
 }
 
 /**
-*   Save a field from an autotag
-*
-*   @param  integer fld_name    Field name, to create session var
-*   @param  string  elem        Document element ID, for updating the view
-*/
+ * Save a field from an autotag.
+ *
+ * @param	integer fld_name    Field name, to create session var
+ * @param	string  elem        Document element ID, for updating the view
+ */
 var FORMS_autotagSave = function(fld_name, elem) {
     var elem_stat = elem.checked;
     switch (elem.type) {
@@ -104,7 +106,7 @@ var FORMS_autotagSave = function(fld_name, elem) {
     };
     data = $.param(dataS);
     $.ajax({
-        type: "POST",
+        type: "post",
         dataType: "json",
         url: glfusionSiteUrl + "/forms/ajax.php",
         data: data,
@@ -112,13 +114,13 @@ var FORMS_autotagSave = function(fld_name, elem) {
             try {
                 if (result.status == 0) {
                     elem_stat = elem_stat ? false : true;   // toggle checkbox
-                    $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
+                    $.UIkit.notify(result.message, {timeout: 1000,pos:'top-center'});
                 } else {
-                    $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
+                    $.UIkit.notify(result.message, {timeout: 1000,pos:'top-center'});
                 }
             }
             catch(err) {
-                $.UIkit.notify(result.msg, {timeout: 1000,pos:'top-center'});
+                $.UIkit.notify(result.message, {timeout: 1000,pos:'top-center'});
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {

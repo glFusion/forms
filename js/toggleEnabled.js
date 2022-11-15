@@ -16,17 +16,17 @@ var FRMtoggleEnabled = function(cbox, id, type, component) {
     };
     data = $.param(dataS);
     $.ajax({
-        type: "POST",
+        type: "post",
         dataType: "json",
         url: ajax_url,
         data: data,
         success: function(result) {
             cbox.checked = result.newval == 1 ? true : false;
             try {
-                $.UIkit.notify("<i class='uk-icon-check'></i>&nbsp;" + result.statusMessage, {timeout: 1000,pos:'top-center'});
+                $.UIkit.notify("<i class='uk-icon-check'></i>&nbsp;" + result.message, {timeout: 1000,pos:'top-center'});
             }
             catch(err) {
-                alert(result.statusMessage);
+                alert(result.message);
             }
         }
     });
