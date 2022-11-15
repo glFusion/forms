@@ -3,15 +3,16 @@
  * Date field class.
  *
  * @author      Lee Garner <lee@leegarner.com>
- * @copyright   Copyright (c) 2018-2021 Lee Garner <lee@leegarner.com>
+ * @copyright   Copyright (c) 2018-2022 Lee Garner <lee@leegarner.com>
  * @package     forms
- * @version     0.5.0
+ * @version     0.6.0
  * @since       0.3.1
  * @license     http://opensource.org/licenses/gpl-2.0.php
  *              GNU Public License v2 or later
  * @filesource
  */
 namespace Forms\Fields;
+use Forms\Models\DataArray;
 use Forms\Models\Request;
 
 
@@ -212,7 +213,7 @@ class DateField extends \Forms\Field
      * @param   array   $vals  All form values
      * @return  string      Empty string for success, or error message
      */
-    public function Validate(&$vals)
+    public function Validate(DataArray &$vals) : string
     {
         global $LANG_FORMS;
 
