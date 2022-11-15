@@ -37,7 +37,7 @@ function FRM_chgCategory(sel)
 	data = $.param(dataS);
 
 	$.ajax({
-		type: "POST",
+		type: "post",
 		dataType: "json",
 		url: site_admin_url + "/plugins/forms/ajax.php",
 		data: data,
@@ -161,7 +161,7 @@ function FRM_chgCategory(sel)
 				<input type="checkbox" value="8" name="onsubmit[emailadmin]" {emailadmin_chk} />&nbsp;{$LANG_FORMS['email_admin']}&nbsp;&nbsp;<br />
 				{$LANG_FORMS['other_emails']}:
 				<input type="text" size="40" maxlength="255" name="email" value="{email}" /><br />
-				<input type="checkbox" value="64" name="onsubmit[emailcatuid]" {emailcatuid_chk} /> &nbsp;{$LANG_FORMS['email_catuid']} <span id="catuid_name">{catuid_name}</span><br />
+				<input type="checkbox" value="64" name="onsubmit[emailcatuid]" {emailcatuid_chk} />&nbsp;{$LANG_FORMS['email_catuid']} <span id="catuid_name">{catuid_name}</span><br />
 				<input type="checkbox" value="128" name="onsubmit[emailcatgid]" {emailcatgid_chk} />&nbsp;{$LANG_FORMS['email_catgid']} <span id="catgid_name">{catgid_name}</span>
 			</div>
 		</div>
