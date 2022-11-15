@@ -102,6 +102,7 @@ spl_autoload_register(function ($class)
 });
 use glFusion\Database\Database;
 use glFusion\Log\Log;
+use Forms\Models\Request;
 
 /** Include service functions */
 require_once __DIR__ . '/services.inc.php';
@@ -474,17 +475,15 @@ function plugin_autotags_forms($op, $content = '', $autotag = '')
             case 'show':
                 if ($frm_id != '') {
                     // Don't insert a form into an e-mailed article.
-                    if (isset($_POST['what']) && $_POST['what'] == 'sendstory') {
-                        break;
-                    }
-
-                    $Form = new Forms\Form($frm_id, FRM_ACCESS_FILL);
-                    if (!$Form->isNew() && $Form->isEnabled()) {
-                        // Make sure it's a valid form
-                        if (!empty($instance_id)) {
-                            $Form->setInstanceId($instance_id);
+                    if (Request::getInstance()->getString('what') != 'sendstory') {
+                        $Form = new Forms\Form($frm_id, FRM_ACCESS_FILL);
+                        if (!$Form->isNew() && $Form->isEnabled()) {
+                            // Make sure it's a valid form
+                            if (!empty($instance_id)) {
+                                $Form->setInstanceId($instance_id);
+                            }
+                            $HTML = $Form->Render($template);
                         }
-                        $HTML = $Form->Render($template);
                     }
                 }
                 break;

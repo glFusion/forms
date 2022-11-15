@@ -25,6 +25,7 @@ if (
     COM_404();
 }
 
+$Request = Forms\Models\Request::getInstance();
 $action = 'listforms';      // Default view
 $expected = array(
     'edit','updateform','editfield', 'updatefield', 'savecat', 'deletecat',
@@ -34,37 +35,29 @@ $expected = array(
     'deleteFrmDef', 'deleteFldDef', 'cancel', 'action', 'view',
     'results', 'preview', 'listcats', 'export',
 );
-foreach($expected as $provided) {
-    if (isset($_POST[$provided])) {
-        $action = $provided;
-        $actionval = $_POST[$provided];
-        break;
-    } elseif (isset($_GET[$provided])) {
-        $action = $provided;
-        $actionval = $_GET[$provided];
-        break;
-    }
-}
+list ($action, $actionval) = $Request->getAction($expected);
 
-$view = isset($_REQUEST['view']) ? $_REQUEST['view'] : $action;
-$frm_id = isset($_REQUEST['frm_id']) ? COM_sanitizeID($_REQUEST['frm_id']) : '';
-$msg = isset($_GET['msg']) && !empty($_GET['msg']) ? $_GET['msg'] : '';
+$view = $Request->getString('view',  $action);
+$frm_id = COM_sanitizeID($Request->getString('frm_id'));
+$msg = $Request->getString('msg');
 $content = '';
 
 switch ($action) {
 case 'action':      // Got "?action=something".
     switch ($actionval) {
     case 'bulkfldaction':
-        if (!isset($_POST['cb']) || !isset($_POST['frm_id']))
+        $id = $Request->getString('frm_id');
+        $cb = $Request->getArray('cb');
+        if (empty($cb) || empty($frm_id)) {
             break;
-        $id = $_POST['frm_id'];    // Override the usual 'id' parameter
-        $fldaction = isset($_POST['fldaction']) ? $_POST['fldaction'] : '';
+        }
+        $fldaction = $Request->getString('fldaction');
 
         switch ($fldaction) {
         case 'rmfld':
         case 'killfld':
             $deldata = $fldaction = 'killfld' ? true : false;
-            foreach ($_POST['cb'] as $varname=>$val) {
+            foreach ($cb as $varname=>$val) {
                 $F = Field::getByName($varname, $frm_id);
                 if (!empty($F->id)) {
                     $F->Remove($id, $deldata);
@@ -82,8 +75,8 @@ case 'action':      // Got "?action=something".
     break;
 
 case 'reorder':
-    $fld_id = isset($_GET['fld_id']) ? $_GET['fld_id'] : 0;
-    $where = isset($_GET['where']) ? $_GET['where'] : '';
+    $fld_id = $Request->getInt('fld_id');
+    $where = $Request->getString('where');
     if ($frm_id != '' && $fld_id > 0 && $where != '') {
         $msg = Forms\Field::Move($frm_id, $fld_id, $where);
     }
@@ -92,14 +85,15 @@ case 'reorder':
 
 case 'moderationapprove':
 case 'updateresult':
-    $F = new Forms\Form($_POST['frm_id']);
-    $R = new Forms\Result($_POST['res_id']);
+    $F = new Forms\Form($Request->getString('frm_id'));
+    $R = new Forms\Result($Request->getInt('res_id'));
     // Clear the moderation flag when saving a moderated submission
-    $R->SaveData($_POST['frm_id'], $F->getFields(), $_POST, $R->getUid());
+    $R->SaveData($Request->getString('frm_id'), $F->getFields(), $_POST, $R->getUid());
     $R->Approve();
     if ($action == 'moderationapprove') {
-        if (isset($_POST['post_save']) && function_exists($_POST['post_save'])) {
-            $_POST['post_save']($R->getUid());
+        $post_save = $Request->getString('post_save');
+        if (function_exists($post_save)) {
+            $post_save($R->getUid());
         }
         COM_refresh($_CONF['site_admin_url'] . '/moderation.php');
     }
@@ -107,47 +101,49 @@ case 'updateresult':
     break;
 
 case 'moderationdelete':
-    if (isset($_GET['res_id'])) {
-        plugin_moderationdelete_forms($_GET['res_id']);
+    if (isset($Request['res_id'])) {
+        plugin_moderationdelete_forms($Request->getInt('res_id'));
     }
     COM_refresh($_CONF['site_admin_url'] . '/moderation.php');
     break;
 
 case 'updatefield':
-    $fld_id = isset($_POST['fld_id']) ? $_POST['fld_id'] : 0;
+    $fld_id = $Request->getInt('fld_id');
     if ($fld_id > 0) {
         $Field = Forms\Field::getById($fld_id);
     } else {
-        $Field = Forms\Field::create($_POST['type']);
+        $Field = Forms\Field::create($Request->getString('type'));
     }
-    $msg = $Field->SaveDef($_POST);
+    $msg = $Field->SaveDef($Request);
     echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $frm_id . '#frm_fldlist');
     break;
 
 case 'delbutton_x':
-    if (isset($_POST['delfrm']) && is_array($_POST['delfrm'])) {
-        foreach ($_POST['delfrm'] as $frm_id) {
+    $delfrm = $Request->getArray('delfrm');
+    $delfld = $Request->getArray('delfield');
+    $delres = $Request->getArray('delresmulti');
+    if (!empty($delfrm)) {
+        foreach ($delfrm as $frm_id) {
             Forms\Form::getInstance($frm_id)->DeleteDef();
         }
         echo COM_refresh(FRM_ADMIN_URL . '/index.php');
-    }elseif (isset($_POST['delfield']) && is_array($_POST['delfield'])) {
-        var_dump($_POST);die;
+    } elseif (!empty($delfld)) {
         // Deleting one or more fields
-        foreach ($_POST['delfield'] as $key=>$value) {
+        foreach ($delfld as $key=>$value) {
             Forms\Field::Delete($value);
         }
-    } elseif (isset($_POST['delresmulti']) && is_array($_POST['delresmulti'])) {
-        foreach ($_POST['delresmulti'] as $key=>$value) {
+    } elseif (!empty($delres)) {
+        foreach ($delres as $key=>$value) {
             Forms\Result::Delete($value);
         }
     }
-    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $_GET['frm_id']);
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $Result->getString('frm_id'));
     CTL_clearCache();   // so the autotags will pick it up.
     break;
 
 case 'delresult':
     Forms\Result::Delete($actionval);
-    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $_GET['frm_id']);
+    echo COM_refresh(FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $Request->getString('frm_id'));
     break;
 
 case 'copyform':
@@ -172,8 +168,8 @@ case 'deletecat':
     break;
 
 case 'savecat':
-    $Cat = Forms\Category::getInstance($_POST['cat_id']);
-    $status = $Cat->save($_POST);
+    $Cat = Forms\Category::getInstance($Request->getInt('cat_id'));
+    $status = $Cat->save($Request);
     if (!$status) {                   // save operation failed
         $view = 'editcat';
     } else {
@@ -182,11 +178,12 @@ case 'savecat':
     break;
 
 case 'updateform':
-    $Form = new Forms\Form($_POST['old_id']);
-    $msg = $Form->SaveDef($_POST);
+    $old_id = $Request->getString('old_id');
+    $Form = new Forms\Form($old_id);
+    $msg = $Form->SaveDef($Request);
     if ($msg > 0) {                   // save operation failed
         $view = 'editform';
-    } elseif (empty($_POST['old_id']) || count($Form->getFields()) == 0) {
+    } elseif (empty($old_id) || count($Form->getFields()) == 0) {
         // New form, return to add fields
         COM_setMsg($LANG_FORMS['now_add_fields']);
         echo COM_refresh(FRM_ADMIN_URL . '/index.php?editform=x&frm_id=' . $Form->getID() . '#frm_fldlist');
@@ -197,14 +194,14 @@ case 'updateform':
 
 case 'deleteFrmDef':
     // Delete a form definition.  Also deletes user values.
-    $id = $_REQUEST['frm_id'];
+    $id = $Request->getString('frm_id');
     $msg = Forms\Form::getInstance($id)->DeleteDef();
     echo COM_refresh(FRM_ADMIN_URL . '/index.php');
     break;
 
 case 'deleteFldDef':
     // Delete a field definition.  Also deletes user values.
-    $msg = Forms\Field::Delete($_GET['fld_id']);
+    $msg = Forms\Field::Delete($Request->getInt('fld_id'));
     $view = 'editform';
     break;
 }
@@ -212,7 +209,7 @@ case 'deleteFldDef':
 // Select the page to display
 switch ($view) {
 case 'results':
-    $instance_id = isset($_GET['instance_id']) ? $_GET['instance_id'] : '';
+    $instance_id = $Request->getString('instance_id');
     if (!empty($instance_id)) {
         $other_text = sprintf($LANG_FORMS['showing_instance'], $instance_id) .
             ' <a href="' . FRM_ADMIN_URL . '/index.php?results=x&frm_id=' . $frm_id .
@@ -267,7 +264,7 @@ case 'showhtml':
     break;
 
 case 'print':
-    $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
+    $res_id = $Request->getInt('res_id');
     if ($frm_id != '' && $res_id > 0) {
         $Form = new Forms\Form($frm_id);
         $content .= $Form->Prt($res_id, true);
@@ -278,7 +275,7 @@ case 'print':
 
 case 'editresult':
 case 'moderate':
-    $Result = new Forms\Result($_GET['res_id']);
+    $Result = new Forms\Result($Request->getInt('res_id'));
     if (!$Result->isNew()) {
         $Form = Forms\Form::getInstance($Result->getFormID());
         if (!$Form->isNew()) {
@@ -313,8 +310,8 @@ case 'editform':
     break;
 
 case 'editfield':
-    $fld_id = isset($_REQUEST['fld_id']) ? (int)$_REQUEST['fld_id'] : 0;
-    $frm_id = isset($_POST['frm_id']) ? $_POST['frm_id'] : '';
+    $fld_id = $Request->getInt('fld_id');
+    $frm_id = $Request->getString('frm_id');
     $Field = Forms\Field::getById($fld_id);
     if ($Field === NULL) {
         $Field = new Forms\Field();

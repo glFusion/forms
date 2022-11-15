@@ -15,6 +15,7 @@ use glFusion\Database\Database;
 use glFusion\Log\Log;
 use Forms\Collections\ResultCollection;
 use Forms\Models\Value;
+use Forms\Models\DataArray;
 
 
 /**
@@ -344,7 +345,7 @@ class Result
      * @param  integer $uid        Optional user ID, default=$_USER['uid']
      * @return mixed       NULL on failure/invalid, result ID on success
      */
-    public function SaveData(string $frm_id, array $fields, array $vals, int $uid = 0) : ?int
+    public function SaveData(string $frm_id, array $fields, DataArray $vals, int $uid = 0) : ?int
     {
         global $_USER;
 

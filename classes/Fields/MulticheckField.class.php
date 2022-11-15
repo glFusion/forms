@@ -13,6 +13,7 @@
  */
 namespace Forms\Fields;
 use Forms\FieldList;
+use Forms\Models\Request;
 
 
 /**
@@ -89,11 +90,13 @@ class MulticheckField extends \Forms\Field
      * @param   integer $res_id     Result set ID
      * @param   string  $mode       'preview' or not
      * @param   string  $valname    Value name to pass to _elemID()
+     * @return  boolean     True if checked, False if not
      */
-    protected function renderValue($res_id, $mode, $valname='')
+    protected function renderValue(int $res_id, string $mode, string $valname='') : bool
     {
         $chk = false;
-        if (isset($_POST[$this->getName()])) {
+        $Request = Request::getInstance();
+        if (isset($Request[$this->getName()])) {
             // First, check for a POSTed value. The form is being redisplayed.
             $chk = true;
         } elseif ($this->getSubType() == 'ajax' && SESS_isSet($this->_elemID($valname))) {

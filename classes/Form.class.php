@@ -13,6 +13,8 @@
 namespace Forms;
 use glFusion\Database\Database;
 use glFusion\Log\Log;
+use Forms\Models\DataArray;
+use Forms\Models\Request;
 
 
 /**
@@ -444,11 +446,11 @@ class Form
      * @param   integer $access Access level requested
      * @return  boolean     True on success, False if not found
      */
-    public function Read($id = '', $access=FRM_ACCESS_ADMIN)
+    public function Read(string $id, int $access=FRM_ACCESS_ADMIN) : bool
     {
         global $_TABLES;
 
-        $this->frm_id = $id;
+        $this->frm_id = COM_sanitizeId($id);
 
         // Clear out any existing items, in case we're reusing this instance.
         $this->fields = array();
@@ -462,10 +464,10 @@ class Form
             )->fetchAssociative();
         } catch (\Exception $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-            $data = NULL;
+            $data = false;
         }
         if (is_array($data)) {
-            $this->setVars($data, true);
+            $this->setVars(new DataArray($data), true);
             $this->access = $this->hasAccess($access);
             $this->fields = Field::getByForm($this);
             return true;
@@ -502,53 +504,54 @@ class Form
     /**
      * Set all values for this form into local variables.
      *
-     * @param   array   $A          Array of values to use.
+     * @param   DataArray   $A      Array of values to use.
      * @param   boolean $fromdb     Indicate if $A is from the DB or a form.
      */
-    public function setVars(array $A, ?bool $fromdb=NULL) : self
+    public function setVars(DataArray $A, ?bool $fromdb=NULL) : self
     {
-        $this->frm_id = $A['frm_id'];
-        $this->cat_id = (int)$A['cat_id'];
-        $this->frm_name = $A['frm_name'];
-        $this->introtext = $A['introtext'];
-        $this->email = $A['email'];
-        $this->owner_id = $A['owner_id'];
-        $this->group_id = $A['group_id'];
-        $this->fill_gid = $A['fill_gid'];
-        $this->results_gid = $A['results_gid'];
-        $this->onetime = $A['onetime'];
-        $this->submit_msg = $A['submit_msg'];
-        $this->noaccess_msg = $A['noaccess_msg'];
-        $this->noedit_msg = $A['noedit_msg'];
-        $this->max_submit_msg = $A['max_submit_msg'];
-        $this->redirect = $A['redirect'];
-        $this->max_submit = $A['max_submit'];
-        $this->sub_type = $A['sub_type'];
-        $this->use_spamx = isset($A['use_spamx']) && $A['use_spamx'] == 1 ? 1 : 0;
+        $this->frm_id = COM_sanitizeId($A->getString('frm_id'));
+        $this->cat_id = $A->getInt('cat_id');
+        $this->frm_name = $A->getString('frm_name');
+        $this->introtext = $A->getString('introtext');
+        $this->email = $A->getString('email');
+        $this->owner_id = $A->getInt('owner_id');
+        $this->group_id = $A->getInt('group_id');
+        $this->fill_gid = $A->getInt('fill_gid');
+        $this->results_gid = $A->getInt('results_gid');
+        $this->onetime = $A->getInt('onetime');
+        $this->submit_msg = $A->getString('submit_msg');
+        $this->noaccess_msg = $A->getString('noaccess_msg');
+        $this->noedit_msg = $A->getString('noedit_msg');
+        $this->max_submit_msg = $A->getString('max_submit_msg');
+        $this->redirect = $A->getString('redirect');
+        $this->max_submit = $A->getInt('max_submit');
+        $this->sub_type = $A->getString('sub_type');
+        $this->use_spamx = $A->getInt('use_spamx');
+        $this->enabled = $A->getInt('enabled');
+        $this->captcha = $A->getInt('captcha');
+        $this->inblock = $A->getInt('inblock');
+        $this->req_approval = $A->getInt('req_approval');
 
         if ($fromdb) {
             // Coming from the database
-            $this->enabled = $A['enabled'];
-            $this->onsubmit = $A['onsubmit'];
-            $this->captcha = $A['captcha'];
-            $this->old_id = $A['frm_id'];
+            $this->onsubmit = $A->getInt('onsubmit');
+            /*$this->enabled = $A'enabled'];
             $this->inblock = $A['inblock'];
             $this->req_approval = $A['req_approval'];
+            $this->captcha = $A['captcha'];*/
+            $this->old_id = $A->getString('frm_id');
         } else {
             // This is coming from a form
-            $this->enabled = isset($A['enabled']) ? 1 : 0;
-            $this->captcha = isset($A['captcha']) ? 1 : 0;
-            $this->inblock = isset($A['inblock']) ? 1 : 0;
-            $this->req_approval = isset($A['req_approval']) ? 1 : 0;
+            /*$this->enabled = $A->getInt('enabled');
+            $this->captcha = $A->getInt('captcha');
+            $this->inblock = $A->getInt('inblock');
+            $this->req_approval = $A->getInt('req_approval');*/
 
-            $onsubmit = 0;      // start fresh
-            if (isset($A['onsubmit']) && is_array($A['onsubmit'])) {
-                foreach($A['onsubmit'] as $key=>$value) {
-                    $onsubmit += $value;
-                }
+            $this->onsubmit = 0;    // start fresh
+            foreach($A->getArray('onsubmit') as $key=>$value) {
+                $this->onsubmit += $value;
             }
-            $this->onsubmit = $onsubmit;
-            $this->old_id = $A['old_id'];
+            $this->old_id = $A->getString('old_id');
         }
         return $this;
     }
@@ -565,12 +568,9 @@ class Form
     {
         global $_CONF, $_CONF_FRM, $_USER, $_TABLES, $LANG_FORMS;
 
-        if (isset($_POST['referrer'])) {
-            $referrer = $_POST['referrer'];
-        } elseif (isset($_SERVER['HTTP_REFERER'])) {
+        $referrer = Request::getInstance()->getString('referrer');
+        if (empty($referrer) && isset($_SERVER['HTTP_REFERER'])) {
             $referrer = $_SERVER['HTTP_REFERER'];
-        } else {
-            $referrer = '';
         }
 
         $T = new \Template(FRM_PI_PATH . '/templates/admin');
@@ -643,16 +643,13 @@ class Form
      * @param   array   $vals   Values to save, from $_POST, normally
      * @return  string      HTML error list, or empty for success
      */
-    public function SaveData($vals)
+    public function SaveData(?DataArray $vals=NULL) : ?string
     {
         global $LANG_FORMS, $_CONF, $_TABLES, $_CONF_FRM;
 
         // Check that $vals is an array; should be from $_POST;
-        if (
-            !is_array($vals) ||
-            !$this->hasAccess(FRM_ACCESS_FILL)
-        ) {
-            return false;
+        if (empty($vals) || !$this->hasAccess(FRM_ACCESS_FILL)) {
+            return NULL;
         }
 
         // Check that the user has access to fill out this form
@@ -808,7 +805,7 @@ class Form
                    ->fetchAllAssociative();
             } catch (\Exception $e) {
                 Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
-                $data = NULL;
+                $data = false;
             }
             if (is_array($data)) {
                 foreach ($data as $A) {
@@ -927,14 +924,14 @@ class Form
     /**
      * Save a form definition.
      *
-     * @param   array   $A      Array of values (e.g. $_POST)
+     * @param   DataArray   $A  Array of values (e.g. $_POST)
      * @return  string      Error message, empty on success
      */
-    public function SaveDef(?array $A = NULL) : string
+    public function SaveDef(?DataArray $A=NULL) : string
     {
         global $_TABLES, $LANG_FORMS;
 
-        if (is_array($A)) {
+        if ($A) {
             $this->setVars($A, false);
         }
         if (empty($this->frm_name)) {
@@ -1069,7 +1066,8 @@ class Form
             Cache::delete('form_' . $this->old_id);  // Clear old form cache
         }
         CTL_clearCache();       // so autotags pick up changes
-        Cache::delete('form_' . $this->frm_id);      // Clear plugin cache
+        Cache::delete('form_' . $this->frm_id);
+        Cache::clear('fields');
 
         // Finally, if the option is selected, update each field's permission
         // with the form's.
@@ -1128,12 +1126,13 @@ class Form
         $lang_submit = $LANG_ADMIN['submit'];
         $lang_delete = '';
         $lang_reject = '';
+        $Request = Request::getInstance();
         if (isset($args['redirect_success'])) {
             $referrer = $args['redirect_success'];
         } elseif (isset($args['referrer'])) {
             $referrer = $args['referrer'];
-        } elseif (isset($_POST['referrer'])) {
-            $referrer = $_POST['referrer'];
+        } elseif (isset($Request['referrer'])) {
+            $referrer = $Request->getString('referrer');
         } elseif (isset($_SERVER['HTTP_REFERER'])) {
             $referrer = $_SERVER['HTTP_REFERER'];
         } else {
@@ -1174,17 +1173,6 @@ class Form
         case 'inline':
             $not_inline = false;
         default:
-            /*if (!$referrer) {
-                if (isset($args['referrer'])) {
-                    $referrer = $args['referrer'];
-                } elseif (isset($_POST['referrer'])) {
-                    $referrer = $_POST['referrer'];
-                } elseif (isset($_SERVER['HTTP_REFERER'])) {
-                    $referrer = $_SERVER['HTTP_REFERER'];
-                } else {
-                    $referrer = '';
-                }
-        }*/
             break;
         }
         if ($this->inblock == 1) {
@@ -1262,8 +1250,7 @@ class Form
             'btn_delete'    => $delaction,
             'frm_id'        => $this->frm_id,
             'introtext'     => $this->introtext,
-            'error_msg'     => isset($_POST['forms_error_msg']) ?
-                                $_POST['forms_error_msg'] : '',
+            'error_msg'     => $Request->getString('forms_error_msg'),
             'referrer'      => $referrer,
             'res_id'        => $res_id,
             //'success_msg'   => self::_stripHtml($success_msg),
@@ -1835,15 +1822,11 @@ class Form
                 $chk = '';
                 $enabled = 0;
             }
-            $retval = "<input name=\"{$fieldname}_{$A['frm_id']}\" " .
-                "type=\"checkbox\" $chk " .
-                "onclick='FRMtoggleEnabled(this, \"{$A['frm_id']}\", \"form\", \"{$fieldname}\", \"" . $extras['base_url'] . "\");' " .
-                "/>\n";
-            /*$retval = FieldList::checkbox(array(
+            $retval = FieldList::checkbox(array(
                 'name' => $fieldname . '_' . $A['frm_id'],
                 'checked' => $fieldvalue == 1,
                 'onclick' => "FRMtoggleEnabled(this, '{$A['frm_id']}', 'form', '{$fieldname}', '{$extras['base_url']}');",
-            ) );*/
+            ) );
             break;
 
         case 'frm_name':

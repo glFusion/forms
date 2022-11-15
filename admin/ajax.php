@@ -15,9 +15,10 @@
  *  Include required glFusion common functions
  */
 require_once '../../../lib-common.php';
+$Request = Forms\Models\Request::getInstance();
 
 // Make sure this is called via Ajax
-if (!COM_isAjax()) {
+if (!$Request->isAjax()) {
     COM_404();
 }
 
@@ -30,38 +31,38 @@ if (!plugin_isadmin_forms()) {
 $base_url = FRM_ADMIN_URL;
 $result = array();
 
-switch ($_POST['action']) {
+switch ($Request->getString('action')) {
 case 'toggleEnabled':
-    $oldval = $_POST['oldval'] == 0 ? 0 : 1;
+    $oldval = $Request->getInt('oldval');
     $newval = 99;
-    $var = trim($_POST['var']);  // sanitized via switch below
-    if (isset($_POST['type'])) {
-        switch ($_POST['type']) {
-        case 'form':
-            $Frm = Forms\Form::getInstance($_POST['id']);
-            if ($Frm->isOwner()) {
-                $newval = \Forms\Form::toggle($_POST['id'], 'enabled', $_POST['oldval']);
-            }
-            /*$type = 'form';
-            $table = 'forms_frmdef';
-            $field = 'id';*/
-            break;
-        case 'field':
-            switch ($var) {
-            case 'readonly':
-            case 'required':
-            case 'enabled':
-            case 'user_reg':
-                $newval = \Forms\Field::toggle($_POST['id'], $var, $_POST['oldval']);
-                break;
-            }
-            /*$type = 'field';
-            $table = 'forms_flddef';
-            $field = 'fld_id';*/
-            break;
-        default:
+    $var = trim($Request->getString('var'));  // validated via switch below
+    $type = $Request->getString('type');
+    $id = $Request->getString('id');    // use a string, cast as needed
+    switch ($type) {
+    case 'form':
+        $Frm = Forms\Form::getInstance($id);
+        if ($Frm->isOwner()) {
+            $newval = \Forms\Form::toggle($id, 'enabled', $oldval);
+        }
+        /*$type = 'form';
+        $table = 'forms_frmdef';
+        $field = 'id';*/
+        break;
+    case 'field':
+        switch ($var) {
+        case 'readonly':
+        case 'required':
+        case 'enabled':
+        case 'user_reg':
+            $newval = \Forms\Field::toggle((int)$id, $var, $oldval);
             break;
         }
+        /*$type = 'field';
+        $table = 'forms_flddef';
+        $field = 'fld_id';*/
+        break;
+    default:
+        break;
     }
 
     $result = array(
@@ -73,7 +74,7 @@ case 'toggleEnabled':
     break;
 
 case 'chgcategory':
-    $cat_id = (int)$_POST['cat_id'];
+    $cat_id = $Request->getInt('cat_id');
     $result = array(
         'catuid_name' => '',
         'catgid_name' => '',

@@ -12,6 +12,7 @@
  * @filesource
  */
 namespace Forms\Fields;
+use Forms\Models\Request;
 
 
 /**
@@ -97,20 +98,21 @@ class DateField extends \Forms\Field
         }
 
         $access = $this->renderAccess();
+        $Request = Request::getInstance();
 
         //  Create the field HTML based on the type of field.
         $fld = '';
         $dt = array();
         // Check for POSTed values first, coming from a previous form
         // If one is set, all should be set, and empty values are ok
-        if (isset($_POST[$this->getName() . '_month'])) {
-            $dt[1] = $_POST[$this->getName() . '_month'];
+        if (isset($Request[$this->getName() . '_month'])) {
+            $dt[1] = $Request->getString($this->getName() . '_month');
         }
-        if (isset($_POST[$this->getName() . '_day'])) {
-            $dt[2] = $_POST[$this->getName() . '_day'];
+        if (isset($Request[$this->getName() . '_day'])) {
+            $dt[2] = $Request->getString($this->getName() . '_day');
         }
-        if (isset($_POST[$this->getName() . '_year'])) {
-            $dt[0] = $_POST[$this->getName() . '_year'];
+        if (isset($Request[$this->getName() . '_year'])) {
+            $dt[0] = $Request->getString($this->getName() . '_year');
         }
 
         // Nothing from POST, check for an existing value.  If none,

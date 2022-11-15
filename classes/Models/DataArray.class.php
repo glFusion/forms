@@ -240,7 +240,7 @@ class DataArray implements \ArrayAccess
      * @param   string  $key    Key name
      * @return  mixed       Property value, NULL if undefined
      */
-    public function getRaw(string $key, $default=NULL)
+    public function get(string $key, $default=NULL)
     {
         if (array_key_exists($key, $this->properties)) {
             return $this->properties[$key];
@@ -255,9 +255,13 @@ class DataArray implements \ArrayAccess
      *
      * @return  string      Encoded string containing the properties
      */
-    public function encode() : string
+    public function json_encode() : string
     {
-        return base64_encode(@json_encode($this->properties));
+        $retval = @json_encode($this->properties);
+        if (empty($retval)) {
+            $retval = '{}';
+        }
+        return $retval;
     }
 
 
@@ -267,10 +271,10 @@ class DataArray implements \ArrayAccess
      * @param   string  $data   Base64-encoded JSON string
      * @return  array       Properties array
      */
-    public function decode(string $data) : array
+    public function json_decode(string $data) : array
     {
-        $this->properties = @json_decode(base64_decode($data), true);
-        if ($this->properties === NULL) {
+        $this->properties = @json_decode($data, true);
+        if ($this->properties === false) {
             $this->properties = array();
         }
         return $this->properties;

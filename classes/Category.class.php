@@ -14,6 +14,7 @@
 namespace Forms;
 use glFusion\Database\Database;
 use glFusion\Log\Log;
+use Forms\Models\DataArray;
 
 
 /**
@@ -54,7 +55,7 @@ class Category
         global $_USER;
 
         if (is_array($vars)) {
-            $this->setVars($vars, true);
+            $this->setVars(new DataArray($vars), true);
         }
     }
 
@@ -62,15 +63,15 @@ class Category
     /**
      * Sets all variables to the matching values from the supplied array.
      *
-     * @param   array   $row    Array of values, from DB or $_POST
+     * @param   DataArray   $row    Array of values, from DB or $_POST
      * @param   boolean $fromDB True if read from DB, false if from a form
      */
-    public function setVars(array $row) : self
+    public function setVars(DataArray $row) : self
     {
-        $this->cat_id = (int)$row['cat_id'];
-        $this->cat_name = $row['cat_name'];
-        $this->cat_email_uid = $row['cat_email_uid'];
-        $this->cat_email_gid = $row['cat_email_gid'];
+        $this->cat_id = $row->getInt('cat_id');
+        $this->cat_name = $row->getString('cat_name');
+        $this->cat_email_uid = $row->getInt('cat_email_uid');
+        $this->cat_email_gid = $row->getInt('cat_email_gid');
         return $this;
     }
 
@@ -103,7 +104,7 @@ class Category
             $row = false;
         }
         if (is_array($row)) {
-            $this->setVars($row);
+            $this->setVars(new DataArray($row));
             Cache::set(self::_makeCacheKey($id), $this, 'forms_cats');
             return true;
         } else {
@@ -148,14 +149,14 @@ class Category
     /**
      * Save the current values to the database.
      *
-     * @param  array   $A      Optional array of values from $_POST
-     * @return boolean         True if no errors, False otherwise
+     * @param  DataArray    $A  Optional array of values from $_POST
+     * @return boolean          True if no errors, False otherwise
      */
-    public function save(?array $A = NULL) : bool
+    public function save(?DataArray $A=NULL) : bool
     {
         global $_TABLES, $_FORMS_CONF;
 
-        if (is_array($A)) {
+        if ($A) {
             $this->setVars($A);
         }
 
@@ -580,17 +581,17 @@ class Category
     }
 
 
-    public function getEmailNames() : array
+    public function getEmailNames() : DataArray
     {
         global $_TABLES;
 
-        $retval = array(
+        $retval = new DataArray(array(
             'catuid_id' => 0,
             'catuid_name' => '',
             'catuid_email' => '',
             'catgid_id' => 0,
             'catgid_name' => '',
-        );
+        ) );
 
         $db = Database::getInstance();
         try {

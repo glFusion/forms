@@ -14,6 +14,8 @@ namespace Forms;
 use glFusion\Database\Database;
 use glFusion\Log\Log;
 use Forms\Models\Value;
+use Forms\Models\DataArray;
+use Forms\Models\Request;
 use Forms\Collections\FieldCollection;
 
 
@@ -114,7 +116,7 @@ class Field
     {
         if (is_array($vars)) {
             // Already have the object data, just set up the variables
-            $this->setVars($vars, true);
+            $this->setVars(new DataArray($vars), true);
             $this->isNew = false;
         }
     }
@@ -134,7 +136,7 @@ class Field
         }
         $cls = __NAMESPACE__ . '\\Fields\\' . ucfirst($A['type']) . 'Field';
         $retval = new $cls;
-        $retval->setVars($A, $from_db);
+        $retval->setVars(new DataArray($A), $from_db);
         return $retval;
     }
 
@@ -188,7 +190,7 @@ class Field
      * @param   integer $id Field ID
      * @return  boolean     Status from setVars()
      */
-    public function Read($id = 0)
+    public function Read(int $id = 0)
     {
         if ($id != 0) $this->fld_id = $id;
         $A = self::_readFromDB($id);
@@ -268,35 +270,30 @@ class Field
      * Set all variables for this field.
      * Data is expected to be from $_POST or a database record
      *
-     * @param   array   $A      Array of fields for this item
+     * @param   DataArray   $A  Array of fields for this item
      * @param   boolean $fromdb Indicate whether this is read from the DB
      */
-    public function setVars($A, $fromdb=false)
+    public function setVars(DataArray $A, $fromdb=false)
     {
-        if (!is_array($A))
-            return false;
-
-        $this->fld_id = (int)$A['fld_id'];
-        $this->frm_id = $A['frm_id'];
-        $this->orderby = empty($A['orderby']) ? 9999 : $A['orderby'];
-        $this->enabled = isset($A['enabled']) && $A['enabled'] ? 1 : 0;
-        $this->access = (int)$A['access'];
-        $this->prompt = $A['prompt'];
-        $this->fld_name = COM_sanitizeId($A['fld_name']);
+        $this->fld_id = $A->getInt('fld_id');
+        $this->frm_id = $A->getString('frm_id');
+        $this->orderby = $A->getInt('orderby', 9999);
+        $this->enabled = $A->getInt('enabled');
+        $this->access = $A->getInt('access');
+        $this->prompt = $A->getString('prompt');
+        $this->fld_name = COM_sanitizeId($A->getString('fld_name'));
         // Make sure 'type' is set before 'value'
-        $this->type = $A['type'];
-        $this->help_msg = $A['help_msg'];
-        $this->results_gid = (int)$A['results_gid'];
-        $this->fill_gid = (int)$A['fill_gid'];
-        if (isset($A['encrypt'])) {
-            $this->encrypt = (int)$A['encrypt'];
-        }
+        $this->type = $A->getString('type');
+        $this->help_msg = $A->getString('help_msg');
+        $this->results_gid = $A->getInt('results_gid');
+        $this->fill_gid = $A->getInt('fill_gid');
+        $this->encrypt = $A->getInt('encrypt');
 
         if (!$fromdb) {
-            $this->options = $this->optsFromForm($A);
-            $this->value = $this->valueFromForm($A);
+            $this->options = $this->optsFromForm($A->toArray());
+            $this->value = $this->valueFromForm($A->toArray());
         } else {
-            $this->options = @unserialize($A['options']);
+            $this->options = @unserialize($A->getString('options'));
             if (!$this->options) $this->options = array();
         }
         return true;
@@ -556,14 +553,14 @@ class Field
     /**
      * Save the field definition to the database.
      *
-     * @param   array   $A      Array of elements, e.g. `$_POST`
+     * @param   DataArray   $A  Array of elements, e.g. `$_POST`
      * @return  boolean     True on success, False on error
      */
-    public function SaveDef(?array $A = NULL) : bool
+    public function SaveDef(?DataArray $A=NULL) : bool
     {
         global $_TABLES, $_CONF_FRM;
 
-        if (is_array($A)) {
+        if ($A) {
             $this->setVars($A, false);
         }
 
@@ -713,7 +710,7 @@ class Field
      * @param   array   $vals  All form values
      * @return  string      Empty string for success, or error message
      */
-    public function Validate(array &$vals) : string
+    public function Validate(DataArray &$vals) : string
     {
         global $LANG_FORMS;
 
@@ -891,7 +888,7 @@ class Field
                     try {
                         $db->conn->update(
                             $_TABLES['forms_flddef'],
-                            array('orderby' => $orderby),
+                            array('orderby' => $order),
                             array('frm_id' => $frm_id, 'fld_id' => $A['fld_id']),
                             array(Database::INTEGER, Database::STRING, Database::INTEGER)
                         );
@@ -965,14 +962,12 @@ class Field
         $ampm_fld = '';
         $hour = '';
         $minute = '';
+        $Request = Request::getInstance();
 
         // Check for POSTed values first, coming from a previous form
         // If one is set, all should be set, and empty values are ok
-        if (isset($_POST[$this->fld_name . '_hour']) &&
-            isset($_POST[$this->fld_name . '_minute'])) {
-            $hour = (int)$_POST[$this->fld_name . '_hour'];
-            $minute = (int)$_POST[$this->fld_name . '_minute'];
-        }
+        $hour = $Request->getInt($this->fld_name . '_hour');
+        $minute = $Request->getInt($this->fld_name . '_minute');
         if (empty($hour) || empty($minute)) {
             if (!empty($timestr)) {
                 // Default to the specified time string
@@ -1437,10 +1432,11 @@ class Field
      */
     protected function renderValue($res_id, $mode)
     {
+        $Request = Request::getInstance();
         $value = '';
-        if (isset($_POST[$this->fld_name])) {
+        if (isset($Request[$this->fld_name])) {
             // First, check for a POSTed value. The form is being redisplayed.
-            $value = $_POST[$this->fld_name];
+            $value = $Request->getString($this->fld_name);
         } elseif ($this->getSubType() == 'ajax') {
             $sess_id = $this->_sessID();
             if (SESS_isSet($sess_id)) {

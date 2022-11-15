@@ -17,6 +17,8 @@ if (!in_array('forms', $_PLUGINS)) {
     COM_404();
 }
 
+use Forms\Models\Request;
+$Request = Request::getInstance();
 $content = '';
 $action = '';
 $actionval = '';
@@ -24,49 +26,36 @@ $expected = array(
     'savedata', 'reset', 'myresult', 'mode', 'print', 'showform',
     'listforms', 'results', 'export', 'preview',
 );
-foreach($expected as $provided) {
-    if (isset($_POST[$provided])) {
-        $action = $provided;
-        $actionval = $_POST[$provided];
-        break;
-    } elseif (isset($_GET[$provided])) {
-        $action = $provided;
-        $actionval = $_GET[$provided];
-        break;
-    }
-}
-
+list ($action, $actionval) = $Request->getAction($expected);
 if (empty($action)) {
     $action = 'showform';
     COM_setArgNames(array('frm_id'));
     $frm_id = COM_getArgument('frm_id');
 } else {
-    $frm_id = isset($_REQUEST['frm_id']) ? $_REQUEST['frm_id'] : '';
+    $frm_id = $Request->getString('frm_id');
 }
 
 if ($action == 'mode') $action = $actionval;
 
 switch ($action) {
 case 'savedata':
-    $F = new Forms\Form($_POST['frm_id']);
+    $F = new Forms\Form($frm_id);
     if ($F->isNew()) {
         COM_refresh($_CONF['site_url']);
     }
     $redirect = str_replace('{site_url}', $_CONF['site_url'], $F->getRedirect());
-    $errmsg = $F->SaveData($_POST);
+    $errmsg = $F->SaveData($Request);
     if (empty($errmsg)) {
         // Success
         if ($F->getSubmitMsg() != '') {
             COM_setMsg($F->getSubmitMsg());
             $msg = '';
-        } elseif (isset($_POST['submit_msg'])) {
-            $msg = $_POST['submit_msg'];
         } else {
-            $msg = '1';
+            $msg = $Request->getInt('submit_msg');
         }
         if (empty($redirect)) {
-            if (isset($_POST['_referrer'])) {
-                $redirect = $_POST['_referrer'];
+            if (isset($Request['_referrer'])) {
+                $redirect = $Request->getString('_referrer');
             } elseif ($F->getOnsubmit() & FRM_ACTION_DISPLAY) {
                 $redirect = FRM_PI_URL . '/index.php?myresult=x&res_id=' .
                     $F->getResultID();
@@ -98,18 +87,18 @@ case 'savedata':
         echo COM_refresh($redirect);
     } else {
         $msg = '2';
-        if (!isset($_POST['referrer']) || empty($_POST['referrer'])) {
-            $_POST['referrer'] = $_SERVER['HTTP_REFERER'];
+        if ($Request->getString('referrer') == '') {
+            $Request['referrer'] = $_SERVER['HTTP_REFERER'];
         }
-        $_POST['forms_error_msg'] = $errmsg;
-        FRM_showForm($_POST['frm_id']);
+        $Request['forms_error_msg'] = $errmsg;
+        FRM_showForm($Request->getInt('frm_id'));
     }
     exit;
     break;
 
 case 'myresult':
-    $res_id = isset($_REQUEST['res_id']) ? (int)$_REQUEST['res_id'] : 0;
-    $token  = isset($_GET['token']) ? $_GET['token'] : '';
+    $res_id = $Request->getInt('res_id');
+    $token  = $Request->getString('token');
     $Result = new Forms\Result($res_id);
     if (!$Result->isNew()) {
         $Form = Forms\Form::getInstance($Result->getFormID());
@@ -141,7 +130,7 @@ case 'myresult':
     break;
 
 case 'print':
-    $res_id = isset($_GET['res_id']) ? (int)$_GET['res_id'] : 0;
+    $res_id = $Request->getInt('res_id');
     if ($res_id > 0) {
         $Result = new Forms\Result($res_id);
         $Form = Forms\Form::getInstance($Result->getFormID());
@@ -206,7 +195,7 @@ case 'preview':
     break;
 
 case 'results':
-    $instance_id = isset($_GET['instance_id']) ? $_GET['instance_id'] : '';
+    $instance_id = $Request->getString('instance_id');
     $Form = Forms\Form::getInstance($frm_id);
     if ($Form->isOwner()) {
         echo COM_siteHeader();
@@ -225,7 +214,7 @@ default:
         echo COM_refresh($_CONF['site_url']);
         exit;
     } else {
-        $modal = isset($_POST['modal']) || isset($_GET['modal']) ? true : false;
+        $modal = $Request->getBool('modal');
         echo FRM_showForm($frm_id, $modal);
     }
     break;
@@ -247,12 +236,14 @@ function FRM_showForm($frm_id, $modal = false)
     // Instantiate the form and make sure the current user has access
     // to fill it out
     $F = new Forms\Form($frm_id, FRM_ACCESS_FILL);
+    $Request = Request::getInstance();
 
     $blocks = $modal ? 0 : -1;
     echo Forms\Menu::siteHeader($F->getName(), '', $blocks);
-    if (isset($_GET['msg']) && !empty($_GET['msg'])) {
+    $msg = $Request->getString('msg');
+    if (!empty($msg)) {
         echo COM_showMessage(
-            COM_applyFilter($_GET['msg'], true), $_CONF_FRM['pi_name']
+            COM_applyFilter($msg, true), $_CONF_FRM['pi_name']
         );
     }
     if ($F->getID() != '' && $F->hasAccess(FRM_ACCESS_FILL) && $F->isEnabled()) {
@@ -268,5 +259,3 @@ function FRM_showForm($frm_id, $modal = false)
     $blocks = $modal ? 0 : -1;
     echo Forms\Menu::siteFooter($blocks);
 }
-
-?>
