@@ -368,7 +368,7 @@ class Result
 
         foreach ($fields as $field) {
             // Get the value to save and have the field save it
-            $newval = $field->valueFromForm($vals);
+            $newval = $field->valueFromForm($vals->toArray());
             $field->SaveData($newval, $res_id);
         }
 

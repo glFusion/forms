@@ -92,9 +92,9 @@ class CheckboxField extends \Forms\Field
      * @param   array   $A      Array of submitted values
      * @return  integer     0 if not set, configured value if set
      */
-    public function valueFromForm($A)
+    public function valueFromForm(array $A) : string
     {
-        return isset($A[$this->fld_name]) ? (int)$A[$this->fld_name] : 0;
+        return isset($A[$this->fld_name]) ? (string)$A[$this->fld_name] : '0';
     }
 
 

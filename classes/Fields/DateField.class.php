@@ -30,7 +30,7 @@ class DateField extends \Forms\Field
      * @param   array   $A      Array of all form fields
      * @return  string          Data value
      */
-    public function valueFromForm($A)
+    public function valueFromForm(array $A) : string
     {
         $dt = array('0000', '00', '00');
         if (isset($A[$this->getName() . '_month'])) {
@@ -178,12 +178,12 @@ class DateField extends \Forms\Field
             $month = '01';
             $day = '01';
         }
+        $second = '00';
         if (isset($dt_tm[1]) && strpos($dt_tm[1], ':')) {
-            list($hour, $minute, $second) = explode(':', $dt_tm[1]);
+            list($hour, $minute) = explode(':', $dt_tm[1]);
         } else {
             $hour = '00';
             $minute = '00';
-            $second = '00';
         }
 
         switch ($this->options['input_format']) {

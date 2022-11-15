@@ -999,7 +999,7 @@ class Field
             'minute_opts' => COM_getMinuteFormOptions($minute),
         ) );
         if ($this->getOption('timeformat') == '12') {
-            list($hour, $ampm_sel) = $this->hour24to12($hour);
+            list($hour, $ampm_sel) = $this->hour24to12((int)$hour);
             $T->set_var(
                 'ampm_select',
                 COM_getAmPmFormSelection($this->fld_name . '_ampm', $ampm_sel)
@@ -1023,7 +1023,7 @@ class Field
      * @param   integer $hour   Hour to convert
      * @return  array       array(new_hour, ampm_indicator)
      */
-    public function hour24to12($hour)
+    public function hour24to12(int $hour)
     {
         if ($hour >= 12) {
             $ampm = 'pm';
@@ -1154,11 +1154,11 @@ class Field
      * Just returns the form value.
      *
      * @param   array   $A      Array of form values, e.g. $_POST
-     * @return  mixed           Field value
+     * @return  string      Field value
      */
-    public function valueFromForm($A)
+    public function valueFromForm(array $A) : string
     {
-        return isset($A[$this->fld_name]) ? $A[$this->fld_name] : '';
+        return isset($A[$this->fld_name]) ? (string)$A[$this->fld_name] : '';
     }
 
 

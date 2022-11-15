@@ -735,7 +735,7 @@ class Form
             if (!empty($msg)) {
                 $invalid_flds .= "<li>$msg</li>\n";
             } else {
-                $F->setValue($vals);
+                $F->valueFromForm($vals->toArray());
             }
         }
         if (!empty($invalid_flds)) {

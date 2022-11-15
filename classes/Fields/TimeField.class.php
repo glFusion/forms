@@ -28,7 +28,7 @@ class TimeField extends \Forms\Field
      * @param   array   $vals   Array of all form fields
      * @return  string          Time value
      */
-    public function valueFromForm($vals)
+    public function valueFromForm(array $vals) : string
     {
         $hour = isset($vals[$this->getName().'_hour']) ?
             (int)$vals[$this->getName().'_hour'] : 0;
@@ -56,18 +56,18 @@ class TimeField extends \Forms\Field
      */
     public function setValue($val)
     {
-        $value = trim($val);
-        $A = explode(':', $value);
+        $A = explode(':', $val);
         $hour = $A[0];
         $min = isset($A[1]) ? $A[1] : '00';
         $sec = isset($A[2]) ? $A[2] : '00'; // just used for the SQL value
+        $this->value = $hour . ':' . $min . ':' . $sec;
         if ($this->getOption('timeformat') == '12') {
             list($hour, $ampm) = $this->hour24to12($hour);
             $this->value_text = sprintf('%02d:%02d %s', $hour, $min, $ampm);
         } else {
             $this->value_text = sprintf('%02d:%02d', $hour, $min);
         }
-        return $value;
+        return $this->value;
     }
 
 
