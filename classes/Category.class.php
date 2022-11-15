@@ -210,13 +210,22 @@ class Category
             return false;
         }
 
+        $db = Database::getInstance();
         try {
-            Database::getInstance()->conn->delete(
+            // Reset forms using this category to Default.
+            $db->conn->update(
+                $_TABLES['forms_frmdef'],
+                array('cat_id' => 1),
+                array('cat_id' => $this->cat_id),
+                array(Database::INTEGER, Database::INTEGER)
+            );
+            // Delete this category
+            $db->conn->delete(
                 $_TABLES['forms_cats'],
                 array('cat_id' => $this->cat_id),
                 array(Database::INTEGER)
             );
-            Cache::clear('forms_cats');
+            Cache::clear();
             $retval = true;
         } catch (\Throwable $e) {
             Log::write('system', Log::ERROR, __METHOD__ . ': ' . $e->getMessage());
