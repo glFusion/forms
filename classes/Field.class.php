@@ -1428,9 +1428,10 @@ class Field
      *
      * @param   integer $res_id     Result set ID
      * @param   string  $mode       View mode, e.g. "preview"
+     * @param   string  $valname    Value name to pass to _elemID()
      * @return  mixed               Field value used to populate form
      */
-    protected function renderValue($res_id, $mode)
+    protected function renderValue(int $res_id, string $mode, string $valname='') : bool
     {
         $Request = Request::getInstance();
         $value = '';
@@ -1608,21 +1609,26 @@ class Field
     /**
      * Return the XML element for privacy export.
      *
+     * @param   array   $Fields Array of all fields, to save lookups
      * @return  string  XML element string: <fld_name>data</fld_name>
      */
-    public function XML()
+    public function toXML(array $Fields) : string
     {
         $retval = '';
-        $Form = Form::getInstance($this->frm_id);
-        $d = addSlashes(htmlentities(trim($this->displayValue($Form->getFields()))));
+        if (
+            $this->access & self::ACCESS_HIDDEN ||
+            $this->access & self::ACCESS_READONLY
+        ) {
+            return $retval;
+        }
+
+        $value = addSlashes(htmlentities(trim($this->displayValue($Fields))));
         // Replace spaces in prompts with underscores, then remove all other
         // non-alphanumerics
-        $p = str_replace(' ', '_', $this->prompt);
-        $p = preg_replace("/[^A-Za-z0-9_]/", '', $p);
-
-        if (!empty($d)) {
-            $retval .= "<$p>$d</$p>\n";
-        }
+        $retval .= "<field>\n";
+        $retval .= '<prompt>' . $this->prompt . "</prompt>\n";
+        $retval .= '<value>' . $value . "</value>\n";
+        $retval .= "</field>\n";
         return $retval;
     }
 

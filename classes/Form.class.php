@@ -245,7 +245,7 @@ class Form
      *
      * @return  array   Array of Field objects
      */
-    public function getFields()
+    public function getFields() : array
     {
         return $this->fields;
     }

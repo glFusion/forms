@@ -55,9 +55,10 @@ class StaticField extends \Forms\Field
      * Return the XML element for privacy export.
      * Static fields do not need to be exported.
      *
+     * @param   array   $Fields Array of all fields (not used)
      * @return  string  Empty string
      */
-    public function XML()
+    public function toXML(array $Fields) : string
     {
         return '';
     }

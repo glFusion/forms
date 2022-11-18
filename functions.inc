@@ -792,7 +792,7 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
 {
     global $_TABLES, $_USER, $_CONF_FRM;
 
-    $retval = "<{$_CONF_FRM['pi_name']}>\n";
+    $retval = '';
     $db = Database::getInstance();
     try {
         $data = $db->conn->executeQuery(
@@ -807,18 +807,19 @@ function plugin_privacy_export_forms($uid, $email='', $username='', $ip='')
 
     if (is_array($data)) {
         foreach ($data as $id=>$res_id) {
-            $R = new Forms\Result($res_id['id']);
+            $R = new Forms\Result($res_id['res_id']);
             $F = Forms\Form::getInstance($R->getFormID());
-            $R->GetValues($F->getFields);
-            $form_name = str_replace(' ', '_', $F->getName());
-            $retval .= "<$form_name>\n";
+            $R->GetValues($F->getFields());
+            $retval .= "<form>\n";
+            $retval .= "<name>{$F->getName()}</name>\n";
             $dt = new Date($R->getTimestamp(), $_USER['tzid']);
-            $retval .= '<date>' . $dt->format($dt->getUserFormat(),true) . "</date>\n";
-            $retval .= "<ip>{$R->getIP()}</ip>\n";
-            foreach ($F->getFields() as $fld) {
-                $retval .= $fld->XML();
+            $retval .= '<date>' . $dt->format('Y-m-d H:i:s T', false) . "</date>\n";
+            $retval .= "<submission_ip>{$R->getIP()}</submission_ip>\n";
+            $Fields = $F->getFields();
+            foreach ($Fields as $fld) {
+                $retval .= $fld->toXML($Fields);
             }
-            $retval .= "</$form_name>\n";
+            $retval .= "</form>\n";
         }
     }
     if (!empty($retval)) {
